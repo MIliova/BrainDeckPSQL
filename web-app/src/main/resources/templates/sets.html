@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title th:text="#{messages.sets}"></title>
+    <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+    <div class="main">
+        <div class="main-left">&nbsp;</div>
+        <div class="main-center">
+            <div th:insert="~{fragment::header-menu}"></div>
+            <div><h1 th:text="#{messages.sets}">My Library</h1></div>
+            <div>
+                <div id="field-error" class="field-error"> </div>
+                <div class="blue-row blue-row-margin" th:each="set: ${sets}">
+                    <div class="blue-row-sets">
+                        <div class="pre-term-title-sets"><span th:text="'103 '+#{messages.set.create.te}">103 Terms</span>&nbsp;&nbsp;|&nbsp;&nbsp; <img class="circle_image" src="/images/avatar.jpg" /><span>MArina_iliova</span></div>
+                        <div><h2><a class="term-title-sets" th:href="@{/set/{setId}(setId=${set.id})}" th:text="${set.title}"></a></h2></div>
+                        <div class="term-description-sets" th:text="${set.description}"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="main-right">&nbsp;</div>
+    </div>
+</body>
+</html>

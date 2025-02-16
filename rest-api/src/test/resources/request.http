@@ -1,0 +1,65 @@
+###
+
+GET http://localhost:8081/api/sets
+
+###
+
+
+POST http://localhost:8081/api/sets/create
+Content-Type: application/json
+
+{
+"title":"",
+"description":"",
+"termLanguageId":1,
+"descriptionLanguageId":2,
+"terms":[
+{"term":"aaa","description":"bbb"},
+{"term":"ccc","description":"ddd"},
+{"term":"eee","description":"fff"}
+]
+}
+
+###
+GET http://localhost:8081/api/set/10
+
+
+
+###
+
+PATCH http://localhost:8081/api/set/1/edit
+Content-Type: application/json
+
+{
+"id":"10",
+"title":"",
+"description":"You muss enter a description.",
+"termLanguageId":"1",
+"descriptionLanguageId":"2",
+ "terms": [
+    {
+      "id": 90,
+      "setId": 10,
+      "term": "aaabbb",
+      "description": "bbb"
+    },
+    {
+      "id": 91,
+      "setId": 10,
+      "term": "cccddd",
+      "description": "ddd"
+    },
+    {
+      "id": 92,
+      "setId": 10,
+      "term": "eeefff",
+      "description": "fff"
+    }
+  ]
+}
+###
+DELETE http://localhost:8081/api/set/10/delete
+###
+
+
+

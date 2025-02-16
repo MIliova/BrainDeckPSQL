@@ -1,0 +1,8 @@
+server.port=8081
+spring.application.name=BrainDeck
+spring.messages.basename=messages
+spring.messages.encoding=UTF-8
+spring.web.locale=ru
+spring.web.locale-resolver=fixed
+logging.level.org.springframework.web.client=DEBUG
+logging.level.org.apache.http=DEBUG

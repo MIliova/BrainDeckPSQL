@@ -1,0 +1,11 @@
+spring.application.name=BrainDeck
+spring.messages.basename=messages
+spring.messages.encoding=UTF-8
+spring.web.locale=ru
+spring.web.locale-resolver=fixed
+
+braindeck.api.uri:http://localhost:8081
+
+logging.level.org.springframework.web.client=DEBUG
+logging.level.org.apache.http=DEBUG
+  

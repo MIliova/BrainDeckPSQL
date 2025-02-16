@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title th:data="#{messages.set.edit}">Edit a set</title>
+  <link rel="stylesheet" href="/css/styles.css">
+  <script src="/js/new-set.js" defer></script>
+  <script src="/js/edit-set.js" defer></script>
+
+</head>
+<body>
+<div class="main">
+  <div class="main-left">&nbsp;</div>
+  <div class="main-center">
+    <div th:insert="~{fragment::header-menu}"></div>
+    <div class="container-left-right" style="margin: 40px 0">
+      <div class="blue-row"><button class="blue-row-button"><a
+              th:href="@{/set/{id}(id=${set != null ? set.id :payload.id})}"><span th:data="messages.set.edit.back">Back to set</span></a></button></div>
+      <div class="blue-row"><button id="submitButton" class="blue-row-button" type="button" aria-label="Done"><span th:data="messages.set.edit.done">Done</span></button></div>
+    </div>
+    <div>
+      <form method="post" id="set-form" data-th-action="@{/set/{id}/edit(id=${set != null ? set.id :payload.id})}">
+        <div class=""><div class="textarea-description"><span
+                  th:if="${(payload != null && payload?.title() !='') || (set != null && set?.title !='')}"
+                  th:text="#{messages.set.create.t}"
+                  th:data-message="#{messages.set.create.t}">&nbsp;</span><span
+                  th:if="${(payload == null || payload?.title() =='') && (set == null || set?.title =='')}"
+                  th:data-message="#{messages.set.create.t}">&nbsp;</span><input
+                id="field-title" type="text" name="title" maxlength="255" value=""
+                th:value="${payload != null ? payload?.title() : set.title}"
+                th:placeholder="#{messages.set.create.et}"
+                th:aria-label="#{messages.set.create.t}"
+                th:data-message="#{messages.set.create.j.et}"
+        ></div></div><br>
+        <div class=""><div class="textarea-description"><span
+                  th:if="${(payload?.description() != null && payload?.description() !='')||(set?.description != null && set?.description !='')}"
+                  th:text="#{messages.set.create.d}"
+                  th:data-message="#{messages.set.create.d}">&nbsp;</span><span
+                  th:if="${(payload?.description() == null || payload?.description() =='') && (set?.description == null || set?.description =='')}"
+                  th:data-message="#{messages.set.create.d}">&nbsp;</span>
+          <textarea
+                id="field-description" name="description"
+                th:text="${payload != null ? payload?.description() : set.description}"
+                th:placeholder="#{messages.set.create.ed}"
+                th:aria-label="#{messages.set.create.d}"
+                th:data-message="#{messages.set.create.j.ad}" ></textarea></div></div>
+        <input type="hidden" id="field-term-language" name="termLanguageId" value=""
+               th:value="${payload!= null ? payload.termLanguageId() : set.termLanguageId}"
+               th:data-message="#{messages.set.create.j.atl}">
+        <input type="hidden" id="field-description-language" name="descriptionLanguageId" value=""
+               th:value="${payload!= null ? payload.descriptionLanguageId() : set.descriptionLanguageId}"
+               th:data-message="#{messages.set.create.j.adl}">
+        <input type="hidden" id="field-terms" name="terms" value=""
+               th:data-message="#{messages.set.create.j.ats}">
+        <input type="hidden" id="field-id" name="id" value="" th:value="${payload != null ? payload.id() : set.id}">
+<!--        <input type="hidden" name="_method" value="PATCH">-->
+
+
+        <div id="field-error" class="field-error"
+             th:attr="style=${errors} ? 'display:block;' : ''"
+             th:data-message="#{messages.set.create.j.yn}">
+          <div th:if="${errors}" >
+<!--            <div style="display: block;" th:each="error:${errors}" th:text="${#strings.concat(#messages.msg('messages.set.field.' + error.field), ' ', error.message)}"></div>&nbsp;-->
+            <div style="display: block;" th:each="error:${errors}" th:text="${error.message}"></div>&nbsp;
+
+          </div>
+        </div>
+
+
+
+
+
+
+
+
+        <div class="blue-row-margin" th:each="term, iter : ${terms != null ? terms : set.terms}">
+          <div class="">
+            <div class="container-left-right blue-row" >
+              <div class="term-block">
+                <div class="term-input" th:data-id="${term.id}" th:id="'term'+${iter.index}"  contenteditable="true"><p th:text="${term.term}"><br></p></div>
+                <hr><div class="container-left-right">
+                <span class="term" th:text="#{messages.set.create.te}">TERM</span>
+                <span th:if="${iter.index==0}"><span data-language="term"  id="language-button-term" class="language-button"
+                                                     th:text="${extra.termLangName}">CHOOSE LANGUAGE</span></span>
+              </div>
+              </div>
+              <div class="term-block">
+                <div class="term-input" th:data-id="${term.id}" th:id="'description'+${iter.index}" contenteditable="true"><p th:text="${term.description}"><br></p></div>
+                <hr><div class="container-left-right">
+                <span class="term" th:text="#{messages.set.create.de}">DESCRIPTION</span>
+                <span th:if="${iter.index==0}"><span data-description="term" id="language-button-description" class="language-button"
+                                                     th:text="${extra.descriptionLangName}">CHOOSE LANGUAGE</span></span>
+              </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+  <div class="main-right">&nbsp;</div>
+</div>
+
+<!--button type="button" aria-label="Import"><span>Import</span></button-->
+
+  <div th:insert="~{fragment::language-menu}"></div>
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

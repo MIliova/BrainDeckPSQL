@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>[[${set.title}]]</title>
+    <link rel="stylesheet" href="/css/styles.css">
+    <script src="/js/set.js" defer></script>
+</head>
+
+<body>
+    <div class="main">
+        <div class="main-left">&nbsp;</div>
+        <div class="main-center">
+            <div th:insert="~{fragment::header-menu}"></div>
+            <div>
+                <div class="container-left-right">
+                    <div><h1 th:text="${set.title}"></h1></div>
+                    <div style="display: flex">
+                    <div class="blue-row" style="margin-left: 10px"><a class="blue-row-a-img" th:href="@{/set/{id}/edit(id=${set.id})}"><img width="20" src="/images/edit-set.png"
+                                                                                                                                             th:alt="#{messages.set.es}" />[[#{messages.set.es}]]</a></div>
+                    <div class="blue-row" style="margin-left: 10px"><form method="post" data-th-action="@{/set/{id}/delete(id=${set.id})}"><button class="blue-row-button-img" type="submit" ><img width="20" height="20" src="/images/delet-set.png" th:alt="#{messages.set.es}" />[[#{messages.set.ds}]]</button></form></div>
+<!--                                        <div class="blue-row"><a class="blue-row-a-img" th:href="@{/set/{id}/edit(id=${set.id})}"><img width="20" src="/images/delet-set.png" alt="Edit a set" />Delete a set</a></div>-->
+                    </div>
+                </div>
+                <div class="pre-term-title-sets"><span>103 Terms</span>&nbsp;&nbsp;|&nbsp;&nbsp; <img class="circle_image" src="/images/avatar.jpg" alt="Create a new set" /><span>MArina_iliova</span></div>
+                <div class="term-description-set" th:text="${set.description}"></div>
+
+                <div class="blue-row blue-row-set blue-row-margin" th:each="term: ${set.terms}">
+                    <div data-term="" style="width: 150px" th:text = "${term.term}"></div>
+                    <div class="term-description-sets">&nbsp;&nbsp;|&nbsp;&nbsp;</div>
+                    <div data-term=""  class="term-description-sets" th:text="${term.description}"></div>
+                </div>
+            </div>
+        </div>
+        <div class="main-right">&nbsp;</div>
+    </div>
+
+</body>
+</html>
