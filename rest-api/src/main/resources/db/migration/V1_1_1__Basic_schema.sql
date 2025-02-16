@@ -16,6 +16,11 @@ create table braindeck.t_folders (
                                    created_at timestamp default current_timestamp
 );
 
+create table braindeck.t_folder_set (
+                                    folder_id integer not null references braindeck.t_folders(id) on delete cascade,
+                                    set_id integer not null references braindeck.t_sets(id) on delete cascade
+);
+
 create table braindeck.t_sets (
                                   id serial primary key,
                                   title varchar(50) not null check (length(trim(title)) >= 1),
@@ -23,7 +28,6 @@ create table braindeck.t_sets (
                                   termLanguageId  integer not null references braindeck.t_languages(id),
                                   descriptionLanguageId  integer not null references braindeck.t_languages(id),
                                   user_id integer not null references braindeck.t_users(id) on delete cascade,
-                                  folder_id integer references braindeck.t_folders(id) on delete set null,
                                   created_at timestamp default current_timestamp
 );
 
@@ -31,12 +35,12 @@ create table braindeck.t_terms (
                                 id seial primary key ,
                                 setId integer not null references braindeck.t_sets(id) on delete cascade,
                                 term varchar(950) not null check (length(trim(term)) >= 1),
-                                description varchar(950),
-                                user_id integer not null references braindeck.t_users(id) on delete cascade
+                                description varchar(950)
 
 );
 
 create table braindeck.t_languages(
                                 id serial primary key,
-                                name varchar(25) not null check (length(trim(name))>=2 )
+                                name varchar(25) not null check (length(trim(name))>=2 ),
+                                top boolean NOT NULL DEFAULT FALSE
 );

@@ -1,6 +1,7 @@
 package dev.braindeck.web.controller.payload;
 
-public record NewSetOfTermsPayload(
+public record UpdateSetPayload(
+        Integer id,
 
         String title,
 
@@ -9,5 +10,6 @@ public record NewSetOfTermsPayload(
         Integer termLanguageId,
 
         Integer descriptionLanguageId
+
 ) {
 }

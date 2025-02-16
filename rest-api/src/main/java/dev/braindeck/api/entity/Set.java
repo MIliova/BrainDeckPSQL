@@ -7,7 +7,6 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.ArrayList;
 import java.util.List;
 
 @Data
@@ -15,7 +14,7 @@ import java.util.List;
 @NoArgsConstructor
 @Entity
 @Table(schema="braindeck.t_sets")
-public class SetOfTerms {
+public class Set {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -35,12 +34,11 @@ public class SetOfTerms {
     @NotNull
     private Integer descriptionLanguageId;
 
+    @OneToMany(mappedBy = "term", cascade = CascadeType.REMOVE, fetch = FetchType.LAZY)
     private List<Term> terms;
 
-    @NotNull
-    private Integer folderId;
-
-    @NotNull
-    private Integer userId;
+    @ManyToOne
+    @JoinColumn(name="user_id", updatable = false, nullable = false)
+    private User user;
 
 }

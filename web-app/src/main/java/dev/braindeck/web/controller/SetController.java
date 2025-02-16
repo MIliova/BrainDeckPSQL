@@ -3,10 +3,9 @@ package dev.braindeck.web.controller;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import dev.braindeck.web.client.BadRequestException;
-import dev.braindeck.web.client.LanguagesException;
 import dev.braindeck.web.client.LanguagesRestClient;
 import dev.braindeck.web.client.SetsRestClient;
-import dev.braindeck.web.controller.payload.UpdateSetOfTermsPayload;
+import dev.braindeck.web.controller.payload.UpdateSetPayload;
 import dev.braindeck.web.entity.*;
 import dev.braindeck.web.utills.Util;
 import jakarta.servlet.http.HttpServletResponse;
@@ -24,7 +23,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.NoSuchElementException;
-import java.util.stream.Collectors;
 
 
 @Controller
@@ -38,7 +36,7 @@ public class SetController {
     private final MyLocale myLocale;
 
     @ModelAttribute("set")
-    public SetOfTerms getSet(@PathVariable("setId") int setId) {
+    public Set getSet(@PathVariable("setId") int setId) {
         return this.setsRestClient.findSetById(setId).orElse(null);
     }
 
@@ -60,12 +58,12 @@ public class SetController {
     }
 
     @GetMapping("/edit")
-    public String getEditSetPage(@PathVariable("setId") int setId, @ModelAttribute("set") SetOfTerms setOfTerms, Model model) {
+    public String getEditSetPage(@PathVariable("setId") int setId, @ModelAttribute("set") Set set, Model model) {
 //        model.addAttribute("curLang", LocaleContextHolder.getLocale().getLanguage());
 //        model.addAttribute("avLangs", this.myLocale.getAvailables());
 
         Map<String, Map<Integer, String>> languagesList = languagesRestClient.getAll();
-        ControllersUtil.getLanguages(languagesList, model, setOfTerms.termLanguageId(),setOfTerms.descriptionLanguageId());
+        ControllersUtil.getLanguages(languagesList, model, set.termLanguageId(), set.descriptionLanguageId());
 
         return "edit-set";
     }
@@ -73,7 +71,7 @@ public class SetController {
     @PostMapping("/edit")
     public String updateSet(@ModelAttribute(value = "setId", binding = false) int setId,
                             @RequestParam("terms") String payloadTerms,
-                            UpdateSetOfTermsPayload payload,
+                            UpdateSetPayload payload,
                             Model model) {
         System.out.println(payload);
         System.out.println(payloadTerms);

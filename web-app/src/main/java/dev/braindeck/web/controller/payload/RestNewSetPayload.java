@@ -4,7 +4,7 @@ import dev.braindeck.web.entity.NewTerm;
 
 import java.util.List;
 
-public record RestNewSetOfTermsPayload(
+public record RestNewSetPayload(
 
         String title,
 

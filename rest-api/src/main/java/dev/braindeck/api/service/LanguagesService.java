@@ -6,10 +6,8 @@ import java.util.Map;
 @Service
 public interface LanguagesService {
 
-    Map<Integer, String> getAll();
+    Map<Integer, String> findAll();
     Map<Integer, String> getMy();
     Map<Integer, String> getTop();
     Map<Integer, String> getRest();
-
-    String getById(Integer id);
 }

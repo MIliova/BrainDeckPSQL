@@ -18,7 +18,7 @@ public class LanguageRestController {
     @GetMapping("/api/languages")
     public Map<String, Map<Integer, String>> getAll() {
         return Map.of(
-                "all", this.languagesService.getAll(),
+                "all", this.languagesService.findAll(),
                 "my", this.languagesService.getMy(),
                 "top", this.languagesService.getTop(),
                 "rest", this.languagesService.getRest()

@@ -1,16 +1,11 @@
 package dev.braindeck.api.repository;
 
+import dev.braindeck.api.entity.Language;
+import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
-import java.util.Map;
-
 @Repository
-public interface LanguagesRepository
+public interface LanguagesRepository extends JpaRepository<Language, Integer>
 {
-    Map<Integer,String> getAll();
-    Map<Integer,String> getMy();
-    Map<Integer,String> getTop();
-    Map<Integer,String> getRest();
 
-    String getById(int id);
 }

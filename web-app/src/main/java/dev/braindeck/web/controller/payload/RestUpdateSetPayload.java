@@ -4,7 +4,7 @@ import dev.braindeck.web.entity.Term;
 
 import java.util.List;
 
-public record RestUpdateSetOfTermsPayload(
+public record RestUpdateSetPayload(
         Integer id,
 
         String title,

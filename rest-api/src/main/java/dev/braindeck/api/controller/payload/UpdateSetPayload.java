@@ -1,6 +1,6 @@
 package dev.braindeck.api.controller.payload;
 
-import dev.braindeck.api.entity.NewTerm;
+import dev.braindeck.api.entity.Term;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
@@ -8,10 +8,11 @@ import jakarta.validation.constraints.Size;
 
 import java.util.List;
 
-public record NewSetOfTermsPayload(
+public record UpdateSetPayload(
+        @NotNull Integer id,
 
         @NotBlank(message = "{error.set.title.not.blank}")
-        @Size(min = 1, max = 256, message = "{error.set.title.size}")
+        @Size(min = 1, max = 50, message = "{error.set.title.size}")
         String title,
 
         @NotBlank(message = "{error.set.description.not.blank}")
@@ -25,6 +26,6 @@ public record NewSetOfTermsPayload(
         Integer descriptionLanguageId,
 
         @NotEmpty(message = "{error.set.terms.not.blank}")
-        List<NewTerm> terms
+        List<Term> terms
 ) {
 }

@@ -1,8 +1,8 @@
 package dev.braindeck.api.controller;
 
-import dev.braindeck.api.controller.payload.NewSetOfTermsPayload;
-import dev.braindeck.api.entity.SetOfTerms;
-import dev.braindeck.api.service.SetOfTermsService;
+import dev.braindeck.api.controller.payload.NewSetPayload;
+import dev.braindeck.api.entity.Set;
+import dev.braindeck.api.service.SetService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.validation.BindException;
@@ -16,18 +16,18 @@ import java.util.Map;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/sets")
+@RequestMapping("/api")
 public class SetsRestController {
 
-    private final SetOfTermsService setOfTermsService;
+    private final SetService setService;
 
-    @GetMapping
-    public List<SetOfTerms> findSets() {
-        return this.setOfTermsService.findAllSets();
+    @GetMapping("/user/{userId:\\d+}/sets")
+    public List<Set> findSets(@PathVariable("userId") int userId) {
+        return this.setService.findAllByUserId(userId);
     }
 
-    @PostMapping("/create")
-    public ResponseEntity<?> createSet(@Valid @RequestBody NewSetOfTermsPayload payload,
+    @PostMapping("/user/{userId:\\d+}/sets/create")
+    public ResponseEntity<?> createSet(@PathVariable("userId") int userId, @Valid @RequestBody NewSetPayload payload,
                                                  BindingResult bindingResult,
                                                  UriComponentsBuilder uriBuilder) throws BindException {
         System.out.println(payload);
@@ -38,10 +38,10 @@ public class SetsRestController {
                 throw new BindException(bindingResult);
             }
         } else {
-            SetOfTerms setOfTerms = this.setOfTermsService.createSet(payload.title(), payload.description(), payload.termLanguageId(), payload.descriptionLanguageId(), payload.terms());
+            Set set = this.setService.createSet(payload.title(), payload.description(), payload.termLanguageId(), payload.descriptionLanguageId(), userId, payload.terms());
             return ResponseEntity.created(uriBuilder
-                    .replacePath("/api/sets/{setId}").build(Map.of("setId", setOfTerms.getId())))
-                    .body(setOfTerms);
+                    .replacePath("/api/sets/{setId}").build(Map.of("setId", set.getId())))
+                    .body(set);
         }
     }
 }

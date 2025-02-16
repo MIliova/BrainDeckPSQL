@@ -1,17 +1,15 @@
 package dev.braindeck.api.repository;
 
 import dev.braindeck.api.entity.Term;
+import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
-import java.util.Optional;
 
-public interface TermRepository {
-    List<Term> findTermsBySetId(Integer setId);
+public interface TermRepository extends JpaRepository<Term, Integer> {
+    List<Term> findAllBySetId(Integer setId);
 
-    void save(Term term);
+    List<Term> findAllByUserId(Integer userId);
 
-    Optional<Term> findById(Integer id);
-
-    void deleteTermsBySetId(Integer setId);
+    void deleteBySetId(Integer setId);
 }
 

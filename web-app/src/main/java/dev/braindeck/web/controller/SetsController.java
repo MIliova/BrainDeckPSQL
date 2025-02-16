@@ -5,10 +5,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import dev.braindeck.web.client.BadRequestException;
 import dev.braindeck.web.client.LanguagesRestClient;
 import dev.braindeck.web.client.SetsRestClient;
-import dev.braindeck.web.controller.payload.NewSetOfTermsPayload;
+import dev.braindeck.web.controller.payload.NewSetPayload;
 import dev.braindeck.web.entity.MyLocale;
 import dev.braindeck.web.entity.NewTerm;
-import dev.braindeck.web.entity.SetOfTerms;
+import dev.braindeck.web.entity.Set;
 import dev.braindeck.web.utills.Util;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.json.JsonParseException;
@@ -64,7 +64,7 @@ public class SetsController {
     @PostMapping(value = "/create-set")
     public String createSet(
             @RequestParam("terms") String payloadTerms,
-            NewSetOfTermsPayload payload,
+            NewSetPayload payload,
                             Model model) {
         System.out.println(payload);
         System.out.println(payloadTerms);
@@ -78,10 +78,10 @@ public class SetsController {
         System.out.println(terms);
 
         try {
-            SetOfTerms setOfTerms = this.setsRestClient.createSet(
+            Set set = this.setsRestClient.createSet(
                     payload.title(), payload.description(), payload.termLanguageId(),payload.descriptionLanguageId(),
                     terms);
-            return "redirect:/set/" + setOfTerms.id();
+            return "redirect:/set/" + set.id();
         } catch(BadRequestException e) {
 
             List<FieldErrorDto> errorDtos = Util.problemDetailErrorToDtoList(e.getJsonObject());

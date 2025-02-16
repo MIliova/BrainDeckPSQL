@@ -2,7 +2,7 @@ package dev.braindeck.web.entity;
 
 import java.util.List;
 
-public record SetOfTerms (
+public record Set(
         Integer id,
         String title,
         String description,

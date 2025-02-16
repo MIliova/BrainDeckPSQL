@@ -20,7 +20,7 @@ public class DefaultTermService implements TermService {
     @Override
     public List<Term> findTermsBySetId(int setId) {
 
-        return  this.termRepository.findTermsBySetId(setId);
+        return  this.termRepository.findAllBySetId(setId);
     }
 
     @Override
@@ -70,7 +70,7 @@ public class DefaultTermService implements TermService {
 
     @Override
     public void deleteTermsBySetId(int setId) {
-        this.termRepository.deleteTermsBySetId(setId);
+        this.termRepository.deleteBySetId(setId);
     }
 
 }

@@ -1,9 +1,9 @@
 package dev.braindeck.web.client;
 
-import dev.braindeck.web.controller.payload.RestNewSetOfTermsPayload;
-import dev.braindeck.web.controller.payload.RestUpdateSetOfTermsPayload;
+import dev.braindeck.web.controller.payload.RestNewSetPayload;
+import dev.braindeck.web.controller.payload.RestUpdateSetPayload;
 import dev.braindeck.web.entity.NewTerm;
-import dev.braindeck.web.entity.SetOfTerms;
+import dev.braindeck.web.entity.Set;
 import dev.braindeck.web.entity.Term;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.ParameterizedTypeReference;
@@ -22,29 +22,29 @@ public class RestClientSetsRestClientImpl implements SetsRestClient {
 
     private final RestClient restClient;
 
-    private static final ParameterizedTypeReference<List<SetOfTerms>> SET_OF_TERMS_TYPE_REFERENCE =
+    private static final ParameterizedTypeReference<List<Set>> SETS_TYPE_REFERENCE =
             new ParameterizedTypeReference<>() {
             };
 
     @Override
-    public List<SetOfTerms> findAllSets() {
+    public List<Set> findAllSets() {
         return this.restClient
                 .get()
-                .uri("/api/sets")
+                .uri("/api/user/1/sets")
                 .retrieve()
-                .body(SET_OF_TERMS_TYPE_REFERENCE);
+                .body(SETS_TYPE_REFERENCE);
     }
 
     @Override
-    public SetOfTerms createSet(String title, String description, Integer termLanguageId, Integer descriptionLanguageId, List<NewTerm> terms) {
+    public Set createSet(String title, String description, Integer termLanguageId, Integer descriptionLanguageId, List<NewTerm> terms) {
         try {
             return this.restClient
                     .post()
-                    .uri("/api/sets/create")
+                    .uri("/api/user/1/sets/create")
                     .contentType(MediaType.APPLICATION_JSON)
-                    .body(new RestNewSetOfTermsPayload( title,  description,  termLanguageId,  descriptionLanguageId, terms))
+                    .body(new RestNewSetPayload( title,  description,  termLanguageId,  descriptionLanguageId, terms))
                     .retrieve()
-                    .body(SetOfTerms.class);
+                    .body(Set.class);
         } catch (HttpClientErrorException.BadRequest e) {
             ProblemDetail problemDetail =  e.getResponseBodyAs(ProblemDetail.class);
             if(problemDetail != null) {
@@ -55,12 +55,12 @@ public class RestClientSetsRestClientImpl implements SetsRestClient {
     }
 
     @Override
-    public Optional<SetOfTerms> findSetById(int setId) {
+    public Optional<Set> findSetById(int setId) {
         try {
             return Optional.ofNullable(this.restClient.get()
                     .uri("/api/set/{setId}", setId)
                     .retrieve()
-                    .body(SetOfTerms.class));
+                    .body(Set.class));
         } catch (HttpClientErrorException.NotFound exception) {
             ProblemDetail problemDetail =  exception.getResponseBodyAs(ProblemDetail.class);
             if(problemDetail != null) {
@@ -79,7 +79,7 @@ public class RestClientSetsRestClientImpl implements SetsRestClient {
                     .patch()
                     .uri("/api/set/{setId}/edit", setId)
                     .contentType(MediaType.APPLICATION_JSON)
-                    .body(new RestUpdateSetOfTermsPayload( setId, title,  description,  termLanguageId,  descriptionLanguageId, terms))
+                    .body(new RestUpdateSetPayload( setId, title,  description,  termLanguageId,  descriptionLanguageId, terms))
                     .retrieve()
                     .toBodilessEntity();
         } catch (HttpClientErrorException.BadRequest e) {

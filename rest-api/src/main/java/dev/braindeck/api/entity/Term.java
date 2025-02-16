@@ -18,8 +18,9 @@ public class Term {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    @NotNull
-    private Integer setId;
+    @ManyToOne
+    @JoinColumn(name="set_id", updatable = false, nullable = false)
+    private Set set;
 
     @NotNull
     @Size(min = 1, max = 950)
@@ -28,8 +29,6 @@ public class Term {
     @Size(min = 1, max = 950)
     private String description;
 
-    @NotNull
-    private Integer userId;
 
 
 

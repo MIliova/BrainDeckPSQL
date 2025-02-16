@@ -1,13 +1,11 @@
 package dev.braindeck.api.repository;
 
-import org.springframework.stereotype.Repository;
 
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
-@Repository
-public class InMemoryLanguagesRepository implements LanguagesRepository {
+public class InMemoryLanguagesRepository {
 
     private final Map<Integer,String> allLanguages = Collections.synchronizedMap(new HashMap<>());
     private final Map<Integer,String> myLanguages = Collections.synchronizedMap(new HashMap<>());
@@ -189,27 +187,22 @@ public class InMemoryLanguagesRepository implements LanguagesRepository {
         restLanguages.forEach((key, value) -> allLanguages.put(key, value));
     }
 
-    @Override
-    public Map<Integer,String> getAll() {
+    public Map<Integer,String> findAll() {
         return Collections.unmodifiableMap(allLanguages);
     }
 
-    @Override
     public Map<Integer,String> getMy() {
         return Collections.unmodifiableMap(myLanguages);
     }
 
-    @Override
     public Map<Integer,String> getTop() {
         return Collections.unmodifiableMap(topLanguages);
     }
 
-    @Override
     public Map<Integer,String> getRest() {
         return Collections.unmodifiableMap(restLanguages);
     }
 
-    @Override
     public String getById (int id) {
         return allLanguages.get(id);
     }
