@@ -1,5 +1,6 @@
 package dev.braindeck.api.controller;
 
+import jakarta.persistence.EntityNotFoundException;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.MessageSource;
@@ -90,6 +91,8 @@ public class BadRequestControllerAdvice {
                 new Object[0], e.getMessage(), locale));
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(problemDetail);
     }
+
+
 
 //    @ExceptionHandler(JsonParseException.class)
 //    public ResponseEntity<ProblemDetail> handleJsonParseException( JsonParseException exception, Locale locale) {

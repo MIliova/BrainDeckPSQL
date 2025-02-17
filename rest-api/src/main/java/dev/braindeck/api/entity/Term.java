@@ -11,7 +11,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity
-@Table(schema="braindeck.t_terms")
+@Table(schema="braindeck", name="t_terms")
 public class Term {
 
     @Id
@@ -28,8 +28,5 @@ public class Term {
 
     @Size(min = 1, max = 950)
     private String description;
-
-
-
 
 }

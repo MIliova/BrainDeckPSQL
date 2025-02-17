@@ -9,5 +9,4 @@ public interface SetRepository extends JpaRepository<Set, Integer> {
 
     List<Set> findAllByUserId(Integer userId);
 
-    List<Set> findAllByFolderId(Integer folderId);
 }

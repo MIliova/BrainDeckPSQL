@@ -7,7 +7,7 @@ import lombok.Data;
 
 @Data
 @Entity
-@Table(schema="braindeck.t_languages")
+@Table(schema="braindeck", name="t_languages")
 public class Language {
 
     @Id

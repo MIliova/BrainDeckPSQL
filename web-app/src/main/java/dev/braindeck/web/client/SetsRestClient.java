@@ -8,7 +8,8 @@ import java.util.List;
 import java.util.Optional;
 
 public interface SetsRestClient {
-    List<Set> findAllSets();
+
+    List<Set> findAllSets(int userId);
 
     Set createSet(String title, String description, Integer termLanguageId, Integer descriptionLanguageId, List<NewTerm> terms);
 

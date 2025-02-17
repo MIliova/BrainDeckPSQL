@@ -15,10 +15,7 @@ import org.springframework.boot.json.JsonParseException;
 import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
 import java.util.List;
@@ -32,6 +29,7 @@ public class SetsController {
     private final LanguagesRestClient languagesRestClient;
     private final MyLocale myLocale;
 
+
     @ModelAttribute("curLang")
     public String getCurLang() {
         return LocaleContextHolder.getLocale().getLanguage();
@@ -42,11 +40,15 @@ public class SetsController {
         return this.myLocale.getAvailables();
     }
 
-    @GetMapping("/user/sets")
-    public String getSetsList(Model model) {
+    @GetMapping("/user/{userId:\\d+}/sets")
+    public String getSetsList(@PathVariable("userId") int userId, Model model) {
 //        model.addAttribute("curLang", LocaleContextHolder.getLocale().getLanguage());
 //        model.addAttribute("avLangs", this.myLocale.getAvailables());
-        model.addAttribute("sets", this.setsRestClient.findAllSets());
+
+
+        List<Set> sets = this.setsRestClient.findAllSets(userId);
+        System.out.println(sets);
+        model.addAttribute("sets", sets);
         return "sets";
     }
 

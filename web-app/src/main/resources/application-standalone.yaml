@@ -1,4 +1,4 @@
-spring.application.name=BrainDeck
+spring.application.name=BrainDeckPSQL
 spring.messages.basename=messages
 spring.messages.encoding=UTF-8
 spring.web.locale=ru

@@ -27,10 +27,10 @@ public class RestClientSetsRestClientImpl implements SetsRestClient {
             };
 
     @Override
-    public List<Set> findAllSets() {
+    public List<Set> findAllSets(int userId) {
         return this.restClient
                 .get()
-                .uri("/api/user/1/sets")
+                .uri("/api/user/{userId}/sets", userId)
                 .retrieve()
                 .body(SETS_TYPE_REFERENCE);
     }
@@ -40,7 +40,7 @@ public class RestClientSetsRestClientImpl implements SetsRestClient {
         try {
             return this.restClient
                     .post()
-                    .uri("/api/user/1/sets/create")
+                    .uri("/api/create")
                     .contentType(MediaType.APPLICATION_JSON)
                     .body(new RestNewSetPayload( title,  description,  termLanguageId,  descriptionLanguageId, terms))
                     .retrieve()

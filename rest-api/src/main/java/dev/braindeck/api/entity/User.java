@@ -14,7 +14,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-@Table(schema="braindeck.t_users")
+@Table(schema="braindeck", name="t_users")
 public class User {
 
     @Id

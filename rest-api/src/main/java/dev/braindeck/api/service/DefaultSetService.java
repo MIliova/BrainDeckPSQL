@@ -3,6 +3,7 @@ package dev.braindeck.api.service;
 import dev.braindeck.api.entity.NewTerm;
 import dev.braindeck.api.entity.Set;
 import dev.braindeck.api.entity.Term;
+import dev.braindeck.api.entity.User;
 import dev.braindeck.api.repository.SetRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -24,17 +25,13 @@ public class DefaultSetService implements SetService {
 
     }
 
-    @Override
-    public List<Set> findAllByFolderId(int folderId) {
-        return this.setRepository.findAllByFolderId(folderId);
 
-    }
 
     @Override
-    public Set createSet(String title, String description, Integer termLanguageId, Integer descriptionLanguageId, Integer userId, List<NewTerm> jsonTerms) {
-        Set set =  this.setRepository.save(new Set(null, title, description, termLanguageId, descriptionLanguageId, null, null, 1 ));
+    public Set createSet(String title, String description, int termLanguageId, int descriptionLanguageId, User user, List<NewTerm> listTerms) {
+        Set set =  this.setRepository.save(new Set(null, title, description, termLanguageId, descriptionLanguageId, user, null));
 
-        this.termService.createTerms(set.getId(), jsonTerms);
+        this.termService.createTerms(set, listTerms);
         List<Term> terms = this.termService.findTermsBySetId(set.getId());
         set.setTerms(terms);
         return set;
@@ -51,7 +48,7 @@ public class DefaultSetService implements SetService {
     }
 
     @Override
-    public void updateSet(int setId, String title, String description, Integer termLanguageId, Integer descriptionLanguageId, List<Term> terms) {
+    public void updateSet(int setId, String title, String description, int termLanguageId, int descriptionLanguageId, User user, List<Term> terms) {
         this.setRepository.findById(setId)
                 .ifPresentOrElse(set -> {
                     set.setTitle(title);

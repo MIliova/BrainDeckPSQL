@@ -2,8 +2,10 @@ package dev.braindeck.api.controller;
 
 import dev.braindeck.api.controller.payload.UpdateSetPayload;
 import dev.braindeck.api.entity.Set;
+import dev.braindeck.api.entity.User;
 import dev.braindeck.api.service.SetService;
 import dev.braindeck.api.service.TermService;
+import dev.braindeck.api.service.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.MessageSource;
@@ -18,9 +20,9 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("api/set/{setId:\\d+}")
 public class SetRestController {
 
+    private final UserService userService;
     private final SetService setService;
     private final TermService termService;
-
     private final MessageSource messageSource;
 
 
@@ -46,7 +48,8 @@ public class SetRestController {
                 throw new BindException(bindingResult);
             }
         } else {
-            this.setService.updateSet(setId, payload.title(), payload.description(), payload.termLanguageId(), payload.descriptionLanguageId(), payload.terms());
+            User user = userService.findById(1);
+            this.setService.updateSet(setId, payload.title(), payload.description(), payload.termLanguageId(), payload.descriptionLanguageId(), user, payload.terms());
             return ResponseEntity.noContent().build();
         }
     }

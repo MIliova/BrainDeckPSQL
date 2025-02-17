@@ -13,7 +13,7 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity
-@Table(schema="braindeck.t_sets")
+@Table(schema="braindeck", name="t_sets")
 public class Set {
 
     @Id
@@ -34,11 +34,13 @@ public class Set {
     @NotNull
     private Integer descriptionLanguageId;
 
-    @OneToMany(mappedBy = "term", cascade = CascadeType.REMOVE, fetch = FetchType.LAZY)
-    private List<Term> terms;
-
     @ManyToOne
     @JoinColumn(name="user_id", updatable = false, nullable = false)
     private User user;
+
+    @OneToMany(mappedBy = "term", cascade = CascadeType.REMOVE, fetch = FetchType.LAZY)
+    private List<Term> terms;
+
+
 
 }

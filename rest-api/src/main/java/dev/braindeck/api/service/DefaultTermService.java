@@ -2,6 +2,7 @@ package dev.braindeck.api.service;
 
 
 import dev.braindeck.api.entity.NewTerm;
+import dev.braindeck.api.entity.Set;
 import dev.braindeck.api.entity.Term;
 import dev.braindeck.api.repository.TermRepository;
 import lombok.RequiredArgsConstructor;
@@ -24,19 +25,10 @@ public class DefaultTermService implements TermService {
     }
 
     @Override
-    public void createTerms(int setId, List<NewTerm> terms) {
-        //ObjectMapper objectMapper = new ObjectMapper();
-        //try {
-            //List<Map<String, String>> terms = objectMapper.readValue(jsonTerms, new TypeReference<List<Map<String, String>>>(){});
-            //for (Map<String, String> term : terms) {
-                //this.termRepository.save(new Term(null, setId, term.get("term"), term.get("description")));
+    public void createTerms(Set set, List<NewTerm> terms) {
             for (NewTerm term : terms) {
-                    this.termRepository.save(new Term(null, setId, term.getTerm(), term.getDescription()));
+                    this.termRepository.save(new Term(null, set, term.getTerm(), term.getDescription()));
             }
-
-        //} catch (IOException e) {
-        //    e.printStackTrace();
-       // }
     }
 
 
@@ -73,5 +65,9 @@ public class DefaultTermService implements TermService {
         this.termRepository.deleteBySetId(setId);
     }
 
+    @Override
+    public void deleteTermById(int id) {
+        this.termRepository.deleteById(id);
+    }
 }
 
