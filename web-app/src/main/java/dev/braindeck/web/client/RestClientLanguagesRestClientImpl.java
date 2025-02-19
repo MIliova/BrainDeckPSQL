@@ -16,7 +16,7 @@ public class RestClientLanguagesRestClientImpl implements LanguagesRestClient {
             };
 
     @Override
-    public  Map<String, Map<Integer, String>>  getAll(){
+    public  Map<String, Map<Integer, String>>  findAllByTypes(){
         return this.restClient
                 .get()
                 .uri("/api/languages")

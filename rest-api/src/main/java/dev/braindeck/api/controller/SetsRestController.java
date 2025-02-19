@@ -1,8 +1,10 @@
 package dev.braindeck.api.controller;
 
 import dev.braindeck.api.controller.payload.NewSetPayload;
-import dev.braindeck.api.entity.Set;
+import dev.braindeck.api.entity.SetDto;
 import dev.braindeck.api.entity.User;
+import dev.braindeck.api.entity.UserDto;
+import dev.braindeck.api.service.Mapper;
 import dev.braindeck.api.service.SetService;
 import dev.braindeck.api.service.UserService;
 import jakarta.validation.Valid;
@@ -24,8 +26,13 @@ public class SetsRestController {
     private final UserService userService;
     private final SetService setService;
 
+    @GetMapping("/current-user")
+    public UserDto currentUser() {
+        return userService.findCurrentUser();
+    }
+
     @GetMapping("/user/{userId:\\d+}/sets")
-    public List<Set> findSets(@PathVariable("userId") int userId) {
+    public List<SetDto> findSets(@PathVariable("userId") int userId) {
         System.out.println("2="+userId);
         return this.setService.findAllByUserId(userId);
     }
@@ -43,9 +50,9 @@ public class SetsRestController {
             }
         } else {
             User user = userService.findById(1);
-            Set set = this.setService.createSet(payload.title(), payload.description(), payload.termLanguageId(), payload.descriptionLanguageId(), user, payload.terms());
+            SetDto set = this.setService.createSet(payload.title(), payload.description(), payload.termLanguageId(), payload.descriptionLanguageId(), user, payload.terms());
             return ResponseEntity.created(uriBuilder
-                    .replacePath("/api/sets/{setId}").build(Map.of("setId", set.getId())))
+                    .replacePath("/api/sets/{setId}").build(Map.of("setId", set.id())))
                     .body(set);
         }
     }

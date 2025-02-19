@@ -35,8 +35,15 @@ public class SetController {
     private final MessageSource messageSource;
     private final MyLocale myLocale;
 
+    @ModelAttribute("user")
+    public UserDto findCurrentUser() {
+        UserDto userDto=this.setsRestClient.findCurrentUser();
+        System.out.println(userDto);
+        return userDto;
+    }
+
     @ModelAttribute("set")
-    public Set getSet(@PathVariable("setId") int setId) {
+    public SetDto getSet(@PathVariable("setId") int setId) {
         return this.setsRestClient.findSetById(setId).orElse(null);
     }
 
@@ -54,15 +61,16 @@ public class SetController {
     public String findSet(@PathVariable("setId") int setId, Model model) {
 //        model.addAttribute("curLang", LocaleContextHolder.getLocale().getLanguage());
 //        model.addAttribute("avLangs", this.myLocale.getAvailables());
+
         return "set";
     }
 
     @GetMapping("/edit")
-    public String getEditSetPage(@PathVariable("setId") int setId, @ModelAttribute("set") Set set, Model model) {
+    public String getEditSetPage(@PathVariable("setId") int setId, @ModelAttribute("set") SetDto set, Model model) {
 //        model.addAttribute("curLang", LocaleContextHolder.getLocale().getLanguage());
 //        model.addAttribute("avLangs", this.myLocale.getAvailables());
 
-        Map<String, Map<Integer, String>> languagesList = languagesRestClient.getAll();
+        Map<String, Map<Integer, String>> languagesList = languagesRestClient.findAllByTypes();
         ControllersUtil.getLanguages(languagesList, model, set.termLanguageId(), set.descriptionLanguageId());
 
         return "edit-set";
@@ -100,7 +108,7 @@ public class SetController {
                 model.addAttribute("terms", terms);
             }
 
-            Map<String, Map<Integer, String>> languagesList = languagesRestClient.getAll();
+            Map<String, Map<Integer, String>> languagesList = languagesRestClient.findAllByTypes();
             ControllersUtil.getLanguages(languagesList, model, payload.termLanguageId(),payload.descriptionLanguageId());
 
             return "edit-set";

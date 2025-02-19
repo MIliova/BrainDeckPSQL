@@ -1,12 +1,17 @@
 package dev.braindeck.api.service;
 
 
-import dev.braindeck.api.entity.NewTerm;
-import dev.braindeck.api.entity.Set;
-import dev.braindeck.api.entity.Term;
+import dev.braindeck.api.controller.payload.NewTermPayload;
+import dev.braindeck.api.controller.payload.UpdateTermPayload;
+import dev.braindeck.api.entity.SetEntity;
+import dev.braindeck.api.entity.TermDto;
+import dev.braindeck.api.entity.TermEntity;
+import dev.braindeck.api.repository.SetRepository;
 import dev.braindeck.api.repository.TermRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import dev.braindeck.api.service.Mapper;
+
 
 import java.util.List;
 import java.util.NoSuchElementException;
@@ -19,30 +24,29 @@ public class DefaultTermService implements TermService {
     private final TermRepository termRepository;
 
     @Override
-    public List<Term> findTermsBySetId(int setId) {
-
-        return  this.termRepository.findAllBySetId(setId);
+    public List<TermDto> findTermsBySetId(int setId) {
+        return Mapper.termsToDto(this.termRepository.findAllBySetId(setId));
     }
 
     @Override
-    public void createTerms(Set set, List<NewTerm> terms) {
-            for (NewTerm term : terms) {
-                    this.termRepository.save(new Term(null, set, term.getTerm(), term.getDescription()));
+    public void createTerms(SetEntity set, List<NewTermPayload> terms) {
+            for (NewTermPayload term : terms) {
+                    this.termRepository.save(new TermEntity(null, term.getTerm(), term.getDescription(), set));
             }
     }
 
 
 
     @Override
-    public void updateTerms(List<Term> terms) {
+    public void updateTerms(List<UpdateTermPayload> terms) {
         //ObjectMapper objectMapper = new ObjectMapper();
         //try {
             //List<Map<String, String>> terms = objectMapper.readValue(jsonTerms, new TypeReference<List<Map<String, String>>>() {});
             //for (Map<String, String> term : terms) {
             //this.updateTerm(Integer.parseInt(term.get("id")), term.get("term"), term.get("description"));
         System.out.println(terms);
-            for (Term term: terms) {
-                this.updateTerm(term.getId(), term.getTerm(), term.getDescription());
+            for (UpdateTermPayload term: terms) {
+                this.updateTerm(term.id(), term.term(), term.description());
             }
         //} catch (IOException e) {
         //    e.printStackTrace();
@@ -54,6 +58,7 @@ public class DefaultTermService implements TermService {
                 .ifPresentOrElse(t -> {
                     t.setTerm(term);
                     t.setDescription(description);
+                    this.termRepository.save(t);
                 }, () -> {
                     throw new NoSuchElementException("errors.term.not_found");
                 });

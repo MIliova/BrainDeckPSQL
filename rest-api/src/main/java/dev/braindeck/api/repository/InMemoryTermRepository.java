@@ -1,16 +1,13 @@
 package dev.braindeck.api.repository;
 
-import dev.braindeck.api.entity.Term;
+import dev.braindeck.api.entity.TermEntity;
 
 import java.util.*;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 
 public class InMemoryTermRepository {
 
-    private final List<Term> terms = Collections.synchronizedList( new LinkedList<>());
+    private final List<TermEntity> terms = Collections.synchronizedList( new LinkedList<>());
 
 //    public InMemoryTermRepository() {
 //        AtomicInteger maxTerm = new AtomicInteger();

@@ -1,19 +1,22 @@
 package dev.braindeck.web.client;
 
-import dev.braindeck.web.entity.NewTerm;
-import dev.braindeck.web.entity.Set;
+import dev.braindeck.web.controller.payload.NewTermPayload;
+import dev.braindeck.web.entity.SetDto;
 import dev.braindeck.web.entity.Term;
+import dev.braindeck.web.entity.UserDto;
 
 import java.util.List;
 import java.util.Optional;
 
 public interface SetsRestClient {
 
-    List<Set> findAllSets(int userId);
+    UserDto findCurrentUser();
 
-    Set createSet(String title, String description, Integer termLanguageId, Integer descriptionLanguageId, List<NewTerm> terms);
+    List<SetDto> findAllSets(int userId);
 
-    Optional<Set> findSetById(int setId);
+    SetDto createSet(String title, String description, Integer termLanguageId, Integer descriptionLanguageId, List<NewTermPayload> terms);
+
+    Optional<SetDto> findSetById(int setId);
 
     void updateSet(int setId, String title, String description, Integer termLanguageId, Integer descriptionLanguageId, List<Term> terms);
 

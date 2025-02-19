@@ -7,7 +7,7 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class SetExtra {
+public class SetExtraDto {
     private String termLangName;
     private String descriptionLangName;
 }

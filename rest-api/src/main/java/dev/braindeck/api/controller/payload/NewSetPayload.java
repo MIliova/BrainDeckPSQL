@@ -1,6 +1,6 @@
 package dev.braindeck.api.controller.payload;
 
-import dev.braindeck.api.entity.NewTerm;
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
@@ -25,6 +25,7 @@ public record NewSetPayload(
         Integer descriptionLanguageId,
 
         @NotEmpty(message = "{error.set.terms.not.blank}")
-        List<NewTerm> terms
+        @Valid
+        List<NewTermPayload> terms
 ) {
 }

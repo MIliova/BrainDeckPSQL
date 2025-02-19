@@ -98,7 +98,7 @@ hr {
     left:0;
     position:absolute;
 //width: 250px;
-    max-height: 150px; /* Максимальная высота контейнера */
+    max-height: 200px; /* Максимальная высота контейнера */
     overflow-y: auto; /* Вертикальная прокрутка, если контент превышает высоту */
     width: fit-content;
 
@@ -106,6 +106,8 @@ hr {
     background-color: #072748;
     font-size: 90%;
     font-weight: bold;
+
+    border: 1px solid #244f73
 }
 .language-menu-outer h6 {
     text-transform: uppercase;

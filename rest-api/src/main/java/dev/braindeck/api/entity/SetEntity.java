@@ -7,6 +7,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Data
@@ -14,7 +15,7 @@ import java.util.List;
 @NoArgsConstructor
 @Entity
 @Table(schema="braindeck", name="t_sets")
-public class Set {
+public class SetEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -39,8 +40,5 @@ public class Set {
     private User user;
 
     @OneToMany(mappedBy = "term", cascade = CascadeType.REMOVE, fetch = FetchType.LAZY)
-    private List<Term> terms;
-
-
-
+    private List<TermEntity> terms = new ArrayList<>();
 }

@@ -29,6 +29,6 @@ public class Folder {
     @JoinTable(name = "t_folder_set",
             joinColumns = @JoinColumn(name = "folder_id"),
             inverseJoinColumns = @JoinColumn(name = "set_id"))
-    private List<Set> sets = new ArrayList<>();
+    private List<SetEntity> sets = new ArrayList<>();
 
 }

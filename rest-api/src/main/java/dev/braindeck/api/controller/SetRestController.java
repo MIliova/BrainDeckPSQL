@@ -1,7 +1,8 @@
 package dev.braindeck.api.controller;
 
 import dev.braindeck.api.controller.payload.UpdateSetPayload;
-import dev.braindeck.api.entity.Set;
+import dev.braindeck.api.entity.SetDto;
+import dev.braindeck.api.entity.SetEntity;
 import dev.braindeck.api.entity.User;
 import dev.braindeck.api.service.SetService;
 import dev.braindeck.api.service.TermService;
@@ -25,14 +26,13 @@ public class SetRestController {
     private final TermService termService;
     private final MessageSource messageSource;
 
-
     @ModelAttribute("set")
-    public Set getSet(@PathVariable("setId") int setId) {
+    public SetDto getSet(@PathVariable("setId") int setId) {
         return this.setService.findSetById(setId);
     }
 
     @GetMapping
-    public Set findSet(@ModelAttribute("set") Set set) {
+    public SetDto findSet(@ModelAttribute("set") SetDto set) {
         return set;
     }
 

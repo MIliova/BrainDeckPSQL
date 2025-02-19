@@ -1,7 +1,5 @@
 package dev.braindeck.web.controller.payload;
 
-import dev.braindeck.web.entity.NewTerm;
-
 import java.util.List;
 
 public record RestNewSetPayload(
@@ -14,7 +12,7 @@ public record RestNewSetPayload(
 
         Integer descriptionLanguageId,
 
-        List<NewTerm> terms
+        List<NewTermPayload> terms
 
 
 ) {

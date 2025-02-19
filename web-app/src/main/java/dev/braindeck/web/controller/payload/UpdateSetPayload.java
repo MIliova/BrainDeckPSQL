@@ -9,9 +9,9 @@ public record UpdateSetPayload(
 
         Integer termLanguageId,
 
-        Integer descriptionLanguageId,
+        Integer descriptionLanguageId
 
-        Integer userId
+
 
 ) {
 }

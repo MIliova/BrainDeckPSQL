@@ -7,8 +7,9 @@ import dev.braindeck.web.client.LanguagesRestClient;
 import dev.braindeck.web.client.SetsRestClient;
 import dev.braindeck.web.controller.payload.NewSetPayload;
 import dev.braindeck.web.entity.MyLocale;
-import dev.braindeck.web.entity.NewTerm;
-import dev.braindeck.web.entity.Set;
+import dev.braindeck.web.controller.payload.NewTermPayload;
+import dev.braindeck.web.entity.SetDto;
+import dev.braindeck.web.entity.UserDto;
 import dev.braindeck.web.utills.Util;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.json.JsonParseException;
@@ -30,6 +31,11 @@ public class SetsController {
     private final MyLocale myLocale;
 
 
+    @ModelAttribute("user")
+    public UserDto findCurrentUser() {
+        return this.setsRestClient.findCurrentUser();
+    }
+
     @ModelAttribute("curLang")
     public String getCurLang() {
         return LocaleContextHolder.getLocale().getLanguage();
@@ -46,7 +52,7 @@ public class SetsController {
 //        model.addAttribute("avLangs", this.myLocale.getAvailables());
 
 
-        List<Set> sets = this.setsRestClient.findAllSets(userId);
+        List<SetDto> sets = this.setsRestClient.findAllSets(userId);
         System.out.println(sets);
         model.addAttribute("sets", sets);
         return "sets";
@@ -57,7 +63,8 @@ public class SetsController {
 //        model.addAttribute("curLang", LocaleContextHolder.getLocale().getLanguage());
 //        model.addAttribute("avLangs", this.myLocale.getAvailables());
 
-        Map<String, Map<Integer, String>> languagesList = languagesRestClient.getAll();
+        Map<String, Map<Integer, String>> languagesList = languagesRestClient.findAllByTypes();
+        System.out.println("getNewSetPage languagesRestClient.findAllByTypes");
 
         ControllersUtil.getLanguages(languagesList, model);
 
@@ -71,16 +78,16 @@ public class SetsController {
         System.out.println(payload);
         System.out.println(payloadTerms);
         ObjectMapper objectMapper = new ObjectMapper();
-        List<NewTerm> terms = null;
+        List<NewTermPayload> terms = null;
         try {
-            terms = objectMapper.readValue(payloadTerms, new TypeReference<List<NewTerm>>(){});
+            terms = objectMapper.readValue(payloadTerms, new TypeReference<List<NewTermPayload>>(){});
         } catch (IOException e) {
             throw new JsonParseException();
         }
         System.out.println(terms);
 
         try {
-            Set set = this.setsRestClient.createSet(
+            SetDto set = this.setsRestClient.createSet(
                     payload.title(), payload.description(), payload.termLanguageId(),payload.descriptionLanguageId(),
                     terms);
             return "redirect:/set/" + set.id();
@@ -96,7 +103,7 @@ public class SetsController {
 //            model.addAttribute("curLang", LocaleContextHolder.getLocale().getLanguage());
 //            model.addAttribute("avLangs", this.myLocale.getAvailables());
 
-            Map<String, Map<Integer, String>> languagesList = languagesRestClient.getAll();
+            Map<String, Map<Integer, String>> languagesList = languagesRestClient.findAllByTypes();
             ControllersUtil.getLanguages(languagesList, model);
 
             return "new-set";

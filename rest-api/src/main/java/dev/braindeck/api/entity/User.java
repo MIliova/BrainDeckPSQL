@@ -34,7 +34,7 @@ public class User {
     String password;
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.REMOVE, fetch = FetchType.LAZY)
-    List<Set> sets = new ArrayList<>();
+    List<SetEntity> sets = new ArrayList<>();
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.REMOVE, fetch = FetchType.LAZY)
     List<Folder> Folder = new ArrayList<>();

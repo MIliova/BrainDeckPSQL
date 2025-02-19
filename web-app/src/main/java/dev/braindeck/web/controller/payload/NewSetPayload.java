@@ -8,8 +8,7 @@ public record NewSetPayload(
 
         Integer termLanguageId,
 
-        Integer descriptionLanguageId,
+        Integer descriptionLanguageId
 
-        Integer userId
 ) {
 }

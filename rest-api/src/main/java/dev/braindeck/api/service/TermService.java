@@ -1,17 +1,19 @@
 package dev.braindeck.api.service;
 
-import dev.braindeck.api.entity.NewTerm;
-import dev.braindeck.api.entity.Set;
-import dev.braindeck.api.entity.Term;
+import dev.braindeck.api.controller.payload.NewTermPayload;
+import dev.braindeck.api.controller.payload.UpdateTermPayload;
+import dev.braindeck.api.entity.SetEntity;
+import dev.braindeck.api.entity.TermDto;
+import dev.braindeck.api.entity.TermEntity;
 
 import java.util.List;
 
 public interface TermService {
-    List<Term> findTermsBySetId(int setId);
+    List<TermDto> findTermsBySetId(int setId);
 
-    void createTerms(Set set, List<NewTerm> jsonTerms);
+    void createTerms(SetEntity set, List<NewTermPayload> jsonTerms);
 
-    void updateTerms(List<Term> jsonTerms);
+    void updateTerms(List<UpdateTermPayload> jsonTerms);
     void updateTerm(Integer id, String term, String description);
 
     void deleteTermById(int id);

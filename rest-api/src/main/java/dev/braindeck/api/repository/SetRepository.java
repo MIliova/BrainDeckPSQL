@@ -1,12 +1,12 @@
 package dev.braindeck.api.repository;
 
-import dev.braindeck.api.entity.Set;
+import dev.braindeck.api.entity.SetEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
 
-public interface SetRepository extends JpaRepository<Set, Integer> {
+public interface SetRepository extends JpaRepository<SetEntity, Integer> {
 
-    List<Set> findAllByUserId(Integer userId);
+    List<SetEntity> findAllByUserId(Integer userId);
 
 }

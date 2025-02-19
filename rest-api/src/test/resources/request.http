@@ -5,7 +5,7 @@ GET http://localhost:8081/api/sets
 ###
 
 
-POST http://localhost:8081/api/sets/create
+POST http://localhost:8081/api/create-set
 Content-Type: application/json
 
 {
@@ -22,6 +22,8 @@ Content-Type: application/json
 
 ###
 GET http://localhost:8081/api/set/10
+###
+GET http://localhost:8081/api/current-user
 
 
 

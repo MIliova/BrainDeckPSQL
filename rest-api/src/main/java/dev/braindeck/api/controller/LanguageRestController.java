@@ -1,6 +1,6 @@
 package dev.braindeck.api.controller;
 
-import dev.braindeck.api.service.LanguagesService;
+import dev.braindeck.api.service.LanguageService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -13,16 +13,11 @@ import java.util.*;
 @RequestMapping
 public class LanguageRestController {
 
-    private final LanguagesService languagesService;
+    private final LanguageService languageService;
 
     @GetMapping("/api/languages")
-    public Map<String, Map<Integer, String>> getAll() {
-        return Map.of(
-                "all", this.languagesService.findAll(),
-                "my", this.languagesService.getMy(),
-                "top", this.languagesService.getTop(),
-                "rest", this.languagesService.getRest()
-        );
+    public Map<String, Map<Integer, String>> findAllByType() {
+        return this.languageService.findAllByType();
     }
 
 //    @GetMapping("/api/languages/{setId:\\d+}")

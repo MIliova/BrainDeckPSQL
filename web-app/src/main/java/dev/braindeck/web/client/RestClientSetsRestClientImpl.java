@@ -2,9 +2,10 @@ package dev.braindeck.web.client;
 
 import dev.braindeck.web.controller.payload.RestNewSetPayload;
 import dev.braindeck.web.controller.payload.RestUpdateSetPayload;
-import dev.braindeck.web.entity.NewTerm;
-import dev.braindeck.web.entity.Set;
+import dev.braindeck.web.controller.payload.NewTermPayload;
+import dev.braindeck.web.entity.SetDto;
 import dev.braindeck.web.entity.Term;
+import dev.braindeck.web.entity.UserDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.MediaType;
@@ -22,12 +23,21 @@ public class RestClientSetsRestClientImpl implements SetsRestClient {
 
     private final RestClient restClient;
 
-    private static final ParameterizedTypeReference<List<Set>> SETS_TYPE_REFERENCE =
+    private static final ParameterizedTypeReference<List<SetDto>> SETS_TYPE_REFERENCE =
             new ParameterizedTypeReference<>() {
             };
 
     @Override
-    public List<Set> findAllSets(int userId) {
+    public UserDto findCurrentUser(){
+        return this.restClient
+                .get()
+                .uri("/api/current-user")
+                .retrieve()
+                .body(UserDto.class);
+    }
+
+    @Override
+    public List<SetDto> findAllSets(int userId) {
         return this.restClient
                 .get()
                 .uri("/api/user/{userId}/sets", userId)
@@ -36,15 +46,15 @@ public class RestClientSetsRestClientImpl implements SetsRestClient {
     }
 
     @Override
-    public Set createSet(String title, String description, Integer termLanguageId, Integer descriptionLanguageId, List<NewTerm> terms) {
+    public SetDto createSet(String title, String description, Integer termLanguageId, Integer descriptionLanguageId, List<NewTermPayload> terms) {
         try {
             return this.restClient
                     .post()
-                    .uri("/api/create")
+                    .uri("/api/create-set")
                     .contentType(MediaType.APPLICATION_JSON)
                     .body(new RestNewSetPayload( title,  description,  termLanguageId,  descriptionLanguageId, terms))
                     .retrieve()
-                    .body(Set.class);
+                    .body(SetDto.class);
         } catch (HttpClientErrorException.BadRequest e) {
             ProblemDetail problemDetail =  e.getResponseBodyAs(ProblemDetail.class);
             if(problemDetail != null) {
@@ -55,12 +65,12 @@ public class RestClientSetsRestClientImpl implements SetsRestClient {
     }
 
     @Override
-    public Optional<Set> findSetById(int setId) {
+    public Optional<SetDto> findSetById(int setId) {
         try {
             return Optional.ofNullable(this.restClient.get()
                     .uri("/api/set/{setId}", setId)
                     .retrieve()
-                    .body(Set.class));
+                    .body(SetDto.class));
         } catch (HttpClientErrorException.NotFound exception) {
             ProblemDetail problemDetail =  exception.getResponseBodyAs(ProblemDetail.class);
             if(problemDetail != null) {

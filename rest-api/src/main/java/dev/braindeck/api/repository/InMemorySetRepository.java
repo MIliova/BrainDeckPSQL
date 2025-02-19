@@ -1,13 +1,12 @@
 package dev.braindeck.api.repository;
 
-import dev.braindeck.api.entity.Set;
+import dev.braindeck.api.entity.SetEntity;
 
 import java.util.*;
-import java.util.stream.IntStream;
 
 public class InMemorySetRepository {
 
-    private final List <Set> sets = Collections.synchronizedList(new LinkedList<>());
+    private final List <SetEntity> sets = Collections.synchronizedList(new LinkedList<>());
 
 //    public InMemorySetRepository() {
 //        IntStream.range(1, 10).forEach(i->{
