@@ -4,6 +4,7 @@ import dev.braindeck.web.controller.payload.RestNewSetPayload;
 import dev.braindeck.web.controller.payload.RestUpdateSetPayload;
 import dev.braindeck.web.controller.payload.NewTermPayload;
 import dev.braindeck.web.entity.SetDto;
+import dev.braindeck.web.entity.SetWithCountDto;
 import dev.braindeck.web.entity.Term;
 import dev.braindeck.web.entity.UserDto;
 import lombok.RequiredArgsConstructor;
@@ -23,7 +24,7 @@ public class RestClientSetsRestClientImpl implements SetsRestClient {
 
     private final RestClient restClient;
 
-    private static final ParameterizedTypeReference<List<SetDto>> SETS_TYPE_REFERENCE =
+    private static final ParameterizedTypeReference<List<SetWithCountDto>> SETS_TYPE_REFERENCE =
             new ParameterizedTypeReference<>() {
             };
 
@@ -37,7 +38,7 @@ public class RestClientSetsRestClientImpl implements SetsRestClient {
     }
 
     @Override
-    public List<SetDto> findAllSets(int userId) {
+    public List<SetWithCountDto> findAllSets(int userId) {
         return this.restClient
                 .get()
                 .uri("/api/user/{userId}/sets", userId)

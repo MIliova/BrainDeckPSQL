@@ -4,9 +4,10 @@ import dev.braindeck.api.controller.payload.NewTermPayload;
 import dev.braindeck.api.controller.payload.UpdateTermPayload;
 import dev.braindeck.api.entity.*;
 import dev.braindeck.api.repository.SetRepository;
+import dev.braindeck.api.repository.UserRepository;
+import jakarta.persistence.Tuple;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import dev.braindeck.api.service.Mapper;
 
 
 import java.util.List;
@@ -18,12 +19,13 @@ public class DefaultSetService implements SetService {
 
     private final SetRepository setRepository;
     private final TermService termService;
-
+    private final UserRepository userRepository;
 
     @Override
-    public List<SetDto> findAllByUserId(int userId) {
-        return Mapper.setsToDto(this.setRepository.findAllByUserId(userId));
-
+    public List<SetWithCountDto> findAllByUserId(int userId) {
+        User user = userRepository.findById(userId).orElseThrow(NoSuchElementException::new);
+        List<Tuple> sets = this.setRepository.findAllByUserIdWithTermCount(userId);
+        return Mapper.setsWithCountWithUserToDto(sets, user);
     }
 
 
@@ -41,7 +43,7 @@ public class DefaultSetService implements SetService {
 
     @Override
     public SetDto findSetById(int setId) {
-        SetEntity setEntity =  this.setRepository.findById(setId)
+        SetEntity setEntity =  this.setRepository.findByIdWithTerms(setId)
                 .orElseThrow(()-> new NoSuchElementException("errors.set.not_found"));
         List<TermDto> terms = this.termService.findTermsBySetId(setEntity.getId());
         return Mapper.setToDto(setEntity, terms);

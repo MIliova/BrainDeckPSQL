@@ -44,7 +44,9 @@ public class SetController {
 
     @ModelAttribute("set")
     public SetDto getSet(@PathVariable("setId") int setId) {
-        return this.setsRestClient.findSetById(setId).orElse(null);
+        SetDto setDto = this.setsRestClient.findSetById(setId).orElse(null);
+        System.out.println(setDto);
+        return setDto;
     }
 
     @ModelAttribute("curLang")

@@ -2,15 +2,12 @@ package dev.braindeck.api.service;
 
 import dev.braindeck.api.controller.payload.NewTermPayload;
 import dev.braindeck.api.controller.payload.UpdateTermPayload;
-import dev.braindeck.api.entity.SetDto;
-import dev.braindeck.api.entity.SetEntity;
-import dev.braindeck.api.entity.TermEntity;
-import dev.braindeck.api.entity.User;
+import dev.braindeck.api.entity.*;
 
 import java.util.List;
 
 public interface SetService {
-    List<SetDto> findAllByUserId(int userId);
+    List<SetWithCountDto> findAllByUserId(int userId);
 
 
 

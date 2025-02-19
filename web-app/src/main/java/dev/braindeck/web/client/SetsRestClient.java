@@ -2,6 +2,7 @@ package dev.braindeck.web.client;
 
 import dev.braindeck.web.controller.payload.NewTermPayload;
 import dev.braindeck.web.entity.SetDto;
+import dev.braindeck.web.entity.SetWithCountDto;
 import dev.braindeck.web.entity.Term;
 import dev.braindeck.web.entity.UserDto;
 
@@ -12,7 +13,7 @@ public interface SetsRestClient {
 
     UserDto findCurrentUser();
 
-    List<SetDto> findAllSets(int userId);
+    List<SetWithCountDto> findAllSets(int userId);
 
     SetDto createSet(String title, String description, Integer termLanguageId, Integer descriptionLanguageId, List<NewTermPayload> terms);
 

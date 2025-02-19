@@ -17,7 +17,7 @@ public record SetDto(
         String description,
         Integer termLanguageId,
         Integer descriptionLanguageId,
-        Integer userId,
+        UserDto user,
         List<TermDto> terms
 ) {
 }

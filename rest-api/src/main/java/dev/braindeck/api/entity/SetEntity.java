@@ -6,6 +6,7 @@ import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -39,6 +40,6 @@ public class SetEntity {
     @JoinColumn(name="user_id", updatable = false, nullable = false)
     private User user;
 
-    @OneToMany(mappedBy = "term", cascade = CascadeType.REMOVE, fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "set", cascade = CascadeType.REMOVE, fetch = FetchType.LAZY)
     private List<TermEntity> terms = new ArrayList<>();
 }

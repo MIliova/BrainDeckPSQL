@@ -9,6 +9,7 @@ import dev.braindeck.web.controller.payload.NewSetPayload;
 import dev.braindeck.web.entity.MyLocale;
 import dev.braindeck.web.controller.payload.NewTermPayload;
 import dev.braindeck.web.entity.SetDto;
+import dev.braindeck.web.entity.SetWithCountDto;
 import dev.braindeck.web.entity.UserDto;
 import dev.braindeck.web.utills.Util;
 import lombok.RequiredArgsConstructor;
@@ -52,7 +53,7 @@ public class SetsController {
 //        model.addAttribute("avLangs", this.myLocale.getAvailables());
 
 
-        List<SetDto> sets = this.setsRestClient.findAllSets(userId);
+        List<SetWithCountDto> sets = this.setsRestClient.findAllSets(userId);
         System.out.println(sets);
         model.addAttribute("sets", sets);
         return "sets";

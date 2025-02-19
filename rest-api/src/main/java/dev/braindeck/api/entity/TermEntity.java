@@ -1,11 +1,12 @@
 package dev.braindeck.api.entity;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
+import org.springframework.stereotype.Service;
 
-@Data
+@Getter
+@Setter
+@ToString(exclude = "set")
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity

@@ -2,6 +2,7 @@ package dev.braindeck.api.controller;
 
 import dev.braindeck.api.controller.payload.NewSetPayload;
 import dev.braindeck.api.entity.SetDto;
+import dev.braindeck.api.entity.SetWithCountDto;
 import dev.braindeck.api.entity.User;
 import dev.braindeck.api.entity.UserDto;
 import dev.braindeck.api.service.Mapper;
@@ -32,8 +33,7 @@ public class SetsRestController {
     }
 
     @GetMapping("/user/{userId:\\d+}/sets")
-    public List<SetDto> findSets(@PathVariable("userId") int userId) {
-        System.out.println("2="+userId);
+    public List<SetWithCountDto> findSets(@PathVariable("userId") int userId) {
         return this.setService.findAllByUserId(userId);
     }
 
