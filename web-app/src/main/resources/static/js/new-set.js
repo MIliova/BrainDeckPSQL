@@ -88,17 +88,32 @@ function insertParagraphAfterCurrent(el) {
 }
 
 const languageMenu = document.querySelector('.language-menu-outer');
+//const termsObj = [];
+const termsObjNew = [];
 function setLanguage(el, id) {
-    if (languageMenu.owner.dataset.language == 'term')
+    let termsObjNewType = 'description';
+    if (languageMenu.owner.dataset.language === 'term') {
+        termsObjNewType = 'term';
         document.getElementById('field-term-language').value = id;
-    else
+    } else {
         document.getElementById('field-description-language').value = id;
+    }
     languageMenu.owner.className="language-button";
     languageMenu.style.display = 'none';
     languageMenu.owner.innerText = el.innerText;
+    termsObjNew.forEach(obj => {
+        if (obj.type == termsObjNewType) {
+            const placeholder = obj.el.getAttribute('data-placeholder');
+            obj.el.setAttribute('data-placeholder', obj.el.getAttribute('data-base-placeholder') + ' ' + el.innerText);
+            if (obj.el.textContent.trim() === placeholder) {
+                obj.el.textContent = obj.el.getAttribute('data-placeholder');
+                obj.el.classList.add(obj.el.getAttribute('data-placeholder-class'));
+            }
+        }
+    })
 }
 
-const termsObj = [];
+
 document.addEventListener('DOMContentLoaded', function () {
     const nameInp = document.getElementById('field-title');
     nameInp.addEventListener('keyup', (event) => {
@@ -116,27 +131,21 @@ document.addEventListener('DOMContentLoaded', function () {
             descrInp.previousElementSibling.innerHTML="&nbsp;";
     });
 
-    const lbs = document.querySelectorAll('.language-button');
-    lbs.forEach(lb => {
-        lb.style.display = 'block';
-        //lb.nextElementSibling.style.display = 'none';
-        lb.addEventListener('click', (event) => {
-            languageMenu.owner = lb;
-            languageMenu.style.display = 'block';
-            const buttonRect = lb.getBoundingClientRect();
-            languageMenu.style.top = `${buttonRect.bottom + window.scrollY}px`;
-            languageMenu.style.left = `${buttonRect.left + window.scrollY}px`;
-        });
-    });
+
+
 
     let i = 0;
     let term = document.getElementById('term'+i);
     let descr = document.getElementById('description'+i);
     while (term  && descr) {
         let atrId = term.getAttribute("data-id");
-        termsObj.push({t:term, d:descr});
+        //termsObj.push({t:term, d:descr});
+        termsObjNew.push({el:term, type:'term'})
+        termsObjNew.push({el:descr, type:'description'})
         if (atrId) {
-            termsObj[termsObj.length-1].id = atrId;
+            //termsObj[termsObj.length-1].id = atrId;
+            termsObjNew[termsObjNew.length-2].id = atrId;
+            termsObjNew[termsObjNew.length-1].id = atrId;
         }
         i++;
         term.innerHTML = term.innerText.split('\n')
@@ -148,9 +157,12 @@ document.addEventListener('DOMContentLoaded', function () {
         term = document.getElementById('term'+i);
         descr = document.getElementById('description'+i);
     }
-console.log(termsObj);
-    const tis = document.querySelectorAll('.term-input');
-    tis.forEach(ti => {
+
+
+
+    //const tis = document.querySelectorAll('.term-input');
+    termsObjNew.forEach(to => {
+        const ti=to.el;
         ti.addEventListener('keydown', (event) => {
             if (event.key === 'Enter') {
                 event.preventDefault();
@@ -160,14 +172,11 @@ console.log(termsObj);
         });
         ti.addEventListener('input', (event) => {
             //obTextInP(ti);
-
             const content = ti.innerHTML;
             // Проверка, если последний элемент не <p>, то добавляем новый
             if (!content.endsWith('</p>')) {
-                console.log('endsWith');
                 insertParagraphAfterCurrent(ti);
             }
-            console.log('removeExtraBreaks');
             removeExtraBreaks(ti);
             // Проверка на удаление тега <p>
             const paragraphs = ti.querySelectorAll('p');
@@ -176,6 +185,46 @@ console.log(termsObj);
                 paragraphs[0].remove(); // Удаляем пустой абзац, если он один
             }
             autoResizeDiv(ti);
+        });
+
+        ti.addEventListener('focus', () => {
+            if (ti.textContent.trim() === ti.getAttribute('data-placeholder')) {
+                ti.textContent = '';
+                ti.classList.remove(ti.getAttribute('data-placeholder-class'));
+                ti.innerHTML='<p><br></p>';
+                const p = ti.querySelector('p');
+                const range=document.createRange();
+                const sel=window.getSelection();
+                range.setStart(p,0);
+                range.collapse(true);
+                sel.removeAllRanges();
+                sel.addRange(range);
+            }
+        });
+        ti.addEventListener('blur', () => {
+            if (ti.textContent.trim() === '') {
+                ti.textContent = ti.getAttribute('data-placeholder');
+                ti.classList.add(ti.getAttribute('data-placeholder-class'));
+            }
+        });
+        // Инициализация плейсхолдера при загрузке страницы
+        if (ti.textContent.trim() === '') {
+            ti.textContent = ti.getAttribute('data-placeholder');
+            ti.classList.add(ti.getAttribute('data-placeholder-class'));
+        }
+
+
+    });
+    const lbs = document.querySelectorAll('.language-button');
+    lbs.forEach(lb => {
+        lb.style.display = 'block';
+        //lb.nextElementSibling.style.display = 'none';
+        lb.addEventListener('click', (event) => {
+            languageMenu.owner = lb;
+            languageMenu.style.display = 'block';
+            const buttonRect = lb.getBoundingClientRect();
+            languageMenu.style.top = `${buttonRect.bottom + window.scrollY}px`;
+            languageMenu.style.left = `${buttonRect.left + window.scrollY}px`;
         });
     });
 });
@@ -223,14 +272,25 @@ function setFormValidate(){
         document.getElementById('language-button-description').className = "language-button";
     }
 
-    for (let i = 0; i < termsObj.length; i++) {
-        if (!termsObj[i].t.textContent.trim() && !termsObj[i].d.textContent.trim()) {
-            termsObj[i].t.parentElement.parentElement.parentElement.className = "blue-row-err";
+    // for (let i = 0; i < termsObj.length; i++) {
+    //     if (!termsObj[i].t.textContent.trim() && !termsObj[i].d.textContent.trim()) {
+    //         termsObj[i].t.parentElement.parentElement.parentElement.className = "blue-row-err";
+    //         errors.push(document.getElementById('field-terms').dataset.message); //errors.push("add at least three terms");
+    //         break;
+    //     } else {
+    //         termsObj[i].t.parentElement.parentElement.parentElement.className = "";
+    //     }
+    // }
+
+    for (let i = 0; i < termsObjNew.length; i++) {
+        if (!termsObjNew[i].el.textContent.trim() && !termsObjNew[i+1].el.textContent.trim()) {
+            termsObjNew[i].el.parentElement.parentElement.parentElement.className = "blue-row-err";
             errors.push(document.getElementById('field-terms').dataset.message); //errors.push("add at least three terms");
             break;
         } else {
-            termsObj[i].t.parentElement.parentElement.parentElement.className = "";
+            termsObjNew[i].el.parentElement.parentElement.parentElement.className = "";
         }
+        i++;
     }
 
     if (errors.length > 0) {
@@ -245,36 +305,57 @@ function setFormSetErrors (text) {
     fieldError.style.display = 'block';
 }
 function setFormGetTerms() {
-    const newTerms = [];
+    const termsDto = [];
     const setIdField = document.getElementById('field-id');
     const setId= setIdField ? setIdField.value : 0;
 
-    for (let i = 0; i < termsObj.length; i++) {
-        const term = Array.from(termsObj[i].t.querySelectorAll("p"))
+    // for (let i = 0; i < termsObj.length; i++) {
+    //     const term = Array.from(termsObj[i].t.querySelectorAll("p"))
+    //         .map(p => p.textContent)
+    //         .join("\n").trim();
+    //     const description = Array.from(termsObj[i].d.querySelectorAll("p"))
+    //         .map(p => p.textContent)
+    //         .join("\n").trim();
+    //     if (term !== "" || description !== "") {
+    //         newTerms.push({
+    //             term: term,
+    //             description: description
+    //         });
+    //         if (termsObj[i].id) {
+    //             newTerms[newTerms.length - 1].id = termsObj[i].id;
+    //             newTerms[newTerms.length - 1].setId = setId;
+    //
+    //
+    //         }
+    //     }
+    // }
+
+    for (let i = 0; i < termsObjNew.length; i++) {
+        const term = Array.from(termsObjNew[i].el.querySelectorAll("p"))
             .map(p => p.textContent)
             .join("\n").trim();
-        const description = Array.from(termsObj[i].d.querySelectorAll("p"))
+        const description = Array.from(termsObjNew[i+1].el.querySelectorAll("p"))
             .map(p => p.textContent)
             .join("\n").trim();
+
         if (term !== "" || description !== "") {
-            newTerms.push({
+            termsDto.push({
                 term: term,
                 description: description
             });
-            if (termsObj[i].id) {
-                newTerms[newTerms.length - 1].id = termsObj[i].id;
-                newTerms[newTerms.length - 1].setId = setId;
-
-
+            if (termsObjNew[i].id) {
+                termsDto[termsDto.length - 1].id = termsObjNew[i].id;
+                termsDto[termsDto.length - 1].setId = setId;
             }
         }
+        i++;
     }
-    console.log(newTerms);
 
-    return newTerms;
+    return termsDto;
 }
 const submitType = '';
-document.getElementById('submitButton').addEventListener("click", function (event) {
+document.getElementById('submitButton').addEventListener("click",
+    function (event) {
 
     if (!setFormValidate())
         return false;
@@ -287,15 +368,14 @@ document.getElementById('submitButton').addEventListener("click", function (even
             submitFormJSON();
             break;
         default:
-            const newTerms = setFormGetTerms();
+            const termsDto = setFormGetTerms();
 
-            document.getElementById("field-terms").value = JSON.stringify(newTerms);
+            document.getElementById("field-terms").value = JSON.stringify(termsDto);
 
             document.getElementById('set-form').submit();
 
             break
     }
-
 });
 
 function submitFormData(event){
@@ -308,10 +388,10 @@ function submitFormData(event){
     formData.append("termLanguageId", document.getElementById('field-term-language').value);
     formData.append("descriptionLanguageId", document.getElementById('field-description-language').value);
 
-    const newTerms = setFormGetTerms();
+    const termsDto = setFormGetTerms();
     //const termsField = document.getElementById("field-terms");
     //termsField.value = JSON.stringify(newTerms);
-    formData.append('terms', new Blob([JSON.stringify(newTerms)], { type: 'application/json' }));
+    formData.append('terms', new Blob([JSON.stringify(termsDto)], { type: 'application/json' }));
     //formData.append("terms", JSON.stringify(newTerms));
 
     fetch(document.getElementById('set-form').action,{

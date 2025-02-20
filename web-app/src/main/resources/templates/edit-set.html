@@ -79,7 +79,11 @@
           <div class="">
             <div class="container-left-right blue-row" >
               <div class="term-block">
-                <div class="term-input" th:data-id="${term.id}" th:id="'term'+${iter.index}"  contenteditable="true"><p th:text="${term.term}"><br></p></div>
+                <div class="term-input" th:data-id="${term.id}" th:id="'term'+${iter.index}"
+                     th:data-base-placeholder="#{messages.set.create.placeholder} "
+                     th:data-placeholder="|#{messages.set.create.placeholder} ${extra.termLangName}|"
+                     data-placeholder-class="term-placeholder"
+                     contenteditable="true"><p th:text="${term.term}"><br></p></div>
                 <hr><div class="container-left-right">
                 <span class="term" th:text="#{messages.set.create.te}">TERM</span>
                 <span th:if="${iter.index==0}"><span data-language="term"  id="language-button-term" class="language-button"
@@ -87,7 +91,11 @@
               </div>
               </div>
               <div class="term-block">
-                <div class="term-input" th:data-id="${term.id}" th:id="'description'+${iter.index}" contenteditable="true"><p th:text="${term.description}"><br></p></div>
+                <div class="term-input" th:data-id="${term.id}" th:id="'description'+${iter.index}"
+                     th:data-base-placeholder="#{messages.set.create.placeholder} "
+                     th:data-placeholder="|#{messages.set.create.placeholder} ${extra.descriptionLangName}|"
+                     data-placeholder-class="description-placeholder"
+                     contenteditable="true"><p th:text="${term.description}"><br></p></div>
                 <hr><div class="container-left-right">
                 <span class="term" th:text="#{messages.set.create.de}">DESCRIPTION</span>
                 <span th:if="${iter.index==0}"><span data-description="term" id="language-button-description" class="language-button"
