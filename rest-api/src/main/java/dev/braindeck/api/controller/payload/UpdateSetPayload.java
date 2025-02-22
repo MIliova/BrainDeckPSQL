@@ -10,7 +10,8 @@ import jakarta.validation.constraints.Size;
 import java.util.List;
 
 public record UpdateSetPayload(
-        @NotNull Integer id,
+        @NotNull
+        Integer id,
 
         @NotBlank(message = "{error.set.title.not.blank}")
         @Size(min = 1, max = 50, message = "{error.set.title.size}")

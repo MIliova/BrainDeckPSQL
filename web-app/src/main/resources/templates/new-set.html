@@ -17,9 +17,9 @@
             <div><h1 data-th-text="#{messages.set.create_new}">Create a new set</h1></div>
             <div class="blue-row"><button id="submitButton" class="blue-row-button" type="button" aria-label="[[#{messages.create}]]" onclick=""><span data-th-text="#{messages.create}">Create</span></button></div>
         </div>
-        <div>
-        <form method="post" id="set-form" data-th-action="@{create-set}">
-            <div class=""><div class="textarea-description"><span
+        <div aria-hidden="true">
+            <form method="post" id="set-form" data-th-action="@{create-set}">
+                <div class=""><div class="textarea-description"><span
                     th:if="${payload?.title() != null && payload?.title() !=''}"
                     th:text="#{messages.set.create.t}"
                     th:data-message="#{messages.set.create.t}">&nbsp;</span><span
@@ -30,31 +30,32 @@
                     th:placeholder="#{messages.set.create.et}"
                     th:aria-label="#{messages.set.create.t}"
                     th:data-message="#{messages.set.create.j.et}"></div></div><br>
-            <div class=""><div class="textarea-description"><span
+                <div class=""><div class="textarea-description"><span
                     th:if="${payload?.description() != null && payload?.description() !=''}"
                     th:text="#{messages.set.create.d}"
                     th:data-message="#{messages.set.create.d}">&nbsp;</span><span
                     th:if="${payload?.description() == null || payload?.description() ==''}"
                     th:data-message="#{messages.set.create.d}">&nbsp;</span>
-                <textarea id="field-description" name="description"
+                    <textarea id="field-description" name="description"
                           th:text="${payload?.description()}"
                           th:placeholder="#{messages.set.create.ed}"
                           th:aria-label="#{messages.set.create.d}"
-                          th:data-message="#{messages.set.create.j.ad}"></textarea></div></div>
-            <input type="hidden" id="field-term-language" name="termLanguageId" value=""
+                          th:data-message="#{messages.set.create.j.ad}"></textarea></div>
+                </div>
+                <input type="hidden" id="field-term-language" name="termLanguageId" value=""
                    th:value="${payload!= null ? payload.termLanguageId() : ''}"
                    th:data-message="#{messages.set.create.j.atl}">
 
-            <input type="hidden" id="field-description-language" name="descriptionLanguageId" value=""
+                <input type="hidden" id="field-description-language" name="descriptionLanguageId" value=""
                    th:value="${payload!= null ? payload.descriptionLanguageId() : ''}"
                    th:data-message="#{messages.set.create.j.adl}">
-            <input type="hidden" id="field-terms" name="terms" value=""
+                <input type="hidden" id="field-terms" name="terms" value=""
                     th:data-message="#{messages.set.create.j.ats}">
 
 
 
 
-            <div class="container-left-right transp-row">
+                <div class="container-left-right transp-row">
                 <div class="transp-button">
                     <span class="transp-row-button-img" ><img width="20" src="/images/import.png" th:alt="#{messages.set.import}" />[[#{messages.set.import}]]</span>
                 </div>
@@ -63,7 +64,7 @@
 
 
 
-            <div id="field-error" class="field-error"
+                <div id="field-error" class="field-error"
                  th:attr="style=${errors} ? 'display:block;' : ''"
                  th:data-message="#{messages.set.create.j.yn}">
                 <div th:if="${errors}" >
@@ -73,7 +74,7 @@
 
 
 
-            <div class="blue-row-margin"
+                <div class="blue-row-margin"
                  th:if="${terms != null and #lists.size(terms) > 0 and terms[0] != null }"
                  th:each="term, iter : ${terms}">
                 <div class="">
@@ -86,7 +87,8 @@
                                  contenteditable="true"><p th:text="${term?.term}"><br></p></div>
                             <hr><div class="container-left-right">
                             <span class="term" th:text="#{messages.set.create.te}">TERM</span>
-                            <span th:if="${iter.index==0}"><span data-language="term" id="language-button-term" class="language-button" th:text="#{messages.set.create.cl}" >CHOOSE LANGUAGE</span></span>
+                            <span th:if="${iter.index==0}"><span data-language="term" id="language-button-term" class="language-button"
+                                                                 th:text="#{messages.set.create.cl}" >CHOOSE LANGUAGE</span></span>
                         </div>
                         </div>
                         <div class="term-block">
@@ -97,7 +99,8 @@
                                  contenteditable="true"><p th:text="${term?.description}"><br></p></div>
                             <hr><div class="container-left-right">
                             <span class="term" th:text="#{messages.set.create.de}">DESCRIPTION</span>
-                            <span th:if="${iter.index==0}"><span data-language="description" id="language-button-description"  class="language-button" th:text="#{messages.set.create.cl}">CHOOSE LANGUAGE</span></span>
+                            <span th:if="${iter.index==0}"><span data-language="description" id="language-button-description"  class="language-button"
+                                                                 th:text="#{messages.set.create.cl}">CHOOSE LANGUAGE</span></span>
                         </div>
                         </div>
                     </div>
@@ -105,7 +108,7 @@
             </div>
 
 
-            <div class="blue-row-margin"
+                <div class="blue-row-margin"
                  th:each="i : ${terms != null and #lists.size(terms) > 0 and terms[0] != null ? #numbers.sequence(#lists.size(terms), #lists.size(terms) + 2) : #numbers.sequence(0, 2)}">
             <div class="" >
                 <div class="container-left-right blue-row" >
@@ -117,7 +120,8 @@
                              contenteditable="true"></div>
                         <hr><div class="container-left-right">
                             <span class="term" th:text="#{messages.set.create.te}">TERM</span>
-                            <span th:if="${i==0}"><span data-language="term" id="language-button-term" class="language-button" th:text="#{messages.set.create.cl}" >CHOOSE LANGUAGE</span></span>
+                            <span th:if="${i==0}"><span data-language="term" id="language-button-term" class="language-button"
+                                                        th:text="#{messages.set.create.cl}" >CHOOSE LANGUAGE</span></span>
                         </div>
                     </div>
                     <div class="term-block">
@@ -128,20 +132,39 @@
                              contenteditable="true"><br></div>
                         <hr><div class="container-left-right">
                             <span class="term" th:text="#{messages.set.create.de}">DESCRIPTION</span>
-                            <span th:if="${i==0}"><span data-language="description" id="language-button-description"  class="language-button" th:text="#{messages.set.create.cl}">CHOOSE LANGUAGE</span></span>
+                            <span th:if="${i==0}"><span data-language="description" id="language-button-description"  class="language-button"
+                                                        th:text="#{messages.set.create.cl}">CHOOSE LANGUAGE</span></span>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
 
-        </form>
-    </div>
+            </form>
+        </div>
+        <div class="textarea-import " id="overlay">
+            <h2 th:text="#{messages.set.create.import.h}"></h2>
+            <textarea  id="field-import" name="import"
+                      th:text="${payload?.description()}"
+                      th:placeholder="#{messages.set.create.import.placeholder}"
+                      th:aria-label="#{messages.set.create.d}"
+                      th:data-message="#{messages.set.create.j.ad}"></textarea>
+
+            <div class="container-right">
+
+            <div class="transp-row">
+                <div class="transp-button">
+                    <span class="transp-row-button-img" ><img width="20" src="/images/import.png" th:alt="#{messages.set.import}" />[[#{messages.set.import}]]</span>
+                </div>
+            </div>
+            </div>
+
+
+        </div>
     </div>
     <div class="main-right">&nbsp;</div>
 </div>
 
-<!--button type="button" aria-label="Import"><span>Import</span></button-->
 
 <div th:insert="~{fragment::language-menu}"></div>
 </body>

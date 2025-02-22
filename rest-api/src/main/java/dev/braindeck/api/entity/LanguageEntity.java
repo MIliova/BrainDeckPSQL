@@ -1,22 +1,20 @@
 package dev.braindeck.api.entity;
 
 import jakarta.persistence.*;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Size;
 import lombok.Data;
 
 @Data
 @Entity
 @Table(schema="braindeck", name="t_languages")
-public class Language {
+public class LanguageEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    @NotNull
-    @Size(min = 2, max = 25)
+    @Column(name="name", length =50, nullable = false, unique = false)
     private String name;
 
+    @Column(name="top", nullable = true, unique = false)
     private Boolean top;
 }

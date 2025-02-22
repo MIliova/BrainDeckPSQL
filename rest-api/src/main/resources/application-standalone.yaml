@@ -13,6 +13,7 @@ spring:
     properties:
       hibernate:
         default_schema: braindeck
+    show-sql: true
 
   #  flyway:
 #    url: jdbc:postgresql://localhost:5432/braindeck
@@ -34,3 +35,6 @@ spring:
   web:
     locale: ru
     locale-resolver: fixed
+logging:
+  level:
+    sql: info

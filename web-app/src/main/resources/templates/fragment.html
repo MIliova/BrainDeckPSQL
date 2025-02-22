@@ -31,19 +31,16 @@
             <div th:if="${myLanguages != null and (!myLanguages.isEmpty())}">
                 <div><h6 th:text="#{messages.set.create.yl}">Your Languages</h6></div>
                 <div th:each="myLanguage: ${myLanguages}" class="language-select-option" role="option"
-                     th:onclick="'setLanguage(this,'+${myLanguage.key}+')'"
                      th:text="${myLanguage.value}"></div>
             </div>
-            <div th:if="${topLanguages != null}">
+            <div th:if="${topLanguages != null and (!topLanguages.isEmpty())}">
                 <div><h6 th:text="#{messages.set.create.tl}">Top Languages</h6></div>
                 <div th:each="topLanguage: ${topLanguages}" class="language-select-option" role="option"
-                     th:onclick="'setLanguage(this,'+${topLanguage.key}+')'"
                      th:text="${topLanguage.value}"></div>
             </div>
-            <div th:if="${languages != null}">
+            <div th:if="${languages != null and (!languages.isEmpty())}">
                 <div><h6 th:text="#{messages.set.create.al}">All Languages</h6></div>
                 <div th:each="language: ${languages}" class="language-select-option" role="option"
-                     th:onclick="'setLanguage(this,'+${language.key}+')'"
                      th:text="${language.value}"></div>
             </div>
         </div>

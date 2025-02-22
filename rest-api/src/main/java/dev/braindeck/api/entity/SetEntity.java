@@ -1,12 +1,9 @@
 package dev.braindeck.api.entity;
 
 import jakarta.persistence.*;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.ToString;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -22,23 +19,21 @@ public class SetEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    @NotNull
-    @Size(min = 1, max = 50)
+    @Column(name="title", length =50, nullable = false, unique = false)
     private String title;
 
-    @NotNull
-    @Size(min = 1, max = 500)
+    @Column(name="description", length =500, nullable = false, unique = false)
     private String description;
 
-    @NotNull
+    @Column(name="term_language_id", nullable = false, unique = false)
     private Integer termLanguageId;
 
-    @NotNull
+    @Column(name="description_language_id", nullable = false, unique = false)
     private Integer descriptionLanguageId;
 
     @ManyToOne
     @JoinColumn(name="user_id", updatable = false, nullable = false)
-    private User user;
+    private UserEntity user;
 
     @OneToMany(mappedBy = "set", cascade = CascadeType.REMOVE, fetch = FetchType.LAZY)
     private List<TermEntity> terms = new ArrayList<>();

@@ -1,5 +1,9 @@
 package dev.braindeck.api.service;
 
+import dev.braindeck.api.dto.SetDto;
+import dev.braindeck.api.dto.SetWithCountDto;
+import dev.braindeck.api.dto.TermDto;
+import dev.braindeck.api.dto.UserDto;
 import dev.braindeck.api.entity.*;
 import jakarta.persistence.Tuple;
 import lombok.experimental.UtilityClass;
@@ -36,14 +40,14 @@ public class Mapper {
         }
         return lDto;
     }
-    public UserDto userToDto(User user) {
+    public UserDto userToDto(UserEntity user) {
         if (user == null) {
             return null;
         }
         return new UserDto(user.getId(), user.getName(), user.getEmail(), user.getPassword());
     }
 
-    public List<SetWithCountDto> setsWithCountWithUserToDto(List<Tuple> listTuple, User user) {
+    public List<SetWithCountDto> setsWithCountWithUserToDto(List<Tuple> listTuple, UserEntity user) {
         if (listTuple == null) {
             return null;
         }

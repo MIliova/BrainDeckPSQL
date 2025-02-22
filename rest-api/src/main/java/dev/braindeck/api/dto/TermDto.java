@@ -1,6 +1,4 @@
-package dev.braindeck.api.entity;
-
-
+package dev.braindeck.api.dto;
 
 public record  TermDto (
         Integer id,

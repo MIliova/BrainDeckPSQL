@@ -3,8 +3,7 @@ package dev.braindeck.api.service;
 import dev.braindeck.api.controller.payload.NewTermPayload;
 import dev.braindeck.api.controller.payload.UpdateTermPayload;
 import dev.braindeck.api.entity.SetEntity;
-import dev.braindeck.api.entity.TermDto;
-import dev.braindeck.api.entity.TermEntity;
+import dev.braindeck.api.dto.TermDto;
 
 import java.util.List;
 

@@ -1,11 +1,10 @@
 package dev.braindeck.api.controller;
 
 import dev.braindeck.api.controller.payload.NewSetPayload;
-import dev.braindeck.api.entity.SetDto;
-import dev.braindeck.api.entity.SetWithCountDto;
-import dev.braindeck.api.entity.User;
-import dev.braindeck.api.entity.UserDto;
-import dev.braindeck.api.service.Mapper;
+import dev.braindeck.api.dto.SetDto;
+import dev.braindeck.api.dto.SetWithCountDto;
+import dev.braindeck.api.entity.UserEntity;
+import dev.braindeck.api.dto.UserDto;
 import dev.braindeck.api.service.SetService;
 import dev.braindeck.api.service.UserService;
 import jakarta.validation.Valid;
@@ -49,7 +48,7 @@ public class SetsRestController {
                 throw new BindException(bindingResult);
             }
         } else {
-            User user = userService.findById(1);
+            UserEntity user = userService.findById(1);
             SetDto set = this.setService.createSet(payload.title(), payload.description(), payload.termLanguageId(), payload.descriptionLanguageId(), user, payload.terms());
             return ResponseEntity.created(uriBuilder
                     .replacePath("/api/sets/{setId}").build(Map.of("setId", set.id())))

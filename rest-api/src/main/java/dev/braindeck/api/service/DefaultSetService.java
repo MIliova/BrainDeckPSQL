@@ -2,12 +2,16 @@ package dev.braindeck.api.service;
 
 import dev.braindeck.api.controller.payload.NewTermPayload;
 import dev.braindeck.api.controller.payload.UpdateTermPayload;
+import dev.braindeck.api.dto.SetDto;
+import dev.braindeck.api.dto.SetWithCountDto;
+import dev.braindeck.api.dto.TermDto;
 import dev.braindeck.api.entity.*;
 import dev.braindeck.api.repository.SetRepository;
 import dev.braindeck.api.repository.UserRepository;
 import jakarta.persistence.Tuple;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 
 import java.util.List;
@@ -23,7 +27,7 @@ public class DefaultSetService implements SetService {
 
     @Override
     public List<SetWithCountDto> findAllByUserId(int userId) {
-        User user = userRepository.findById(userId).orElseThrow(NoSuchElementException::new);
+        UserEntity user = userRepository.findById(userId).orElseThrow(NoSuchElementException::new);
         List<Tuple> sets = this.setRepository.findAllByUserIdWithTermCount(userId);
         return Mapper.setsWithCountWithUserToDto(sets, user);
     }
@@ -31,7 +35,8 @@ public class DefaultSetService implements SetService {
 
 
     @Override
-    public SetDto createSet(String title, String description, int termLanguageId, int descriptionLanguageId, User user, List<NewTermPayload> listTerms) {
+    @Transactional
+    public SetDto createSet(String title, String description, int termLanguageId, int descriptionLanguageId, UserEntity user, List<NewTermPayload> listTerms) {
         SetEntity setEntity =  this.setRepository.save(new SetEntity(null, title, description, termLanguageId, descriptionLanguageId, user, null));
 
         this.termService.createTerms(setEntity, listTerms);
@@ -50,20 +55,22 @@ public class DefaultSetService implements SetService {
     }
 
     @Override
-    public void updateSet(int setId, String title, String description, int termLanguageId, int descriptionLanguageId, User user, List<UpdateTermPayload> terms) {
+    @Transactional
+    public void updateSet(int setId, String title, String description, int termLanguageId, int descriptionLanguageId, UserEntity user, List<UpdateTermPayload> terms) {
         this.setRepository.findById(setId)
                 .ifPresentOrElse(set -> {
                     set.setTitle(title);
                     set.setDescription(description);
                     set.setTermLanguageId(termLanguageId);
                     set.setDescriptionLanguageId(descriptionLanguageId);
-                    this.setRepository.save(set);
+//                    this.setRepository.save(set);
                 }, () -> {
                     throw new NoSuchElementException("errors.set.not_found");
                 });
         this.termService.updateTerms(terms);
     }
     @Override
+    @Transactional
     public void deleteSet(int setId) {
         this.setRepository.deleteById(setId);
         this.termService.deleteTermsBySetId(setId);

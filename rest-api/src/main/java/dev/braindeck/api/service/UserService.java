@@ -1,10 +1,10 @@
 package dev.braindeck.api.service;
 
-import dev.braindeck.api.entity.User;
-import dev.braindeck.api.entity.UserDto;
+import dev.braindeck.api.entity.UserEntity;
+import dev.braindeck.api.dto.UserDto;
 
 public interface UserService {
-    User findById(int id);
+    UserEntity findById(int id);
     UserDto findCurrentUser ();
 
 }

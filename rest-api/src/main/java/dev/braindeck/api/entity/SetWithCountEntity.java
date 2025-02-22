@@ -12,5 +12,4 @@ public class SetWithCountEntity {
         this.set = set;
         this.termCount = termCount;
     }
-
 }

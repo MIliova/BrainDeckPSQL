@@ -17,8 +17,10 @@ public class TermEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
+    @Column(name="term", length=950, nullable = false, unique = false)
     private String term;
 
+    @Column(name="description", length=950, nullable = true, unique = false)
     private String description;
 
     @ManyToOne

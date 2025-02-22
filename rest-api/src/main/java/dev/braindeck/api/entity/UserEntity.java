@@ -15,28 +15,25 @@ import java.util.List;
 @AllArgsConstructor
 @Entity
 @Table(schema="braindeck", name="t_users")
-public class User {
+public class UserEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     Integer id;
 
-    @NotNull
-    @Size(min = 1, max = 50)
+    @Column(name="name", length=50, nullable = false, unique = true)
     String name;
 
-    @NotNull
-    @Size(min = 1, max = 50)
+    @Column(name="email", length=50, nullable = false, unique = true)
     String email;
 
-    @NotNull
-    @Size(min = 1, max = 70)
+    @Column(name="password", length=700, nullable = false, unique = false)
     String password;
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.REMOVE, fetch = FetchType.LAZY)
     List<SetEntity> sets = new ArrayList<>();
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.REMOVE, fetch = FetchType.LAZY)
-    List<Folder> Folder = new ArrayList<>();
+    List<FolderEntity> folder = new ArrayList<>();
 
 }

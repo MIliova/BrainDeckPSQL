@@ -1,9 +1,8 @@
 package dev.braindeck.api.controller;
 
 import dev.braindeck.api.controller.payload.UpdateSetPayload;
-import dev.braindeck.api.entity.SetDto;
-import dev.braindeck.api.entity.SetEntity;
-import dev.braindeck.api.entity.User;
+import dev.braindeck.api.dto.SetDto;
+import dev.braindeck.api.entity.UserEntity;
 import dev.braindeck.api.service.SetService;
 import dev.braindeck.api.service.TermService;
 import dev.braindeck.api.service.UserService;
@@ -48,7 +47,7 @@ public class SetRestController {
                 throw new BindException(bindingResult);
             }
         } else {
-            User user = userService.findById(1);
+            UserEntity user = userService.findById(1);
             this.setService.updateSet(setId, payload.title(), payload.description(), payload.termLanguageId(), payload.descriptionLanguageId(), user, payload.terms());
             return ResponseEntity.noContent().build();
         }

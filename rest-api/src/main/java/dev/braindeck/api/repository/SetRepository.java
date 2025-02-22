@@ -1,7 +1,6 @@
 package dev.braindeck.api.repository;
 
 import dev.braindeck.api.entity.SetEntity;
-import dev.braindeck.api.entity.SetWithCountEntity;
 import jakarta.persistence.Tuple;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;

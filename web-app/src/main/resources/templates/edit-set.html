@@ -105,6 +105,41 @@
             </div>
           </div>
         </div>
+
+
+<!--        <div class="blue-row-margin"-->
+<!--             th:each="i : ${terms != null and #lists.size(terms) > 0 and terms[0] != null ? #numbers.sequence(#lists.size(terms), #lists.size(terms) + 2) : #numbers.sequence(0, 2)}">-->
+<!--          <div class="" >-->
+<!--            <div class="container-left-right blue-row" >-->
+<!--              <div class="term-block">-->
+<!--                <div class="term-input term-placeholder" th:id="'term'+${i}"-->
+<!--                     th:data-base-placeholder="#{messages.set.create.placeholder} "-->
+<!--                     th:data-placeholder="#{messages.set.create.term_placeholder}"-->
+<!--                     data-placeholder-class="term-placeholder"-->
+<!--                     contenteditable="true"></div>-->
+<!--                <hr><div class="container-left-right">-->
+<!--                <span class="term" th:text="#{messages.set.create.te}">TERM</span>-->
+<!--                <span th:if="${i==0}"><span data-language="term" id="language-button-term" class="language-button"-->
+<!--                                            th:text="#{messages.set.create.cl}" >CHOOSE LANGUAGE</span></span>-->
+<!--              </div>-->
+<!--              </div>-->
+<!--              <div class="term-block">-->
+<!--                <div class="term-input description-placeholder" th:id="'description'+${i}"-->
+<!--                     th:data-base-placeholder="#{messages.set.create.placeholder} "-->
+<!--                     th:data-placeholder="#{messages.set.create.description_placeholder}"-->
+<!--                     data-placeholder-class="description-placeholder"-->
+<!--                     contenteditable="true"><br></div>-->
+<!--                <hr><div class="container-left-right">-->
+<!--                <span class="term" th:text="#{messages.set.create.de}">DESCRIPTION</span>-->
+<!--                <span th:if="${i==0}"><span data-language="description" id="language-button-description"  class="language-button"-->
+<!--                                            th:text="#{messages.set.create.cl}">CHOOSE LANGUAGE</span></span>-->
+<!--              </div>-->
+<!--              </div>-->
+<!--            </div>-->
+<!--          </div>-->
+<!--        </div>-->
+
+
       </form>
     </div>
   </div>

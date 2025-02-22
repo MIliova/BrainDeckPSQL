@@ -4,13 +4,11 @@ package dev.braindeck.api.service;
 import dev.braindeck.api.controller.payload.NewTermPayload;
 import dev.braindeck.api.controller.payload.UpdateTermPayload;
 import dev.braindeck.api.entity.SetEntity;
-import dev.braindeck.api.entity.TermDto;
+import dev.braindeck.api.dto.TermDto;
 import dev.braindeck.api.entity.TermEntity;
-import dev.braindeck.api.repository.SetRepository;
 import dev.braindeck.api.repository.TermRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import dev.braindeck.api.service.Mapper;
 
 
 import java.util.List;
