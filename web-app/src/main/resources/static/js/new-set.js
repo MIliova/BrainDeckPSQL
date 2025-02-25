@@ -475,8 +475,9 @@ class FormSubmit {
 }
 
 class Overlay {
-    init(overlay, showButton, hideButton) {
+    init(overlay, showButton, hideButton, onHide) {
         this.overlay = overlay;
+        this.onHide = onHide;
         if (showButton && hideButton) {
             showButton.addEventListener('click', () => {
                 this.show();
@@ -494,7 +495,9 @@ class Overlay {
     }
 
     hide() {
-        this.overlay.style.visibility = "hidden"; // Скрываем элемент
+        this.overlay.style.visibility = "hidden";
+        if (this.onHide)
+            this.onHide.onHide();
     }
 
 }
@@ -502,36 +505,100 @@ class Overlay {
 class TermsImport {
     init (button, textarea, errorDiv, previewDiv) {
         if (button && textarea) {
+            this.form = textarea.form;
             this.textarea = textarea;
+
+            this.placeholder = [];
+            let rows = this.textarea.placeholder.split('\n');
+            rows.forEach(row=>{
+                this.placeholder.push(row.split('\t'));
+            });
+
+            this.colSeparator = this.form.elements['col-separator'];
+            this.rowSeparator = this.form.elements['row-separator'];
+            this.colCustom = this.form.elements['col-custom'];
+            this.rowCustom = this.form.elements['row-custom'];
+
             this.errorDiv = errorDiv;
             this.previewDiv = previewDiv;
 
             button.addEventListener('click', () => {
                 this.submitJSON();
             });
+
+            var radios = Array.from(document.querySelectorAll('input[name="col-separator"]')).concat(Array.from(document.querySelectorAll('input[name="row-separator"]')));
+            radios.forEach(radio => {
+                radio.addEventListener('click', () => {
+                    this.placeholderChange();
+                });
+            });
+            [this.colCustom ,this.rowCustom].forEach(inp => {
+                inp.addEventListener('input', () => {
+                    this.placeholderChange();
+                });
+            });
         }
     }
+
+    placeholderChange() {
+        let cS = '';
+        switch (this.colSeparator.value) {
+            case 'tab':
+                cS = '\t';
+                break;
+            case 'comma':
+                cS = ',';
+                break;
+            default:
+                cS = this.colCustom.value;
+                break;
+        }
+        let rS = '';
+        switch (this.rowSeparator.value) {
+                case 'newline':
+                    rS = '\n';
+                    break;
+                case 'semicolon':
+                    rS = ';';
+                    break;
+                default:
+                    rS = this.rowCustom.value;
+                    break;
+        }
+
+        let newPlaceholder=[];
+        this.placeholder.forEach(r => {
+            newPlaceholder.push(r.join(cS));
+        });
+        this.textarea.placeholder = newPlaceholder.join(rS);
+    }
+
+    onHide () {
+        this.textarea.value = '';
+        this.previewDiv.innerHTML = '';
+    }
     submitJSON(){
+        this.previewDiv.innerHTML = '';
         this.errorDiv.style.display = "none";
-        const form = this.textarea.form;
-        const colSeparator = form.elements['col-separator'];
-        const rowSeparator = form.elements['row-separator'];
+        //const form = this.textarea.form;
+        // const colSeparator = form.elements['col-separator'];
+        // const rowSeparator = form.elements['row-separator'];
 
         const jsonData = {
             text: this.textarea.value,
-            colSeparator: colSeparator.value,
-            rowSeparator: rowSeparator.value,
+            colSeparator: this.colSeparator.value,
+            rowSeparator: this.rowSeparator.value,
             colCustom:null,
             rowCustom:null
         };
-        if (colSeparator === 'custom') {
-            jsonData['collCustom']  = form.elements['col-custom'];
+        if (this.colSeparator.value === 'custom') {
+            jsonData['colCustom']  = this.colCustom.value;//.elements['col-custom'];
         }
-        if (rowSeparator === 'custom') {
-            jsonData['rowCustom']  = form.elements['row-custom'];
+        if (this.rowSeparator.value === 'custom') {
+            jsonData['rowCustom']  = this.rowCustom.value//form.elements['row-custom'];
         }
 
-        const formData = new FormData(form);
+        const formData = new FormData(this.form);
 
         fetch('http://localhost:8081/api/terms/prepare-import', {
             method: 'POST',
@@ -655,7 +722,10 @@ document.addEventListener('DOMContentLoaded', function () {
     editableDiv.init();
     textNormalization.init();
     formSubmit.init('');
-    overlay.init(document.getElementById("overlay"), document.getElementById("overlay_show_button"), document.getElementById("overlay_hide_button"));
+    overlay.init(document.getElementById("overlay"),
+        document.getElementById("overlay_show_button"),
+        document.getElementById("overlay_hide_button"),
+        termsImport);
     termsImport.init(document.getElementById('overlay_import_button'),
         document.getElementById("field-import"),
         document.getElementById("field-import-error"),

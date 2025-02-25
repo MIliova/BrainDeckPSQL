@@ -364,6 +364,17 @@ select {
     color:white;
 
 }
+.import-preview {
+    overflow-y:auto;
+    height: 100vh;
+    margin-top: 10px;
+}
+.import-preview .blue-row {
+    background-color: #304160;
+    border-radius: 0;
+    color: lightgray;
+    padding: 7px;
+}
 
 
 

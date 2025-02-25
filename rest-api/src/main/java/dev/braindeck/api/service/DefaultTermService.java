@@ -95,7 +95,7 @@ public class DefaultTermService implements TermService {
         String [] rows = text.split(rS);
         for (String row : rows) {
             List<String> cols = new ArrayList<>(Arrays.asList(row.split(cS,2)));
-            list.add(new ImportTermDto(cols.getFirst(), cols.getLast()));
+            list.add(new ImportTermDto(cols.getFirst(), (cols.size() > 1 ? cols.getLast(): "")));
         }
         return list;
     }
