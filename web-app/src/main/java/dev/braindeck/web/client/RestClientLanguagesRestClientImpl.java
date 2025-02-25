@@ -23,25 +23,4 @@ public class RestClientLanguagesRestClientImpl implements LanguagesRestClient {
                 .retrieve()
                 .body(LANGUAGES_TYPE_REFERENCE);
     }
-
-
-
-
-
-//    @Override
-//    public String getById(Integer id){
-//        try {
-//            return this.restClient.get()
-//                    .uri("/api/languages/{id}", id)
-//                    .retrieve()
-//                    .body(String.class);
-//        } catch (HttpClientErrorException.NotFound exception) {
-//            ProblemDetail problemDetail =  exception.getResponseBodyAs(ProblemDetail.class);
-//            if(problemDetail != null) {
-//                throw new NoSuchElementException(String.valueOf(Objects.requireNonNull(problemDetail.getProperties()).get("errors")));
-//            }
-//            throw new ProblemDetailException("Problem detail is null");
-//        }
-//    }
-
 }

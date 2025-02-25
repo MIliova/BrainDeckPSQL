@@ -2,6 +2,7 @@ package dev.braindeck.api.service;
 
 import dev.braindeck.api.controller.payload.NewTermPayload;
 import dev.braindeck.api.controller.payload.UpdateTermPayload;
+import dev.braindeck.api.dto.ImportTermDto;
 import dev.braindeck.api.entity.SetEntity;
 import dev.braindeck.api.dto.TermDto;
 
@@ -17,5 +18,8 @@ public interface TermService {
 
     void deleteTermById(int id);
     void deleteTermsBySetId(int setId);
+
+    List<ImportTermDto> prepareImport(String text, String colSeparator, String rowSeparator, String colCustom, String rowCustom);
+
 
 }

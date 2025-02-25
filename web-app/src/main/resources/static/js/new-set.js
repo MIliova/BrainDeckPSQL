@@ -5,7 +5,7 @@ class DivPlaceholder {
     add(el, type) {
         this.els.push({el:el, type:type});
     }
-    init(innerHTMLText) {
+    init() {
         this.els.forEach(obj => {
             let el = obj.el;
             // Инициализация плейсхолдера при загрузке страницы
@@ -14,19 +14,15 @@ class DivPlaceholder {
                 el.classList.add(el.getAttribute('data-placeholder-class'));
                 el.dataset.ph = '1';
             }
+
             el.addEventListener('focus', () => {
                 if (el.dataset.ph === '1' && el.textContent.trim() === el.getAttribute('data-placeholder')) {
                     el.dataset.ph = '0';
-                    el.textContent = '';
                     el.classList.remove(el.getAttribute('data-placeholder-class'));
-                    el.innerHTML = innerHTMLText; //!!!!!!!
-                    const p = el.querySelector('p');
-                    const range = document.createRange();
-                    const sel = window.getSelection();
-                    range.setStart(p, 0);
-                    range.collapse(true);
-                    sel.removeAllRanges();
-                    sel.addRange(range);
+                    if (obj.onfocus)
+                        obj.onfocus();
+                    else
+                        this.onfocus(el);
                 }
             });
             el.addEventListener('blur', () => {
@@ -38,7 +34,17 @@ class DivPlaceholder {
             });
         });
     }
-
+    onfocus(el){
+        el.textContent = '';
+        el.innerHTML = '<p><br></p>'; //!!!!!!!
+        const p = el.querySelector('p');
+        const range = document.createRange();
+        const sel = window.getSelection();
+        range.setStart(p, 0);
+        range.collapse(true);
+        sel.removeAllRanges();
+        sel.addRange(range);
+    }
     update(type, text){
         this.els.forEach(obj => {
             if (obj.type === type) {
@@ -453,7 +459,6 @@ class FormSubmit {
                     .map(p => p.textContent)
                     .join("\n").trim();
             }
-
             if (term !== "" || description !== "") {
                 termsDto.push({
                     term: term,
@@ -462,8 +467,6 @@ class FormSubmit {
                 if (this.termsObjs[i].id) {
                     termsDto[termsDto.length - 1].id = this.termsObjs[i].id;
                     termsDto[termsDto.length - 1].setId = setId;
-
-
                 }
             }
         }
@@ -471,22 +474,144 @@ class FormSubmit {
     }
 }
 
-function showOverlay() {
-    const overlay = document.getElementById("overlay");
-    overlay.style.visibility = "visible"; // Показываем элемент
+class Overlay {
+    init(overlay, showButton, hideButton) {
+        this.overlay = overlay;
+        if (showButton && hideButton) {
+            showButton.addEventListener('click', () => {
+                this.show();
+            });
+            hideButton.addEventListener('click', () => {
+                this.hide();
+            });
+        } else if (showButton) {
+            showButton.style.visibility = "hidden";
+        }
+
+    }
+    show() {
+        this.overlay.style.visibility = "visible"; // Показываем элемент
+    }
+
+    hide() {
+        this.overlay.style.visibility = "hidden"; // Скрываем элемент
+    }
+
 }
 
-function hideOverlay() {
-    const overlay = document.getElementById("overlay");
-    overlay.style.visibility = "hidden"; // Скрываем элемент
+class TermsImport {
+    init (button, textarea, errorDiv, previewDiv) {
+        if (button && textarea) {
+            this.textarea = textarea;
+            this.errorDiv = errorDiv;
+            this.previewDiv = previewDiv;
+
+            button.addEventListener('click', () => {
+                this.submitJSON();
+            });
+        }
+    }
+    submitJSON(){
+        this.errorDiv.style.display = "none";
+        const form = this.textarea.form;
+        const colSeparator = form.elements['col-separator'];
+        const rowSeparator = form.elements['row-separator'];
+
+        const jsonData = {
+            text: this.textarea.value,
+            colSeparator: colSeparator.value,
+            rowSeparator: rowSeparator.value,
+            colCustom:null,
+            rowCustom:null
+        };
+        if (colSeparator === 'custom') {
+            jsonData['collCustom']  = form.elements['col-custom'];
+        }
+        if (rowSeparator === 'custom') {
+            jsonData['rowCustom']  = form.elements['row-custom'];
+        }
+
+        const formData = new FormData(form);
+
+        fetch('http://localhost:8081/api/terms/prepare-import', {
+            method: 'POST',
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(jsonData)
+        })
+            .then(response => response.json())
+            .then(data => {
+                console.log('Ответ:', data);
+
+                if (data.errors && typeof data.errors === 'object') {
+                    let errorsArr = [];
+                    const errorsObj = data.errors;
+                    Object.keys(errorsObj).forEach(key => {
+                        const error = errorsObj[key];
+                        if (Array.isArray(error)) {
+                            error.forEach(message => {
+                                errorsArr.push(message);
+                                //alert(`${key}: ${message}`);
+                            });
+                        } else {
+                            errorsArr.push(error);
+                            //alert(`${key}: ${error}`);
+                        }
+                    });
+                    if (errorsArr.length > 0) {
+                        this.errorDiv.innerHTML = errorsArr.join('<br>');
+                        this.errorDiv.style.display = "block";
+                    }
+                } else {
+                    data.forEach( d => {
+                        const rDiv = document.createElement('div');
+                        rDiv.innerHTML= '<div class="">\n' +
+                            '                                <div class="container-left-right blue-row">\n' +
+                            '                                    <div class="term-block">\n' +
+                            '                                        <div class="term-input">'+d.term+'</div>\n' +
+                            '                                        <hr><div class="container-left-right">\n' +
+                            '                                            <span class="term">ТЕРМИН</span>\n' +
+                            '                                            <span></span>\n' +
+                            '                                        </div>\n' +
+                            '                                    </div>\n' +
+                            '                                    <div class="term-block">\n' +
+                            '                                        <div class="term-input">'+d.description+'</div>\n' +
+                            '                                        <hr><div class="container-left-right">\n' +
+                            '                                            <span class="term">ОПРЕДЕЛЕНИЕ</span>\n' +
+                            '                                            <span></span>\n' +
+                            '                                        </div>\n' +
+                            '                                    </div>\n' +
+                            '                                </div>\n' +
+                            '                            </div>';
+                        // const tDiv = document.createElement('div');
+                        // const dDiv = document.createElement('div');
+                        // tDiv.innerHTML = d.term;
+                        // dDiv.innerHTML = d.description;
+                        // rDiv.appendChild(tDiv);
+                        // rDiv.appendChild(dDiv);
+                        rDiv.className="blue-row-margin";
+
+                        this.previewDiv.appendChild(rDiv);
+
+                    })
+
+                }
+            })
+            .catch(error => {
+                console.error('Ошибка:', error);
+            });
+    }
 }
 
-// Показываем элемент через 2 секунды, например
-setTimeout(showOverlay, 2000); // через 2 секунды покажем
+const overlay = new Overlay();
 const divplaceholder= new DivPlaceholder();
 const editableDiv= new EditableDiv();
 const languageMenu1 = new LanguageMenu();
 const formSubmit = new FormSubmit();
+const termsImport = new TermsImport();
+
+
 
 document.addEventListener('DOMContentLoaded', function () {
     languageMenu1.addInput(document.getElementById('field-term-language'), 'term');
@@ -524,10 +649,19 @@ document.addEventListener('DOMContentLoaded', function () {
         term = document.getElementById('term'+i);
         descr = document.getElementById('description'+i);
     }
-    divplaceholder.init('<p><br></p>');
+    // divplaceholder.add(document.getElementById("overlay"), 'overlay', overlay.onfocus);
+
+    divplaceholder.init();
     editableDiv.init();
     textNormalization.init();
     formSubmit.init('');
+    overlay.init(document.getElementById("overlay"), document.getElementById("overlay_show_button"), document.getElementById("overlay_hide_button"));
+    termsImport.init(document.getElementById('overlay_import_button'),
+        document.getElementById("field-import"),
+        document.getElementById("field-import-error"),
+        document.getElementById("field-import-preview")
+);
+
 });
 
 

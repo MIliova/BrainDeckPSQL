@@ -1,6 +1,5 @@
 package dev.braindeck.api.controller.payload;
 
-import dev.braindeck.api.entity.TermEntity;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;

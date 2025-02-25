@@ -56,7 +56,7 @@
 
 
                 <div class="container-left-right transp-row">
-                <div class="transp-button">
+                <div class="transp-button" id="overlay_show_button">
                     <span class="transp-row-button-img" ><img width="20" src="/images/import.png" th:alt="#{messages.set.import}" />[[#{messages.set.import}]]</span>
                 </div>
             </div>
@@ -142,31 +142,85 @@
 
             </form>
         </div>
-        <div class="textarea-import " id="overlay">
-            <h2 th:text="#{messages.set.create.import.h}"></h2>
-            <textarea  id="field-import" name="import"
-                      th:text="${payload?.description()}"
-                      th:placeholder="#{messages.set.create.import.placeholder}"
-                      th:aria-label="#{messages.set.create.d}"
-                      th:data-message="#{messages.set.create.j.ad}"></textarea>
 
-            <div class="container-right">
-
-            <div class="transp-row">
-                <div class="transp-button">
-                    <span class="transp-row-button-img" ><img width="20" src="/images/import.png" th:alt="#{messages.set.import}" />[[#{messages.set.import}]]</span>
-                </div>
-            </div>
-            </div>
-
-
-        </div>
     </div>
     <div class="main-right">&nbsp;</div>
 </div>
 
 
 <div th:insert="~{fragment::language-menu}"></div>
+
+
+<div class="textarea-import overlay" id="overlay">
+    <div class="content">
+
+
+
+        <div class="container-left-right">
+            <div><h3 style="text-align: left" th:text="#{messages.set.create.import.h}"></h3></div>
+            <div class="transp-button" id="overlay_hide_button">
+                <span class="transp-row-button-img" ><img width="20" src="/images/close.png" th:alt="#{messeges.set.create.import.close}" />[[#{messeges.set.create.import.close}]]</span>
+            </div>
+        </div>
+
+
+        <div id="field-import-error" class="field-error"></div>
+
+
+        <form>
+        <textarea  id="field-import" name="import"
+               th:text="${payload?.description()}"
+               th:placeholder="#{messages.set.create.import.div.placeholder}"
+               th:aria-label="#{messages.set.import}"
+               ></textarea>
+        <div style="display: flex">
+            <div style="text-align: left">
+                <h3 style="text-align: left">Between term and definition</h3>
+                <div aria-label="Between term and definition" style="display: block">
+                    <div><label for="import-radio-tab">
+                        <input id="import-radio-tab" type="radio" name="col-separator" value="tab" checked=""><span>Tab</span></label></div>
+                    <div><label for="import-radio-comma">
+                        <input id="import-radio-comma" type="radio" name="col-separator" value="comma"><span>Comma</span></label></div>
+                    <div><label for="import-radio-custom1">
+                        <input id="import-radio-custom1" type="radio" name="col-separator" value="custom">
+                        <label><input class="input2" name="col-custom" aria-label="Custom" placeholder="-" type="text" value="-"></label></label></div>
+                </div>
+            </div>
+            <div style="text-align: left">
+                <h3>Between cards</h3>
+                <div aria-label="Between terms" style="display: block">
+                    <div><label for="import-radio-newline">
+                        <input id="import-radio-newline" type="radio" name="row-separator" value="newline" checked=""><span>New line</span></label></div>
+                    <div><label for="import-radio-semicolon">
+                        <input id="import-radio-semicolon" type="radio" name="row-separator" value="semicolon">
+                        <span>Semicolon</span></label></div>
+                    <div><label for="import-radio-custom2">
+                        <input id="import-radio-custom2" type="radio" name="row-separator" value="custom">
+                        <label><input class="input2" name="row-custom" aria-label="Custom" placeholder="\n\n" type="text" value="\n\n"></label>
+                    </label></div>
+                </div>
+            </div>
+        </div>
+        </form>
+
+        <div class="container-right">
+            <div class="transp-button" id="overlay_import_button">
+                <span class="transp-row-button-img" ><img width="20" src="/images/import.png" th:alt="#{messages.set.import}" />[[#{messages.set.import}]]</span>
+            </div>
+        </div>
+
+        <div id="field-import-preview" style="overflow-y:auto; height: 100vh">
+
+
+        </div>
+
+
+
+
+
+    </div>
+</div>
+
 </body>
 </html>
 

@@ -2,6 +2,9 @@ package dev.braindeck.api.controller;
 
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.validation.Constraint;
+import jakarta.validation.ConstraintViolation;
+import jakarta.validation.ConstraintViolationException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.MessageSource;
 import org.springframework.http.HttpStatus;
@@ -45,6 +48,7 @@ public class BadRequestControllerAdvice {
                             )
                         )
         );
+        System.out.println(problemDetail);
         return ResponseEntity.badRequest().body(problemDetail);
     }
 
@@ -92,7 +96,21 @@ public class BadRequestControllerAdvice {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(problemDetail);
     }
 
+    @ExceptionHandler(ConstraintViolationException.class)
+    public ResponseEntity<ProblemDetail> handleConstraintViolationException(Exception e, Model model, HttpServletResponse response, Locale locale) {
 
+        System.out.println("Exception from BadRequestControllerAdvice=" + e.getMessage());
+
+
+        ProblemDetail problemDetail = ProblemDetail
+                .forStatusAndDetail(HttpStatus.BAD_REQUEST,
+                        this.messageSource.getMessage("errors.400.title",
+                                new Object[0], "errors.400.title", locale));
+        problemDetail.setProperty("errors", this.messageSource.getMessage(e.getMessage(),
+                new Object[0], e.getMessage(), locale));
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(problemDetail);
+    }
+}
 
 //    @ExceptionHandler(JsonParseException.class)
 //    public ResponseEntity<ProblemDetail> handleJsonParseException( JsonParseException exception, Locale locale) {
@@ -116,7 +134,7 @@ public class BadRequestControllerAdvice {
 //    }
 
 
-}
+
 
 
 //Map<String, String> errors = bindingResult.getAllErrors().stream()
@@ -135,3 +153,5 @@ public class BadRequestControllerAdvice {
 //        .toList().reversed();
 //
 //    }
+
+
