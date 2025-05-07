@@ -1,14 +1,18 @@
 package dev.braindeck.api.entity;
 
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.util.ArrayList;
 import java.util.List;
 
 @Data
+@AllArgsConstructor
+@NoArgsConstructor
 @Entity
-@Table(schema="braindeck", name="t_languages")
+@Table(name="t_languages")
 public class FolderEntity {
 
     @Id

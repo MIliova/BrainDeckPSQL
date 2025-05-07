@@ -25,9 +25,10 @@ public class DefaultSetService implements SetService {
     private final TermService termService;
     private final UserRepository userRepository;
 
+
     @Override
     public List<SetWithCountDto> findAllByUserId(int userId) {
-        UserEntity user = userRepository.findById(userId).orElseThrow(NoSuchElementException::new);
+        UserEntity user = this.userRepository.findById(userId).orElseThrow(NoSuchElementException::new);
         List<Tuple> sets = this.setRepository.findAllByUserIdWithTermCount(userId);
         return Mapper.setsWithCountWithUserToDto(sets, user);
     }
@@ -72,7 +73,9 @@ public class DefaultSetService implements SetService {
     @Override
     @Transactional
     public void deleteSet(int setId) {
-        this.setRepository.deleteById(setId);
         this.termService.deleteTermsBySetId(setId);
+        this.setRepository.deleteById(setId);
     }
+
+
 }

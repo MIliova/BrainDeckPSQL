@@ -1,6 +1,6 @@
 package dev.braindeck.web.controller.payload;
 
-public record UpdateSetPayload(
+public record   UpdateSetPayload(
         Integer id,
 
         String title,

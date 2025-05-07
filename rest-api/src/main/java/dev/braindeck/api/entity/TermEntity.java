@@ -2,7 +2,6 @@ package dev.braindeck.api.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
-import org.springframework.stereotype.Service;
 
 @Getter
 @Setter
@@ -10,7 +9,7 @@ import org.springframework.stereotype.Service;
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity
-@Table(schema="braindeck", name="t_terms")
+@Table(name="t_terms")
 public class TermEntity {
 
     @Id

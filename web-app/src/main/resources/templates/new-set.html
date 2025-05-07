@@ -1,11 +1,11 @@
 <!DOCTYPE html>
-<html lang="en">
+<html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title data-th-text="#{messages.set.create_new}"></title>
+    <title th:text="${pageTitle} ?: 'BrainDeck'"></title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@100;200;300&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/css/styles.css">
     <script src="/js/new-set.js" defer></script>
-
 </head>
 <body>
 <div class="main">
@@ -13,12 +13,15 @@
     <div class="main-center">
         <div th:insert="~{fragment::header-menu}"></div>
 
+
         <div class="container-left-right">
             <div><h1 data-th-text="#{messages.set.create_new}">Create a new set</h1></div>
             <div class="blue-row"><button id="submitButton" class="blue-row-button" type="button" aria-label="[[#{messages.create}]]" onclick=""><span data-th-text="#{messages.create}">Create</span></button></div>
         </div>
+
+
         <div aria-hidden="true">
-            <form method="post" id="set-form" data-th-action="@{create-set}">
+            <form method="post" id="set-form" data-th-action="@{/create-set}">
                 <div class=""><div class="textarea-description"><span
                     th:if="${payload?.title() != null && payload?.title() !=''}"
                     th:text="#{messages.set.create.t}"
@@ -56,10 +59,10 @@
 
 
                 <div class="container-left-right transp-row">
-                <div class="transp-button" id="overlay_show_button">
-                    <span class="transp-row-button-img" ><img width="20" src="/images/import.png" th:alt="#{messages.set.import}" />[[#{messages.set.import}]]</span>
+                    <div class="transp-button" id="overlay_show_button" th:data-draft-id="${(draft!=null && draft.id()!=null ? draft.id(): 0)}">
+                        <span class="transp-row-button-img" ><img width="20" src="/images/import.png" th:alt="#{messages.set.create.import}" />[[#{messages.set.create.import}]]</span>
+                    </div>
                 </div>
-            </div>
 
 
 
@@ -74,75 +77,79 @@
 
 
 
-                <div class="blue-row-margin"
-                 th:if="${terms != null and #lists.size(terms) > 0 and terms[0] != null }"
-                 th:each="term, iter : ${terms}">
-                <div class="">
-                    <div class="container-left-right blue-row" >
-                        <div class="term-block">
-                            <div class="term-input term-placeholder" th:id="'term'+${iter.index}"
-                                 th:data-base-placeholder="#{messages.set.create.placeholder} "
-                                 th:data-placeholder="#{messages.set.create.term_placeholder}"
-                                 data-placeholder-class="term-placeholder"
-                                 contenteditable="true"><p th:text="${term?.term}"><br></p></div>
-                            <hr><div class="container-left-right">
-                            <span class="term" th:text="#{messages.set.create.te}">TERM</span>
-                            <span th:if="${iter.index==0}"><span data-language="term" id="language-button-term" class="language-button"
+                <div id="terms-description-area"
+                     th:data-base-placeholder="#{messages.set.create.placeholder} "
+                     th:data-term-placeholder="#{messages.set.create.term_placeholder}"
+                     th:data-description-placeholder="#{messages.set.create.description_placeholder}"
+                     th:data-term-text="#{messages.set.create.te}"
+                     th:data-descr-text="#{messages.set.create.de}"
+                     th:data-language-text="#{messages.set.create.cl}">
+
+                    <div class="blue-row-margin" th:if="${terms != null and #lists.size(terms) > 0 and terms[0] != null }"
+                        th:each="term, iter : ${terms}">
+                        <div class="">
+                            <div class="container-left-right blue-row" >
+                                <div class="term-block">
+                                    <div class="term-input term-placeholder" th:id="'term'+${iter.index}"
+                                        th:data-base-placeholder="#{messages.set.create.placeholder} "
+                                        th:data-placeholder="#{messages.set.create.term_placeholder}"
+                                        data-placeholder-class="term-placeholder"
+                                        contenteditable="true"><p th:text="${term?.term}"><br></p></div><hr>
+                                    <div class="container-left-right">
+                                        <span class="term" th:text="#{messages.set.create.te}">TERM</span>
+                                        <span th:if="${iter.index==0}"><span data-language="term" id="language-button-term" class="language-button"
                                                                  th:text="#{messages.set.create.cl}" >CHOOSE LANGUAGE</span></span>
-                        </div>
-                        </div>
-                        <div class="term-block">
-                            <div class="term-input description-placeholder" th:id="'description'+${iter.index}"
-                                 th:data-base-placeholder="#{messages.set.create.placeholder} "
-                                 th:data-placeholder="#{messages.set.create.description_placeholder}"
-                                 data-placeholder-class="description-placeholder"
-                                 contenteditable="true"><p th:text="${term?.description}"><br></p></div>
-                            <hr><div class="container-left-right">
-                            <span class="term" th:text="#{messages.set.create.de}">DESCRIPTION</span>
-                            <span th:if="${iter.index==0}"><span data-language="description" id="language-button-description"  class="language-button"
+                                    </div>
+                                </div>
+                                <div class="term-block">
+                                    <div class="term-input description-placeholder" th:id="'description'+${iter.index}"
+                                       th:data-base-placeholder="#{messages.set.create.placeholder} "
+                                       th:data-placeholder="#{messages.set.create.description_placeholder}"
+                                       data-placeholder-class="description-placeholder"
+                                       contenteditable="true"><p th:text="${term?.description}"><br></p></div><hr>
+                                    <div class="container-left-right">
+                                        <span class="term" th:text="#{messages.set.create.de}">DESCRIPTION</span>
+                                        <span th:if="${iter.index==0}"><span data-language="description" id="language-button-description"  class="language-button"
                                                                  th:text="#{messages.set.create.cl}">CHOOSE LANGUAGE</span></span>
-                        </div>
+                                 </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
-                </div>
-            </div>
 
-
-                <div class="blue-row-margin"
-                 th:each="i : ${terms != null and #lists.size(terms) > 0 and terms[0] != null ? #numbers.sequence(#lists.size(terms), #lists.size(terms) + 2) : #numbers.sequence(0, 2)}">
-            <div class="" >
-                <div class="container-left-right blue-row" >
-                    <div class="term-block">
-                        <div class="term-input term-placeholder" th:id="'term'+${i}"
-                             th:data-base-placeholder="#{messages.set.create.placeholder} "
-                             th:data-placeholder="#{messages.set.create.term_placeholder}"
-                             data-placeholder-class="term-placeholder"
-                             contenteditable="true"></div>
-                        <hr><div class="container-left-right">
-                            <span class="term" th:text="#{messages.set.create.te}">TERM</span>
-                            <span th:if="${i==0}"><span data-language="term" id="language-button-term" class="language-button"
+                    <div class="blue-row-margin" th:each="i : ${terms != null and #lists.size(terms) > 0 and terms[0] != null ? #numbers.sequence(#lists.size(terms), #lists.size(terms) + 2) : #numbers.sequence(0, 2)}">
+                        <div class="" >
+                            <div class="container-left-right blue-row" >
+                                <div class="term-block">
+                                    <div class="term-input term-placeholder" th:id="'term'+${i}"
+                                        th:data-base-placeholder="#{messages.set.create.placeholder} "
+                                        th:data-placeholder="#{messages.set.create.term_placeholder}"
+                                        data-placeholder-class="term-placeholder"
+                                        contenteditable="true"></div><hr>
+                                    <div class="container-left-right">
+                                        <span class="term" th:text="#{messages.set.create.te}">TERM</span>
+                                        <span th:if="${i==0}"><span data-language="term" id="language-button-term" class="language-button"
                                                         th:text="#{messages.set.create.cl}" >CHOOSE LANGUAGE</span></span>
-                        </div>
-                    </div>
-                    <div class="term-block">
-                        <div class="term-input description-placeholder" th:id="'description'+${i}"
-                             th:data-base-placeholder="#{messages.set.create.placeholder} "
-                             th:data-placeholder="#{messages.set.create.description_placeholder}"
-                             data-placeholder-class="description-placeholder"
-                             contenteditable="true"><br></div>
-                        <hr><div class="container-left-right">
-                            <span class="term" th:text="#{messages.set.create.de}">DESCRIPTION</span>
-                            <span th:if="${i==0}"><span data-language="description" id="language-button-description"  class="language-button"
-                                                        th:text="#{messages.set.create.cl}">CHOOSE LANGUAGE</span></span>
+                                    </div>
+                                </div>
+                                <div class="term-block">
+                                    <div class="term-input description-placeholder" th:id="'description'+${i}"
+                                        th:data-base-placeholder="#{messages.set.create.placeholder} "
+                                        th:data-placeholder="#{messages.set.create.description_placeholder}"
+                                        data-placeholder-class="description-placeholder"
+                                        contenteditable="true"><br></div><hr>
+                                    <div class="container-left-right">
+                                        <span class="term" th:text="#{messages.set.create.de}">DESCRIPTION</span>
+                                        <span th:if="${i==0}"><span data-language="description" id="language-button-description"  class="language-button"
+                                                                th:text="#{messages.set.create.cl}">CHOOSE LANGUAGE</span></span>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
-        </div>
-
             </form>
         </div>
-
     </div>
     <div class="main-right">&nbsp;</div>
 </div>
@@ -158,8 +165,8 @@
 
         <div class="container-left-right">
             <div><h3 style="text-align: left" th:text="#{messages.set.create.import.h}"></h3></div>
-            <div class="transp-button" id="overlay_hide_button">
-                <span class="transp-row-button-img" ><img width="20" src="/images/close.png" th:alt="#{messeges.set.create.import.close}" />[[#{messeges.set.create.import.close}]]</span>
+            <div class="transp-button" id="overlay_hide_button" >
+                <span class="transp-row-button-img" ><img width="20" src="/images/close.png" th:alt="#{messages.set.create.import.close}" />[[#{messages.set.create.import.close}]]</span>
             </div>
         </div>
 
@@ -171,12 +178,12 @@
         <textarea  id="field-import" name="import"
                th:text="${payload?.description()}"
                th:placeholder="#{messages.set.create.import.div.placeholder}"
-               th:aria-label="#{messages.set.import}"
+               th:aria-label="#{messages.set.create.import}"
                ></textarea>
         <div style="display: flex">
-            <div style="text-align: left">
-                <h3 style="text-align: left">Between term and definition</h3>
-                <div aria-label="Between term and definition" style="display: block">
+            <div style="text-align: left; margin-right: 20px">
+                <h3 style="text-align: left" th:text="#{messages.set.create.import.colSeparator}"></h3>
+                <div aria-label="[[#{messages.set.create.import.colSeparator}]]" style="display: block">
                     <div><label for="import-radio-tab">
                         <input id="import-radio-tab" type="radio" name="col-separator" value="tab" checked=""><span>Tab</span></label></div>
                     <div><label for="import-radio-comma">
@@ -186,9 +193,11 @@
                         <label><input class="input2" name="col-custom" aria-label="Custom" placeholder="-" type="text" value="-"></label></label></div>
                 </div>
             </div>
+
+
             <div style="text-align: left">
-                <h3>Between cards</h3>
-                <div aria-label="Between terms" style="display: block">
+                <h3 th:text="#{messages.set.create.import.rowSeparator}"></h3>
+                <div aria-label="[[[[#{messages.set.create.import.colSeparator}]]]]" style="display: block">
                     <div><label for="import-radio-newline">
                         <input id="import-radio-newline" type="radio" name="row-separator" value="newline" checked=""><span>New line</span></label></div>
                     <div><label for="import-radio-semicolon">
@@ -204,12 +213,15 @@
         </form>
 
         <div class="container-right">
+            <div class="transp-button" id="overlay_clear_button">
+                <span class="transp-row-button-img" ><img width="20" src="/images/clear.png" th:alt="#{messages.set.create.import.clear}" />[[#{messages.set.create.import.clear}]]</span>
+            </div>
             <div class="transp-button" id="overlay_import_button">
-                <span class="transp-row-button-img" ><img width="20" src="/images/import.png" th:alt="#{messages.set.import}" />[[#{messages.set.import}]]</span>
+                <span class="transp-row-button-img" ><img width="20" src="/images/import.png" th:alt="#{messages.set.create.import}" />[[#{messages.set.create.import}]]</span>
             </div>
         </div>
 
-        <div id="field-import-preview" class="import-preview" >
+        <div id="field-import-preview" class="import-preview" th:data-term="#{messages.set.create.te}" th:data-description="#{messages.set.create.de}">
 
 
         </div>

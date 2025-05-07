@@ -1,7 +1,7 @@
 package dev.braindeck.web.entity;
 
 
-public record Term (
+public record TermDto(
          Integer id,
          Integer setId,
          String term,

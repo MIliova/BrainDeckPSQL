@@ -1,11 +1,9 @@
 package dev.braindeck.api.controller;
 
 import dev.braindeck.api.controller.payload.NewSetPayload;
-import dev.braindeck.api.controller.payload.TermsImportPayload.TermsImportPayload;
 import dev.braindeck.api.dto.*;
 import dev.braindeck.api.entity.UserEntity;
 import dev.braindeck.api.service.SetService;
-import dev.braindeck.api.service.TermService;
 import dev.braindeck.api.service.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -37,9 +35,10 @@ public class SetsRestController {
     }
 
     @PostMapping("/create-set")
-    public ResponseEntity<?> createSet(@Valid @RequestBody NewSetPayload payload,
-                                                 BindingResult bindingResult,
-                                                 UriComponentsBuilder uriBuilder) throws BindException {
+    public ResponseEntity<?> createSet(
+            @Valid @RequestBody NewSetPayload payload,
+            BindingResult bindingResult,
+            UriComponentsBuilder uriBuilder) throws BindException {
         System.out.println(payload);
         if (bindingResult.hasErrors()) {
             if (bindingResult instanceof BindException exception) {

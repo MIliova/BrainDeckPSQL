@@ -9,7 +9,7 @@ public record SetDto(
         Integer termLanguageId,
         Integer descriptionLanguageId,
         UserDto user,
-        List<Term> terms
+        List<TermDto> terms
 ) {
 
 }

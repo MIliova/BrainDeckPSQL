@@ -1,11 +1,13 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:fragment="headerFragment">
     <meta charset="UTF-8">
-    <title>Title</title>
+    <title th:text="${pageTitle} ?: 'BrainDeck'"></title>
+    <link rel="stylesheet" href="/css/styles.css">
+    <script src="/js/new-set.js" defer></script>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@100;200;300&display=swap" rel="stylesheet">
 </head>
 <body>
-
 <div th:fragment="header-menu">
     <div class="container-left-right blue-row ">
         <a class="blue-row-a-img" th:href="@{/user/{userId}/folders(userId=${user.id})}"><img width="20" src="/images/folders.png" th:alt="#{messages.folder.folders_my}" />[[#{messages.folder.folders}]]</a>
@@ -31,19 +33,22 @@
             <div th:if="${myLanguages != null and (!myLanguages.isEmpty())}">
                 <div><h6 th:text="#{messages.set.create.yl}">Your Languages</h6></div>
                 <div th:each="myLanguage: ${myLanguages}" class="language-select-option" role="option"
-                     th:text="${myLanguage.value}"></div>
+                     th:data-key="${myLanguage.key}" th:text="${myLanguage.value}"></div>
             </div>
             <div th:if="${topLanguages != null and (!topLanguages.isEmpty())}">
                 <div><h6 th:text="#{messages.set.create.tl}">Top Languages</h6></div>
                 <div th:each="topLanguage: ${topLanguages}" class="language-select-option" role="option"
-                     th:text="${topLanguage.value}"></div>
+                     th:data-key="${topLanguage.key}" th:text="${topLanguage.value}"></div>
             </div>
             <div th:if="${languages != null and (!languages.isEmpty())}">
                 <div><h6 th:text="#{messages.set.create.al}">All Languages</h6></div>
                 <div th:each="language: ${languages}" class="language-select-option" role="option"
-                     th:text="${language.value}"></div>
+                     th:data-key="${language.key}" th:text="${language.value}"></div>
             </div>
         </div>
+    </div>
 </div>
+
+
 </body>
 </html>

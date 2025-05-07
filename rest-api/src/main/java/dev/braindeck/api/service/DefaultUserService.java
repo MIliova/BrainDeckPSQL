@@ -18,8 +18,13 @@ public class DefaultUserService implements UserService {
         return this.userRepository.findById(id).orElseThrow(() -> new NoSuchElementException("errors.user.not_found"));
     }
 
+    @Override
     public UserDto findCurrentUser () {
         return Mapper.userToDto(this.findById(1));
     }
+
+//    public UserWithDraftDto findByIdWithDraft(int id) {
+//        return this.userRepository.findByIdWithDraft(id).orElseThrow(() -> new NoSuchElementException("errors.user.not_found"));
+//    }
 
 }

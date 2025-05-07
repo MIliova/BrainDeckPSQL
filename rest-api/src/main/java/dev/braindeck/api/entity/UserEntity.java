@@ -1,8 +1,6 @@
 package dev.braindeck.api.entity;
 
 import jakarta.persistence.*;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -14,26 +12,29 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-@Table(schema="braindeck", name="t_users")
+@Table(name="t_users")
 public class UserEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    Integer id;
+    private Integer id;
 
     @Column(name="name", length=50, nullable = false, unique = true)
-    String name;
+    private String name;
 
     @Column(name="email", length=50, nullable = false, unique = true)
-    String email;
+    private String email;
 
     @Column(name="password", length=700, nullable = false, unique = false)
-    String password;
+    private String password;
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<SetEntity> sets = new ArrayList<>();
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.REMOVE, fetch = FetchType.LAZY)
-    List<SetEntity> sets = new ArrayList<>();
+    private List<FolderEntity> folder = new ArrayList<>();
 
-    @OneToMany(mappedBy = "user", cascade = CascadeType.REMOVE, fetch = FetchType.LAZY)
-    List<FolderEntity> folder = new ArrayList<>();
-
+//    @OneToOne(mappedBy = "user", cascade = CascadeType.REMOVE, fetch = FetchType.LAZY)
+//    //@PrimaryKeyJoinColumn
+//    private DraftEntity draft;
 }

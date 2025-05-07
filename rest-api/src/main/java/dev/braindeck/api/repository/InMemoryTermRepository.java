@@ -4,7 +4,6 @@ import dev.braindeck.api.entity.TermEntity;
 
 import java.util.*;
 
-
 public class InMemoryTermRepository {
 
     private final List<TermEntity> terms = Collections.synchronizedList( new LinkedList<>());

@@ -12,7 +12,7 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity
-@Table(schema="braindeck", name="t_sets")
+@Table(name="t_sets")
 public class SetEntity {
 
     @Id
@@ -31,10 +31,11 @@ public class SetEntity {
     @Column(name="description_language_id", nullable = false, unique = false)
     private Integer descriptionLanguageId;
 
-    @ManyToOne
+    @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JoinColumn(name="user_id", updatable = false, nullable = false)
     private UserEntity user;
 
-    @OneToMany(mappedBy = "set", cascade = CascadeType.REMOVE, fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "set", cascade = CascadeType.REMOVE, fetch = FetchType.LAZY, orphanRemoval = true)
     private List<TermEntity> terms = new ArrayList<>();
+
 }

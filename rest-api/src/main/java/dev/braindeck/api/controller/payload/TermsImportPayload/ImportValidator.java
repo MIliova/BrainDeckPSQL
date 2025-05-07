@@ -19,19 +19,19 @@ public class ImportValidator implements ConstraintValidator<ImportValidation, Te
         boolean valid = true;
 
         if (payload.colSeparator() == null) {
-            constraintValidatorContext.buildConstraintViolationWithTemplate("Разделитель между Термином и Определением не может быть пустым")
+            constraintValidatorContext.buildConstraintViolationWithTemplate("{error.set.import.colSeparator}")
                     .addPropertyNode("colSeparator")
                     .addConstraintViolation();
             valid = false;
         }
         if (payload.rowSeparator() == null) {
-            constraintValidatorContext.buildConstraintViolationWithTemplate("Разделитель между различными Терминами не может быть пустым")
+            constraintValidatorContext.buildConstraintViolationWithTemplate("{error.set.import.rowSeparator}")
                     .addPropertyNode("rowSeparator")
                     .addConstraintViolation();
 
         }
         if (payload.colSeparator() != null && !VALID_COL_OPTIONS.contains(payload.colSeparator())) {
-            constraintValidatorContext.buildConstraintViolationWithTemplate("Разделитель между Термином и Определением указан некорректно: "
+            constraintValidatorContext.buildConstraintViolationWithTemplate("{error.set.import.false.colSeparator}"
                     + payload.colSeparator())
                     .addPropertyNode("colSeparator")
                     .addConstraintViolation();
@@ -39,7 +39,7 @@ public class ImportValidator implements ConstraintValidator<ImportValidation, Te
         }
 
         if (payload.rowSeparator() != null && !VALID_ROW_OPTIONS.contains(payload.rowSeparator())) {
-            constraintValidatorContext.buildConstraintViolationWithTemplate("Разделитель между различными Терминами указан некорректно: "
+            constraintValidatorContext.buildConstraintViolationWithTemplate("{error.set.import.false.rowSeparator}"
                     + payload.rowSeparator())
                     .addPropertyNode("rowSeparator")
                     .addConstraintViolation();
@@ -47,13 +47,13 @@ public class ImportValidator implements ConstraintValidator<ImportValidation, Te
         }
 
         if (Objects.equals(payload.colSeparator(), "custom") && payload.colCustom() == null) {
-            constraintValidatorContext.buildConstraintViolationWithTemplate("Укажите свой разделитель между Термином и Определением")
+            constraintValidatorContext.buildConstraintViolationWithTemplate("{error.set.import.colCustom}")
                     .addPropertyNode("colCustom")
                     .addConstraintViolation();
             valid = false;
         }
         if (Objects.equals(payload.rowSeparator(), "custom") && payload.rowCustom() == null) {
-            constraintValidatorContext.buildConstraintViolationWithTemplate("Укажите свой разделитель между различными Терминами")
+            constraintValidatorContext.buildConstraintViolationWithTemplate("{error.set.import.rowCustom}")
                     .addPropertyNode("rowCustom")
                     .addConstraintViolation();
             valid = false;

@@ -5,9 +5,10 @@ html, body {
 }
 body {
     background-color: #072748;
-    font-family: Arial, sans-serif;
+    font-family: "Roboto", sans-serif;
     font-size: 16px;
     color: white;
+    font-weight: 300;
 }
 .main {
     display: grid;
@@ -194,8 +195,9 @@ select {
     color: white;
     cursor: pointer;
     font-size: 100%;
-    font-weight: bold;
+    /*font-weight: bold;*/
     text-transform: uppercase;
+
 
     /*text-transform: uppercase;*/
     /*font-size: 100%;*/
@@ -208,7 +210,7 @@ select {
     color: white;
     cursor: pointer;
     font-size: 100%;
-    font-weight: bold;
+    /*font-weight: bold;*/
     text-transform: none;
     padding-left: 0;
     padding-right: 0;
@@ -257,8 +259,9 @@ select {
 
 }
 .term-description-sets {
-    font-size: 90%;
-    color: #072748;
+    font-size: 100%;
+    color: white;
+    /*#072748;*/
 }
 
 .term-description-set {
@@ -310,6 +313,7 @@ select {
     color: white;
     cursor: pointer;
     padding: 7px;
+    margin: 10px 5px;
 }
 
 .transp-row-button-img {
@@ -367,13 +371,38 @@ select {
 .import-preview {
     overflow-y:auto;
     height: 100vh;
-    margin-top: 10px;
 }
 .import-preview .blue-row {
     background-color: #304160;
     border-radius: 0;
     color: lightgray;
     padding: 7px;
+    position: relative;
+    text-align:left;
+
+}
+
+.numberH {
+    margin-left: -7px;
+    padding: 5px;
+    background-color: #25334c;
+    display: flex;
+    align-items: center;
+    text-align:center;
+    width: 20px;
+    position: absolute;
+    top: 0;
+    bottom: 0;
+}
+.number {
+    margin-left: -7px;
+    padding: 5px;
+    background-color: #25334c;
+    display: flex;
+    align-items: center;
+    width: 20px;
+    color: #25334c;
+
 }
 
 

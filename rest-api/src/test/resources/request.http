@@ -1,6 +1,6 @@
 ###
 
-GET http://localhost:8081/api/sets
+GET http://localhost:8081/api/user/1/sets
 
 ###
 
@@ -61,6 +61,10 @@ Content-Type: application/json
 }
 ###
 DELETE http://localhost:8081/api/set/10/delete
+###
+
+GET http://localhost:8081/api/draft/user/1
+
 ###
 
 

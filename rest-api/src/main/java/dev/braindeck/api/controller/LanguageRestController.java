@@ -20,9 +20,5 @@ public class LanguageRestController {
         return this.languageService.findAllByType();
     }
 
-//    @GetMapping("/api/languages/{setId:\\d+}")
-//    public String getById(@PathVariable final int setId) {
-//        return this.languagesService.getById(setId);
-//    }
 
 }

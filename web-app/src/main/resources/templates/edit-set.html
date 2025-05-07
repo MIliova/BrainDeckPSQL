@@ -1,23 +1,26 @@
 <!DOCTYPE html>
-<html lang="en">
+<html xmlns:th="http://www.thymeleaf.org">
 <head>
   <meta charset="UTF-8">
-  <title th:data="#{messages.set.edit}">Edit a set</title>
+  <title th:text="${pageTitle} ?: 'BrainDeck'"></title>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@100;200;300&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/css/styles.css">
   <script src="/js/new-set.js" defer></script>
-  <script src="/js/edit-set.js" defer></script>
-
 </head>
 <body>
 <div class="main">
   <div class="main-left">&nbsp;</div>
   <div class="main-center">
     <div th:insert="~{fragment::header-menu}"></div>
+
+
     <div class="container-left-right" style="margin: 40px 0">
       <div class="blue-row"><button class="blue-row-button"><a
               th:href="@{/set/{id}(id=${set != null ? set.id :payload.id})}"><span th:data="messages.set.edit.back">Back to set</span></a></button></div>
       <div class="blue-row"><button id="submitButton" class="blue-row-button" type="button" aria-label="Done"><span th:data="messages.set.edit.done">Done</span></button></div>
     </div>
+
+
     <div>
       <form method="post" id="set-form" data-th-action="@{/set/{id}/edit(id=${set != null ? set.id :payload.id})}">
         <div class=""><div class="textarea-description"><span

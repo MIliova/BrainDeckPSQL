@@ -1,23 +1,16 @@
 package dev.braindeck.api.service;
 
-
 import dev.braindeck.api.controller.payload.NewTermPayload;
 import dev.braindeck.api.controller.payload.UpdateTermPayload;
-import dev.braindeck.api.dto.ImportTermDto;
 import dev.braindeck.api.entity.SetEntity;
 import dev.braindeck.api.dto.TermDto;
 import dev.braindeck.api.entity.TermEntity;
 import dev.braindeck.api.repository.TermRepository;
 import lombok.RequiredArgsConstructor;
-import org.apache.logging.log4j.util.Strings;
 import org.springframework.stereotype.Service;
 
-
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.NoSuchElementException;
-
 
 @Service
 @RequiredArgsConstructor
@@ -36,8 +29,6 @@ public class DefaultTermService implements TermService {
                     this.termRepository.save(new TermEntity(null, term.getTerm(), term.getDescription(), set));
             }
     }
-
-
 
     @Override
     public void updateTerms(List<UpdateTermPayload> terms) {
@@ -77,27 +68,7 @@ public class DefaultTermService implements TermService {
         this.termRepository.deleteById(id);
     }
 
-    @Override
-    public List<ImportTermDto> prepareImport(String text, String colSeparator, String rowSeparator, String colCustom, String rowCustom) {
-        String rS = switch (rowSeparator) {
-            case "newline" -> "\n";
-            case "semicolon" -> ";";
-            default -> rowCustom;
-        };
 
-        String cS = switch (colSeparator) {
-            case "tab" -> "\t";
-            case "comma" -> ",";
-            default -> colCustom;
-        };
 
-        List<ImportTermDto> list = new ArrayList<>();
-        String [] rows = text.split(rS);
-        for (String row : rows) {
-            List<String> cols = new ArrayList<>(Arrays.asList(row.split(cS,2)));
-            list.add(new ImportTermDto(cols.getFirst(), (cols.size() > 1 ? cols.getLast(): "")));
-        }
-        return list;
-    }
 }
 

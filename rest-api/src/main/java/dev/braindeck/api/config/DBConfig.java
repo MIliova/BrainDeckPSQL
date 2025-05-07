@@ -2,10 +2,6 @@ package dev.braindeck.api.config;
 
 import org.springframework.context.annotation.Configuration;
 
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
-
 @Configuration
 public class DBConfig {
 

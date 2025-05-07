@@ -35,6 +35,17 @@ public class SetController {
     private final MessageSource messageSource;
     private final MyLocale myLocale;
 
+    @ModelAttribute("curLang")
+    public String getCurLang() {
+        return LocaleContextHolder.getLocale().getLanguage();
+    }
+    @ModelAttribute("avLangs")
+    public Map<String, String> getAvLangs() {
+        return this.myLocale.getAvailables();
+    }
+
+
+
     @ModelAttribute("user")
     public UserDto findCurrentUser() {
         UserDto userDto=this.setsRestClient.findCurrentUser();
@@ -49,32 +60,37 @@ public class SetController {
         return setDto;
     }
 
-    @ModelAttribute("curLang")
-    public String getCurLang() {
-        return LocaleContextHolder.getLocale().getLanguage();
-    }
-
-    @ModelAttribute("avLangs")
-    public Map<String, String> getAvLangs() {
-        return this.myLocale.getAvailables();
-    }
 
     @GetMapping
     public String findSet(@PathVariable("setId") int setId, Model model) {
-//        model.addAttribute("curLang", LocaleContextHolder.getLocale().getLanguage());
-//        model.addAttribute("avLangs", this.myLocale.getAvailables());
+        SetDto set = (SetDto) model.getAttribute("set");
 
+        if (set != null) {
+            model.addAttribute("pageTitle", set.title());
+        } else {
+            model.addAttribute("pageTitle", "");
+        }
         return "set";
     }
 
+    @PostMapping("/delete")
+    public String deleteSet(@ModelAttribute("setId") int setId, Model model) {
+        this.setsRestClient.deleteSet(setId);
+        UserDto userDto = (UserDto) model.getAttribute("user");
+        if (userDto == null) {
+            return "redirect:/"; // Или другая страница, например, главная
+        }
+        return "redirect:/user/"+userDto.id()+"/sets";
+    }
+
     @GetMapping("/edit")
-    public String getEditSetPage(@PathVariable("setId") int setId, @ModelAttribute("set") SetDto set, Model model) {
-//        model.addAttribute("curLang", LocaleContextHolder.getLocale().getLanguage());
-//        model.addAttribute("avLangs", this.myLocale.getAvailables());
+    public String getEditSetPage(@PathVariable("setId") int setId, @ModelAttribute("set") SetDto set,
+                                 Model model, Locale locale) {
 
         Map<String, Map<Integer, String>> languagesList = languagesRestClient.findAllByTypes();
         ControllersUtil.getLanguages(languagesList, model, set.termLanguageId(), set.descriptionLanguageId());
 
+        model.addAttribute("pageTitle", messageSource.getMessage("messages.set.edit", null, locale));
         return "edit-set";
     }
 
@@ -82,13 +98,13 @@ public class SetController {
     public String updateSet(@ModelAttribute(value = "setId", binding = false) int setId,
                             @RequestParam("terms") String payloadTerms,
                             UpdateSetPayload payload,
-                            Model model) {
+                            Model model, Locale locale) {
         System.out.println(payload);
         System.out.println(payloadTerms);
         ObjectMapper objectMapper = new ObjectMapper();
-        List<Term> terms = null;
+        List<TermDto> terms = null;
         try {
-            terms = objectMapper.readValue(payloadTerms, new TypeReference<List<Term>>(){});
+            terms = objectMapper.readValue(payloadTerms, new TypeReference<List<TermDto>>(){});
         } catch (IOException e) {
             throw new JsonParseException();
         }
@@ -113,15 +129,12 @@ public class SetController {
             Map<String, Map<Integer, String>> languagesList = languagesRestClient.findAllByTypes();
             ControllersUtil.getLanguages(languagesList, model, payload.termLanguageId(),payload.descriptionLanguageId());
 
+            model.addAttribute("pageTitle", messageSource.getMessage("messages.set.edit", null, locale));
             return "edit-set";
         }
     }
 
-    @PostMapping("/delete")
-    public String deleteSet(@ModelAttribute("setId") int setId) {
-        this.setsRestClient.deleteSet(setId);
-        return "redirect:/user/sets";
-    }
+
 
     @ExceptionHandler(NoSuchElementException.class)
     public String handleNoSuchElementException(NoSuchElementException e,
@@ -129,6 +142,7 @@ public class SetController {
                                                HttpServletResponse response, Locale locale) {
         response.setStatus(HttpStatus.NOT_FOUND.value());
         model.addAttribute("error", this.messageSource.getMessage(e.getMessage(), new Object[0], e.getMessage(), locale));
+        model.addAttribute("pageTitle", messageSource.getMessage("messages.set.create_new", null, locale));
         return "error/404";
     }
 

@@ -1,9 +1,6 @@
-package dev.braindeck.api.controller;
+package dev.braindeck.api.controller.exception;
 
-import jakarta.persistence.EntityNotFoundException;
 import jakarta.servlet.http.HttpServletResponse;
-import jakarta.validation.Constraint;
-import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.MessageSource;
@@ -24,7 +21,7 @@ import java.util.stream.Collectors;
 
 @ControllerAdvice
 @RequiredArgsConstructor
-public class BadRequestControllerAdvice {
+public class GlobalExceptionController {
 
     private final MessageSource messageSource;
 
@@ -96,12 +93,12 @@ public class BadRequestControllerAdvice {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(problemDetail);
     }
 
-    @ExceptionHandler(ConstraintViolationException.class)
+    @ExceptionHandler({
+            ConstraintViolationException.class,
+            DraftExistException.class
+    })
     public ResponseEntity<ProblemDetail> handleConstraintViolationException(Exception e, Model model, HttpServletResponse response, Locale locale) {
-
         System.out.println("Exception from BadRequestControllerAdvice=" + e.getMessage());
-
-
         ProblemDetail problemDetail = ProblemDetail
                 .forStatusAndDetail(HttpStatus.BAD_REQUEST,
                         this.messageSource.getMessage("errors.400.title",

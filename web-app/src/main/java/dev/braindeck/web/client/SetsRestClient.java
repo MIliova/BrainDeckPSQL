@@ -16,10 +16,16 @@ public interface SetsRestClient {
 
     Optional<SetDto> findSetById(int setId);
 
-    void updateSet(int setId, String title, String description, Integer termLanguageId, Integer descriptionLanguageId, List<Term> terms);
+    void updateSet(int setId, String title, String description, Integer termLanguageId, Integer descriptionLanguageId, List<TermDto> terms);
 
     void deleteSet(int setId);
 
     List<ImportTermDto> prepareImport(String text, String colSeparator, String rowSeparator, String colCustom, String rowCustom);
+
+    Optional<DraftSetDto> findDraftByUserId(int userId);
+
+    Optional<DraftSetDto> findDraftById(int draftId);
+
+    SetDto createSetFromDraft(int draftId, String title, String description, Integer termLanguageId, Integer descriptionLanguageId, List<NewTermPayload> terms);
 
     }

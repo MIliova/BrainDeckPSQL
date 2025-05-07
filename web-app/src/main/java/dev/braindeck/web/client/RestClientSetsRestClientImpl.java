@@ -1,9 +1,6 @@
 package dev.braindeck.web.client;
 
-import dev.braindeck.web.controller.payload.RestNewSetPayload;
-import dev.braindeck.web.controller.payload.RestUpdateSetPayload;
-import dev.braindeck.web.controller.payload.NewTermPayload;
-import dev.braindeck.web.controller.payload.ImportTermPayload;
+import dev.braindeck.web.controller.payload.*;
 import dev.braindeck.web.entity.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -85,7 +82,7 @@ public class RestClientSetsRestClientImpl implements SetsRestClient {
     }
 
     @Override
-    public void updateSet(int setId, String title, String description, Integer termLanguageId, Integer descriptionLanguageId, List<Term> terms) {
+    public void updateSet(int setId, String title, String description, Integer termLanguageId, Integer descriptionLanguageId, List<TermDto> terms) {
         try {
             System.out.println(terms);
 
@@ -136,6 +133,58 @@ public class RestClientSetsRestClientImpl implements SetsRestClient {
                     .body(new ImportTermPayload(text,  colSeparator,  rowSeparator,  colCustom, rowCustom))
                     .retrieve()
                     .body(TERMS_TYPE_REFERENCE);
+        } catch (HttpClientErrorException.BadRequest e) {
+            ProblemDetail problemDetail =  e.getResponseBodyAs(ProblemDetail.class);
+            if(problemDetail != null) {
+                throw new BadRequestException(Objects.requireNonNull(problemDetail.getProperties()).get("errors"));
+            }
+            throw new ProblemDetailException("Problem detail is null");
+        }
+    }
+
+    @Override
+    public Optional<DraftSetDto> findDraftByUserId(int userId) {
+        try {
+            return Optional.ofNullable(this.restClient.get()
+                    .uri("/api/draft/user/{userId}", userId)
+                    .retrieve()
+                    .body(DraftSetDto.class));
+        } catch (HttpClientErrorException.NotFound exception) {
+            ProblemDetail problemDetail =  exception.getResponseBodyAs(ProblemDetail.class);
+            if(problemDetail != null) {
+                throw new NoSuchElementException(String.valueOf(Objects.requireNonNull(problemDetail.getProperties()).get("errors")));
+            }
+            throw new ProblemDetailException("Problem detail is null");
+        }
+    }
+
+    @Override
+    public Optional<DraftSetDto> findDraftById(int draftId) {
+        try {
+            return Optional.ofNullable(this.restClient.get()
+                    .uri("/api/draft/{draftId}", draftId)
+                    .retrieve()
+                    .body(DraftSetDto.class));
+        } catch (HttpClientErrorException.NotFound exception) {
+            ProblemDetail problemDetail =  exception.getResponseBodyAs(ProblemDetail.class);
+            if(problemDetail != null) {
+                throw new NoSuchElementException(String.valueOf(Objects.requireNonNull(problemDetail.getProperties()).get("errors")));
+            }
+            throw new ProblemDetailException("Problem detail is null");
+        }
+    }
+
+
+    @Override
+    public SetDto createSetFromDraft(int draftId, String title, String description, Integer termLanguageId, Integer descriptionLanguageId, List<NewTermPayload> terms) {
+        try {
+            return this.restClient
+                    .post()
+                    .uri("/api/draft/{draftId}/create-set", draftId)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .body(new RestNewSetPayload(title,  description,  termLanguageId,  descriptionLanguageId, terms))
+                    .retrieve()
+                    .body(SetDto.class);
         } catch (HttpClientErrorException.BadRequest e) {
             ProblemDetail problemDetail =  e.getResponseBodyAs(ProblemDetail.class);
             if(problemDetail != null) {
