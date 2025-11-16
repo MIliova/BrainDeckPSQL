@@ -38,20 +38,11 @@ public class RestClientSetsRestClientImpl implements SetsRestClient {
     }
 
     @Override
-    public List<SetWithCountDto> findAllSets(int userId) {
-        return this.restClient
-                .get()
-                .uri("/api/user/{userId}/sets", userId)
-                .retrieve()
-                .body(SETS_TYPE_REFERENCE);
-    }
-
-    @Override
     public SetDto createSet(String title, String description, Integer termLanguageId, Integer descriptionLanguageId, List<NewTermPayload> terms) {
         try {
             return this.restClient
                     .post()
-                    .uri("/api/create-set")
+                    .uri("/api/users/me/sets")
                     .contentType(MediaType.APPLICATION_JSON)
                     .body(new RestNewSetPayload( title,  description,  termLanguageId,  descriptionLanguageId, terms))
                     .retrieve()
@@ -66,29 +57,12 @@ public class RestClientSetsRestClientImpl implements SetsRestClient {
     }
 
     @Override
-    public Optional<SetDto> findSetById(int setId) {
-        try {
-            return Optional.ofNullable(this.restClient.get()
-                    .uri("/api/set/{setId}", setId)
-                    .retrieve()
-                    .body(SetDto.class));
-        } catch (HttpClientErrorException.NotFound exception) {
-            ProblemDetail problemDetail =  exception.getResponseBodyAs(ProblemDetail.class);
-            if(problemDetail != null) {
-                throw new NoSuchElementException(String.valueOf(Objects.requireNonNull(problemDetail.getProperties()).get("errors")));
-            }
-            throw new ProblemDetailException("Problem detail is null");
-        }
-    }
-
-    @Override
     public void updateSet(int setId, String title, String description, Integer termLanguageId, Integer descriptionLanguageId, List<TermDto> terms) {
         try {
             System.out.println(terms);
-
             this.restClient
                     .patch()
-                    .uri("/api/set/{setId}/edit", setId)
+                    .uri("/api/users/me/sets/{setId}", setId)
                     .contentType(MediaType.APPLICATION_JSON)
                     .body(new RestUpdateSetPayload( setId, title,  description,  termLanguageId,  descriptionLanguageId, terms))
                     .retrieve()
@@ -107,11 +81,36 @@ public class RestClientSetsRestClientImpl implements SetsRestClient {
         try {
             this.restClient
                     .delete()
-                    .uri("/api/set/{setId}/delete", setId)
+                    .uri("/api/users/me/sets/{setId}", setId)
                     .retrieve()
                     .toBodilessEntity();
         } catch (HttpClientErrorException.NotFound exception) {
             throw new NoSuchElementException(exception.getResponseBodyAsString());
+        }
+    }
+
+    @Override
+    public List<SetWithCountDto> findAllSets(int userId) {
+        return this.restClient
+                .get()
+                .uri("/api/users/{userId}/sets", userId)
+                .retrieve()
+                .body(SETS_TYPE_REFERENCE);
+    }
+
+    @Override
+    public Optional<SetDto> findSetById(int setId) {
+        try {
+            return Optional.ofNullable(this.restClient.get()
+                    .uri("/api/sets/{setId}", setId)
+                    .retrieve()
+                    .body(SetDto.class));
+        } catch (HttpClientErrorException.NotFound exception) {
+            ProblemDetail problemDetail =  exception.getResponseBodyAs(ProblemDetail.class);
+            if(problemDetail != null) {
+                throw new NoSuchElementException(String.valueOf(Objects.requireNonNull(problemDetail.getProperties()).get("errors")));
+            }
+            throw new ProblemDetailException("Problem detail is null");
         }
     }
 

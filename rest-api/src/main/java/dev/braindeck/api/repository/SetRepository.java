@@ -25,6 +25,7 @@ public interface SetRepository extends JpaRepository<SetEntity, Integer> {
     @Query("SELECT s, COUNT(t) AS termCount FROM SetEntity s LEFT JOIN s.terms t WHERE s.user.id = :userId GROUP BY s.id")
     List<Tuple> findAllByUserIdWithTermCount(@Param("userId") Integer userId);
 
+
     @Modifying
     @Query("DELETE FROM SetEntity s WHERE s.id = :id")
     void deleteById(@Param("id") Integer id);
