@@ -1,44 +1,63 @@
 class DivPlaceholder {
     constructor() {
         this.els = [];
+        // this.inited = false;
     }
+    // pushEl(el, type) {
+    //     if (el.dataset._ph_inited)
+    //         return;
+    //     this.els.push({el:el, type:type});
+    // }
+    // reset(){
+    //     this.els = [];
+    //     this.inited = false;
+    // }
+    // reInit(){
+    //     this.init();
+    // }
+    // init() {
+    //     if (this.inited) return;
+    //     this.els.forEach(obj => this.initEl(obj));
+    //     this.inited = true;
+    // }
     add(el, type) {
+        if (el.dataset._ph_inited)
+            return;
         this.els.push({el:el, type:type});
+        this.initEl({el:el, type:type})
     }
-    reset(){
-        this.els = [];
-    }
-    reInit(){
-        this.init();
-    }
-    init() {
-        this.els.forEach(obj => {
-            let el = obj.el;
-            // Инициализация плейсхолдера при загрузке страницы
-            if (el.textContent.trim() === '') {
-                el.textContent = el.getAttribute('data-placeholder');
-                el.classList.add(el.getAttribute('data-placeholder-class'));
-                el.dataset.ph = '1';
+    initEl(obj){
+        const el = obj.el;
+        if (el.dataset._ph_inited)
+            return;
+        el.dataset._ph_inited = "1";
+        if (el.textContent.trim() === "") {
+            this.show(el);
+        }
+        el.addEventListener('focus', () => {
+            if (el.dataset._ph === "1" /*&& el.textContent.trim() === el.getAttribute('data-placeholder')*/) {
+                this.hide(el);
+                obj.onfocus?.() ?? this.onfocus(el);
+                // if (obj.onfocus)
+                //     obj.onfocus();
+                // else
+                //     this.onfocus(el);
             }
-
-            el.addEventListener('focus', () => {
-                if (el.dataset.ph === '1' && el.textContent.trim() === el.getAttribute('data-placeholder')) {
-                    el.dataset.ph = '0';
-                    el.classList.remove(el.getAttribute('data-placeholder-class'));
-                    if (obj.onfocus)
-                        obj.onfocus();
-                    else
-                        this.onfocus(el);
-                }
-            });
-            el.addEventListener('blur', () => {
-                if (el.textContent.trim() === '') {
-                    el.dataset.ph = '1';
-                    el.textContent = el.getAttribute('data-placeholder');
-                    el.classList.add(el.getAttribute('data-placeholder-class'));
-                }
-            });
         });
+        el.addEventListener('blur', () => {
+            if (el.textContent.trim() === "") {
+                this.show(el);
+            }
+        });
+    }
+    show(el){
+        el.dataset._ph = "1";
+        el.textContent = el.dataset.placeholder;//el.getAttribute('data-placeholder');
+        el.classList.add(el.dataset.placeholderClass);// getAttribute('data-placeholder-class'));
+    }
+    hide(el){
+        el.dataset._ph = "0";
+        el.classList.remove(el.dataset.placeholderClass);// el.getAttribute('data-placeholder-class'));
     }
     onfocus(el){
         el.textContent = '';
@@ -54,265 +73,406 @@ class DivPlaceholder {
     update(type, text){
         this.els.forEach(obj => {
             if (obj.type === type) {
-                const oldPH = obj.el.getAttribute('data-placeholder');
-                obj.el.setAttribute('data-placeholder', obj.el.getAttribute('data-base-placeholder') + ' ' + text);
-                if (obj.el.dataset.ph === '1' && obj.el.textContent.trim() === oldPH) {
-                    obj.el.textContent = obj.el.getAttribute('data-placeholder');
-                    obj.el.classList.add(obj.el.getAttribute('data-placeholder-class'));
+                const el = obj.el;
+                const oldPH = el.dataset.placeholder;//getAttribute('data-placeholder');
+                el.dataset.placeholder = el.dataset.basePlaceholder + " " + text;
+                //obj.el.setAttribute('data-placeholder', obj.el.getAttribute('data-base-placeholder') + ' ' + text);
+                if (obj.el.dataset._ph === '1' /*&& obj.el.textContent.trim() === oldPH*/) {
+                    this.show(obj.el);
                 }
             }
         })
     }
 
     isActive(el) {
-        return el.dataset.ph === "1" && el.textContent.trim() === el.dataset.placeholder;
+        return el.dataset._ph === "1" /*&& el.textContent.trim() === el.dataset.placeholder*/;
+        //return el.dataset._ph === "1" && el.textContent.trim() === el.getAttribute('data-placeholder');
     }
 }
 
 class EditableDiv {
-    constructor() {
-        this.els = [];
-    }
+    // constructor() {
+    //     this.els = [];
+    //     this.inited = false;
+    // }
     add(el) {
-        this.els.push(el);
+        //this.els.push(el);
+        this.initEl(el)
     }
-    reset(){
-        this.els = [];
-    }
-    reInit(){
-        init();
-    }
-    init() {
-        this.els.forEach(el => {
-            el.addEventListener('keydown', (event) => {
-                if (event.key === 'Enter') {
-                    event.preventDefault();
-                    this.insertParagraphAfterCurrent(el);
-                    this.autoResizeDiv(el);
-                }
-            });
-            el.addEventListener('input', (event) => {
-                //obTextInP(el);
-                const content = el.innerHTML;
-                // Проверка, если последний элемент не <p>, то добавляем новый
-                if (!content.endsWith('</p>')) {
-                    this.insertParagraphAfterCurrent(el);
-                }
-                this.removeExtraBreaks(el);
-                // Проверка на удаление тега <p>
-                const paragraphs = el.querySelectorAll('p');
-                if (paragraphs.length === 1 && paragraphs[0].innerHTML.trim() === '') {
-                    console.log('удаление тега <p>');
-                    paragraphs[0].remove(); // Удаляем пустой абзац, если он один
-                }
+    initEl(el) {
+        if (el.dataset._ed_inited)
+            return;
+        el.dataset._ed_inited = "1";
+        this.ensureParagraphStructure(el);
+
+        el.addEventListener('keydown', (event) => {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                this.insertParagraphAfterCurrent(el);
                 this.autoResizeDiv(el);
-            });
+            }
+        });
+
+        el.addEventListener('input', () => {
+            this.ensureParagraphStructure(el);
+            this.removeExtraBreaks(el);
+            this.autoResizeDiv(el);
+        });
+    }
+    // reset(){
+    //     this.els = [];
+    //     this.inited = false;
+    // }
+    // reInit(){
+    //     this.init();
+    // }
+    // init() {
+    //     if (this.inited) return;
+    //     this.inited = true;
+    //     this.els.forEach(el => {
+    //         this.initEl(el);
+    //     });
+    // }
+
+    ensureParagraphStructure(el) {
+        // Если div пуст — создаем <p><br>
+        if (el.children.length === 0) {
+            const p = document.createElement('p');
+            p.innerHTML = '<br>';
+            el.appendChild(p);
+            return;
+        }
+
+        // Текст на корневом уровне → перенести в <p>
+        [...el.childNodes].forEach(node => {
+            if (node.nodeType === Node.TEXT_NODE && node.textContent.trim() !== '') {
+                const p = document.createElement('p');
+                p.textContent = node.textContent;
+                node.replaceWith(p);
+            }
         });
     }
 
     insertParagraphAfterCurrent(el) {
         const selection = window.getSelection();
         const range = selection.getRangeAt(0);
-        const newParagraph = document.createElement('P');
-        newParagraph.innerHTML = '<br>';
 
-        const currentBlock = range.startContainer.nodeType === Node.TEXT_NODE
-            ? range.startContainer.parentNode
-            : range.startContainer;
+        let currentP = this.getCurrentParagraph(el);
 
-        if (currentBlock.tagName === 'P') {
-            //const selectedText = range.toString();
-            const beforeCursorText = range.startContainer.textContent.slice(0, range.startOffset).trim();
-            const afterCursorText = range.startContainer.textContent.slice(range.startOffset).trim();
+        // Если <p> нет — создаём и ставим курсор
+        if (!currentP) {
+            const p = document.createElement('p');
+            p.innerHTML = '<br>';
+            el.appendChild(p);
 
-            currentBlock.parentNode.insertBefore(newParagraph, currentBlock.nextSibling);
-
-            if (afterCursorText.length > 0)
-                newParagraph.textContent = afterCursorText;
-
-            if (beforeCursorText.length > 0){
-                range.startContainer.textContent = beforeCursorText;
-            } else {
-                range.startContainer.textContent = '';
-                currentBlock.innerHTML = '<br>';
-            }
-        } else {
-            el.appendChild(newParagraph);
+            const newRange = document.createRange();
+            newRange.setStart(p, 0);
+            newRange.collapse(true);
+            selection.removeAllRanges();
+            selection.addRange(newRange);
+            return;
         }
 
-        // Перемещаем курсор в новый абзац
+        // Разбиваем абзац
+        const newP = document.createElement('p');
+        newP.innerHTML = '<br>';
+
+        const startNode = range.startContainer;
+        const startOffset = range.startOffset;
+
+        // Внутри форматированных тегов → клонируем структуру
+        const afterFragment = range.cloneContents();
+        const beforeFragment = currentP.cloneNode(true);
+
+        // Удаляем хвост после курсора из currentP
+        const walker = document.createTreeWalker(currentP, NodeFilter.SHOW_TEXT, null);
+        let textNode;
+        while (textNode = walker.nextNode()) {
+            if (textNode === startNode) {
+                textNode.textContent = textNode.textContent.slice(0, startOffset);
+                this.trimEmptyNodes(currentP);
+                break;
+            }
+        }
+
+        // Заполняем новый <p>
+        if (afterFragment.textContent.trim() !== '') {
+            newP.innerHTML = '';
+            newP.appendChild(afterFragment);
+        }
+
+        // Вставляем после текущего абзаца
+        currentP.parentNode.insertBefore(newP, currentP.nextSibling);
+
+        // Ставим курсор в начало нового абзаца
         const newRange = document.createRange();
-        newRange.setStart(newParagraph, 0);
+        newRange.setStart(newP, 0);
         newRange.collapse(true);
         selection.removeAllRanges();
         selection.addRange(newRange);
     }
 
-    autoResizeDiv(el) {
-        el.style.height = 'auto'; // Сбрасываем высоту
-        el.style.height = el.scrollHeight + 'px'; // Устанавливаем по содержимому
+    getCurrentParagraph(el) {
+        const selection = window.getSelection();
+        if (!selection.rangeCount) return null;
+
+        let node = selection.getRangeAt(0).startContainer;
+
+        // Если текстовый узел — берём родителя
+        if (node.nodeType === Node.TEXT_NODE) {
+            node = node.parentNode;
+        }
+
+        // Поднимаемся вверх до <p> или el
+        while (node && node !== el && node.tagName !== 'P') {
+            node = node.parentNode;
+        }
+
+        return (node && node.tagName === 'P') ? node : null;
     }
 
-    // Удаление пустых <br> в абзацах
-    removeExtraBreaks(editableDiv) {
-        const brs = editableDiv.querySelectorAll('br');
-        brs.forEach(br => {
-            if (br.parentNode === editableDiv)
-                editableDiv.removeChild(br);
+    trimEmptyNodes(node) {
+        [...node.childNodes].forEach(n => {
+            if (n.nodeType === Node.TEXT_NODE && n.textContent === '') {
+                n.remove();
+            }
+            if (n.nodeType === Node.ELEMENT_NODE && n.innerHTML === '') {
+                n.remove();
+            }
+        });
+        if (node.innerHTML.trim() === '') {
+            node.innerHTML = '<br>';
+        }
+    }
+
+    removeExtraBreaks(el) {
+        // Удаляем <br> на верхнем уровне
+        [...el.childNodes].forEach(n => {
+            if (n.nodeName === 'BR') n.remove();
         });
 
-        const paragraphs = editableDiv.querySelectorAll('p');
-        paragraphs.forEach(paragraph => {
-            const children = Array.from(paragraph.childNodes);
-            children.forEach(child => {
-                if (child.nodeName === 'BR' && !child.nextSibling) {
-                    paragraph.removeChild(child); // Удаляем <br>, если он последний
+        // Удаляем trailing <br> в p
+        el.querySelectorAll('p').forEach(p => {
+            const children = [...p.childNodes];
+            children.forEach((child, i) => {
+                if (child.nodeName === 'BR' && i < children.length - 1) {
+                    child.remove();
                 }
             });
-            if (paragraph.textContent.trim() === '') {
-                paragraph.innerHTML = '<br>';
+
+            if (p.innerHTML.trim() === '') {
+                p.innerHTML = '<br>';
             }
         });
     }
-// obTextInP(el) {
-//     const selection = window.getSelection();
-//     const range = selection.getRangeAt(0);
-//     const currentBlock = range.startContainer.nodeType === Node.TEXT_NODE
-//         ? range.startContainer.parentNode
-//         : range.startContainer;
-//     if (currentBlock.tagName !== 'P'){
-//
-//             const newParagraph = document.createElement('P');
-//             newParagraph.textContent = range.startContainer.textContent;
-//             el.appendChild(newParagraph);
-//
-//
-//
-//         range.startContainer.textContent = '';
-//         const newRange = document.createRange();
-//         newRange.setStart(newParagraph, 0);
-//         newRange.collapse(true);
-//         selection.removeAllRanges();
-//         selection.addRange(newRange);
-//     }
-// }
+
+    autoResizeDiv(el) {
+        el.style.height = 'auto';
+        el.style.height = el.scrollHeight + 'px';
+    }
+}
+
+class TextNormalization {
+    // constructor() {
+    //     this.els = [];
+    // }
+    add(el) {
+        //this.els.push(el);
+        this.initEl(el)
+    }
+    initEl(el) {
+        if (el.dataset._tn_inited)
+            return;
+        el.dataset._tn_inited = "1";
+        el.innerHTML = this.normalizeText(el.textContent);
+    }
+    // init () {
+    //     this.els.forEach(el => {
+    //         el.innerHTML = this.norm(el.textContent);
+    //     });
+    // }
+    normalizeText(text) {
+        return text.trim()
+            .split('\n')
+            .map(p => `<p>${p || '<br>'}</p>`)
+            .join('');
+    }
+    normalizeObj(obj) {
+        return Array.from(obj.querySelectorAll("p"))
+                .map(p => p.textContent)
+                .join("\n").trim();
+    }
 }
 
 class LanguageMenu {
-    constructor() {
-        this.inputs ={};
-        this.languageButtons = [];
-        this.languageOptions = [];
+    constructor({ onChange } = {}) {
+        this.onChange = onChange || (() => {});
 
+        this.inputs = {};
+        this.buttons = [];
+        this.options = [];
+        this.languageMenu = null;
+        this.owner = null;
+        this.inited = false;
+
+
+        this._handleDocClick = this._handleDocClick.bind(this);
     }
     addInput(el, type) {
         this.inputs[type] = el;
     }
     addButton(el, type) {
-        this.languageButtons.push({el:el, type: type});
+        this.buttons.push({el:el, type: type});
     }
     addOption(el) {
-        this.languageOptions.push(el);
+        this.options.push(el);
     }
     init(languageMenu){
         this.languageMenu = languageMenu;
-        this.initLanguageButtons();
-        this.languageOptions.forEach(el=>{
+        this._initButtons();
+        this._initOptions();
+
+        document.addEventListener('click', this._handleDocClick);
+    }
+    _initButtons(){
+        if (this.inited) return;
+        this.inited = true;
+        this.buttons.forEach(obj => {
+            const el = obj.el;
+            el.style.display = 'block';
+            //lb.nextElementSibling.style.display = 'none';
+
+            const handler = (event) => {
+                event.stopPropagation();
+                this.owner = obj;
+                this.languageMenu.style.display = 'block';
+                const rect = el.getBoundingClientRect();
+                this.languageMenu.style.top = `${rect.bottom + window.scrollY}px`;
+                this.languageMenu.style.left = `${rect.left + window.scrollX}px`;
+            };
+
+            obj._clickHandler = handler; // сохраняем для removeEventListener
+
+            el.addEventListener('click', handler);
+
+        });
+    }
+    _initOptions() {
+        this.options.forEach(el => {
             el.addEventListener('click', (event) => {
                 this.setLanguage(event.target.dataset.key, event.target.innerText)
             });
         });
-        document.addEventListener('click', (event) => {
-            if (!this.languageMenu.contains(event.target) && !event.target.classList.contains('language-button')) {
-                this.languageMenu.style.display = 'none'; // Скрыть меню
-            }
-        });
     }
-    initLanguageButtons(){
-        this.languageButtons.forEach(lbo => {
-            let lb=lbo.el;
-            lb.style.display = 'block';
-            //lb.nextElementSibling.style.display = 'none';
-            lb.addEventListener('click', (event) => {
-                this.owner = lb;
-                this.languageMenu.style.display = 'block';
-                const buttonRect = lb.getBoundingClientRect();
-                this.languageMenu.style.top = `${buttonRect.bottom + window.scrollY}px`;
-                this.languageMenu.style.left = `${buttonRect.left + window.scrollY}px`;
-            });
-        });
+    _handleDocClick(event) {
+        if (!this.languageMenu) return;
+        // if (!this.languageMenu.contains(event.target) && !event.target.classList.contains('language-button')) {
+        //     this.languageMenu.style.display = 'none'; // Скрыть меню
+        // }
+        if (!event.target.closest(".language-button") &&
+            !this.languageMenu.contains(event.target))
+        {
+            this.languageMenu.style.display = 'none';
+        }
     }
     setLanguage(id, text) {
-        const type = this.owner.dataset.language;
+        if (!this.owner) return;
+        const type = this.owner.type;
+
         this.inputs[type].value = id;
 
-        this.owner.className="language-button";
-        this.languageMenu.style.display = 'none';
-        this.owner.innerText = text;
-        this.languageButtons.forEach(ob=>{
-            if (ob.type === type)
-            ob.el.innerText = text;
+        this.buttons.forEach(ob => {
+            if (ob.type === type) {
+                ob.el.innerText = text;
+                ob.el.className="language-button";
+            }
         });
 
-        divplaceholder.update(type, text);
+        //this.owner.className="language-button";
+        //this.owner.innerText = text;
+
+        this.languageMenu.style.display = 'none';
+
+        this.onChange(type, text);
+        //divplaceholder.update(type, text);
     }
     reset(){
-        this.languageButtons = [];
+        this.buttons.forEach(obj => {
+            if (obj._clickHandler) {
+                obj.el.removeEventListener('click', obj._clickHandler);
+            }
+        });
+        this.buttons = [];
+
+        this.owner = null;
+
+        this.inited = false;
+
+        //document.removeEventListener('click', this._handleDocClick);
     }
     reInit(){
-        this.initLanguageButtons();
+        this._initButtons();
     }
 }
 
 class Labels {
-    constructor() {
-        this.els = [];
-    }
+    // constructor() {
+    //     this.els = [];
+    // }
     add(el) {
-        this.els.push(el);
-    }
-    init () {
-        this.els.forEach(el => {
-            el.addEventListener('keyup', (event) => {
-                if (event.target.value.length > 0)
-                    event.target.previousElementSibling.innerHTML = event.target.previousElementSibling.dataset.message;//"Title";
-                else
-                    event.target.previousElementSibling.innerHTML="&nbsp;";
-            });
+        //this.els.push(el);
+        el.addEventListener('keyup', (event) => {
+            if (event.target.value.length > 0)
+                event.target.previousElementSibling.innerHTML = event.target.previousElementSibling.dataset.message;//"Title";
+            else
+                event.target.previousElementSibling.innerHTML="&nbsp;";
         });
     }
+    // init () {
+    //     this.els.forEach(el => {
+    //         el.addEventListener('keyup', (event) => {
+    //             if (event.target.value.length > 0)
+    //                 event.target.previousElementSibling.innerHTML = event.target.previousElementSibling.dataset.message;//"Title";
+    //             else
+    //                 event.target.previousElementSibling.innerHTML="&nbsp;";
+    //         });
+    //     });
+    // }
 }
 
-class TextNormalization {
-    constructor() {
-        this.els = [];
-    }
-    add(el) {
-        this.els.push(el);
-    }
-    init () {
-        this.els.forEach(el => {
-            el.innerHTML = this.norm(el.innerText);
+class Errors {
+    getError (errors) {
+        if (!errors || typeof errors !== 'object') return '';
+
+        let errorsArr = [];
+        Object.keys(errors).forEach(key => {
+            const error = errors[key];
+            if (Array.isArray(error)) {
+                error.forEach(message => {
+                    errorsArr.push(message);
+                });
+            } else {
+                errorsArr.push(error);
+            }
         });
-    }
-    norm(text) {
-        return text.trim().split('\n')
-            .map(p=>  (p.length > 0 ? '<p>' + p + '</p>' : '<p><br></p>'))
-            .join('');
+        return errorsArr.join('<br>');
     }
 }
 
 class SetForm {
-    constructor(test) {
+    constructor({ termIsEmpty } = {}, submitType = "", test = true) {
+        this.termIsEmpty = termIsEmpty || (() => false);
+        this.submitType = submitType;
+        this.test = test;
+        this.inited = false;
         this.termsObjs = [];
-        this.submitType = '';
-        this.test = (test ? test : false);
     }
     add(term, description, id) {
         this.termsObjs.push({t:term, d:description, id:id});
     }
-    init (submitType) {
-        this.submitType = submitType;
+    init () {
+        if (this.inited) return;
+        this.inited = true;
 
         document.getElementById('submitButton').addEventListener("click", (event) => {
 
@@ -337,50 +497,49 @@ class SetForm {
                 }
             });
     }
+    checkField(fieldId, errorClass = "blue-row-err") {
+        const field = document.getElementById(fieldId);
+        if (field.value.trim() === "") {
+            field.parentElement.parentElement.classList.add(errorClass);
+            return field.dataset.message;
+        } else {
+            field.parentElement.parentElement.classList.remove(errorClass);
+            return null;
+        }
+    }
+    checkLanguage(fieldId, fieldId2, errorClass = "language-button-err") {
+        const field = document.getElementById(fieldId);
+        if (field.value.trim() === "") {
+            document.getElementById(fieldId2).classList.add(errorClass);
+            return field.dataset.message;
+        } else {
+            document.getElementById(fieldId2).classList.remove(errorClass);
+            return null;
+
+        }
+    }
     validate(){
-
         const errors = [];
-
-        const fieldTitle = document.getElementById('field-title');
-        if (fieldTitle.value === "") {
-            errors.push(fieldTitle.dataset.message);
-            fieldTitle.parentElement.parentElement.className = "blue-row-err";
-        } else {
-            fieldTitle.parentElement.parentElement.className = "";
-        }
-
-        const fieldDescription = document.getElementById('field-description');
-        if (fieldDescription.value === "") {
-            errors.push(fieldDescription.dataset.message);
-            fieldDescription.parentElement.parentElement.className = "blue-row-err";
-        } else {
-            fieldDescription.parentElement.parentElement.className = "";
-        }
-
-        const fieldTermLanguage = document.getElementById('field-term-language');
-        if (fieldTermLanguage.value === "") {
-            errors.push(fieldTermLanguage.dataset.message);
-            document.getElementById('language-button-term').className = "language-button language-button-err";
-        } else {
-            document.getElementById('language-button-term').className = "language-button";
-        }
-
-        const fieldDescriptionLanguage = document.getElementById('field-description-language');
-        if (fieldDescriptionLanguage.value === "") {
-            errors.push(fieldDescriptionLanguage.dataset.message);
-            document.getElementById('language-button-description').className = "language-button language-button-err";
-        } else {
-            document.getElementById('language-button-description').className = "language-button";
-        }
+        const errorClass = "blue-row-err";
+        ["field-title", "field-description"].forEach(id => {
+            const err = this.checkField(id);
+            if (err) errors.push(err);
+        });
+        [['field-term-language', 'language-button-term'], ['field-description-language', 'language-button-description']].forEach(ids => {
+            const err = this.checkLanguage(ids[0],ids[1]);
+            if (err) errors.push(err);
+        });
 
         for (let i = 0; i < this.termsObjs.length; i++) {
-            if ((!this.termsObjs[i].t.textContent.trim() || divplaceholder.isActive(this.termsObjs[i].t))
-                && (!this.termsObjs[i].d.textContent.trim()  || divplaceholder.isActive(this.termsObjs[i].d))) {
-                this.termsObjs[i].t.parentElement.parentElement.parentElement.className = "blue-row-err";
+            const termEmpty = !this.termsObjs[i].t.textContent.trim() || this.termIsEmpty(this.termsObjs[i].t);
+            const descEmpty = !this.termsObjs[i].d.textContent.trim() || this.termIsEmpty(this.termsObjs[i].d);
+
+            if (termEmpty && descEmpty) {
+                this.termsObjs[i].t.parentElement.parentElement.parentElement.classList.add(errorClass);
                 errors.push(document.getElementById('field-terms').dataset.message); //errors.push("add at least three terms");
                 break;
             } else {
-                this.termsObjs[i].t.parentElement.parentElement.parentElement.className = "";
+                this.termsObjs[i].t.parentElement.parentElement.parentElement.classList.remove(errorClass);
             }
         }
 
@@ -407,7 +566,7 @@ class SetForm {
         formData.append("termLanguageId", document.getElementById('field-term-language').value);
         formData.append("descriptionLanguageId", document.getElementById('field-description-language').value);
 
-        const termsDto = this.setFormGetTerms();
+        const termsDto = this.getTerms();
         //const termsField = document.getElementById("field-terms");
         //termsField.value = JSON.stringify(newTerms);
         formData.append('terms', new Blob([JSON.stringify(termsDto)], { type: 'application/json' }));
@@ -427,7 +586,7 @@ class SetForm {
             description: document.getElementById('field-description').value,
             termLanguageId: document.getElementById('field-term-language').value,
             descriptionLanguageId: document.getElementById('field-description-language').value,
-            terms: this.setFormGetTerms()
+            terms: this.getTerms()
         };
 
         fetch('/api/sets/create',{
@@ -446,7 +605,7 @@ class SetForm {
             .then(data => {
                 if (data.errors) {
                     //console.log("Ответ сервера errors", Object.values( data.errors).join(', '));
-                    this.setFormSetErrors(Object.values( data.errors).join(', '));
+                    this.showErrors(Object.values( data.errors).join(', '));
                 }
                 console.log("Ответ сервера data", data);
             })
@@ -465,13 +624,13 @@ class SetForm {
 
         for (let i = 0; i < this.termsObjs.length; i++) {
             term = '';
-            if (!divplaceholder.isActive(this.termsObjs[i].t)) {
+            if (!this.termIsEmpty(this.termsObjs[i].t)) {
                 term = Array.from(this.termsObjs[i].t.querySelectorAll("p"))
                     .map(p => p.textContent)
                     .join("\n").trim();
             }
             description = '';
-            if (!divplaceholder.isActive(this.termsObjs[i].d)) {
+            if (!this.termIsEmpty(this.termsObjs[i].d)) {
                 description = Array.from(this.termsObjs[i].d.querySelectorAll("p"))
                     .map(p => p.textContent)
                     .join("\n").trim();
@@ -495,87 +654,260 @@ class SetForm {
 }
 
 class Overlay {
-    init(overlay, showButton, hideButton, onHide, onShow) {
-        this.overlay = overlay;
+    constructor (onHide, onShow) {
         this.onHide = onHide;
         this.onShow = onShow;
-        if (showButton && hideButton) {
-            showButton.addEventListener('click', () => {
-                this.show();
-            });
-            hideButton.addEventListener('click', () => {
-                this.hide();
-            });
-        } else if (showButton) {
+        this.inited = false;
+    }
+    init(overlay, showButton, hideButton) {
+        if (this.inited) return;
+        this.inited = true;
+        if (!(overlay instanceof HTMLElement) || !(showButton instanceof HTMLElement)) return;
+        if (!(hideButton instanceof HTMLElement)) {
             showButton.style.visibility = "hidden";
+            return;
         }
-
+        this.overlay = overlay;
+        showButton.addEventListener('click', () => {
+            this.show();
+        });
+        hideButton.addEventListener('click', () => {
+            this.hide();
+        });
     }
     show() {
         this.overlay.style.visibility = "visible";
-        if (this.onShow)
-            this.onShow.onShow();
+        //if (this.onShow) this.onShow.onShow();
+        if (typeof this.onShow === 'function') this.onShow();
     }
-
     hide() {
         this.overlay.style.visibility = "hidden";
-        if (this.onHide)
-            this.onHide.onHide();
+        //if (this.onHide) this.onHide.onHide();
+        if (typeof this.onHide === 'function') this.onHide();
     }
+}
 
+class TermRow {
+    constructor(
+        { onTextNormalization } = {},
+        obj = null,
+        first = false,
+        data) {
+        this.obj = obj ?? { term: "", description: "", id: null };
+        this.first = !!first;
+
+        this.data = data ?? {};
+
+        this.onTextNormalization = onTextNormalization || ((t) => t);
+
+        this.buildRow();
+    }
+    getElement() {
+        return this.root;
+    }
+    createField(placeholderClass, placeholder, type, text) {
+        const div = document.createElement('div');
+        div.className = `term-input ${placeholderClass}`;
+        div.setAttribute('data-base-placeholder', this.data.dataBasePlaceholder);
+        div.setAttribute('data-placeholder', placeholder);
+        div.setAttribute('data-placeholder-class',`${type}-placeholder`);
+        div.contentEditable='true';
+        div.innerHTML = this.onTextNormalization(text);
+        return div;
+    }
+    createWrapBloc(field, label) {
+        const div = document.createElement('div');
+        div.className='term-block';
+        div.appendChild(field);
+        div.appendChild(document.createElement('hr'));
+        div.appendChild(label);
+        return div;
+    }
+    createButton(labelText, first, type) {
+        const div = document.createElement('div');
+        const span = document.createElement("span");
+        span.className = "term";
+        span.textContent = labelText;
+        div.appendChild(span);
+        if (first) {
+            const lang = document.createElement("span");
+            lang.className = "language-button";
+            lang.dataset.language = type;
+            lang.textContent = this.data.dataLanguageText;
+            lang.id = `language-button-${type}`
+            const labelSpan = document.createElement("span");
+            labelSpan.appendChild(lang);
+            div.appendChild(labelSpan);
+        }
+        return div;
+    }
+    buildRow(){
+        const term = this.createField('term-placeholder', this.data.dataTermPlaceholder, "term", this.obj.term);
+        const containerLeftRightTerm = this.createButton(this.data.dataTermText, this.first, "term");
+        const termBlock = this.createWrapBloc(term, containerLeftRightTerm);
+
+        const descr = this.createField('description-placeholder', this.data.dataDescriptionPlaceholder, "description", this.obj.description);
+        const containerLeftRightDescr = this.createButton(this.data.dataDescrText, this.first, "description");
+        const descrBlock = this.createWrapBloc(descr, containerLeftRightDescr);
+
+        let containerLeftRightBlueRow = document.createElement('div');
+        containerLeftRightBlueRow.className='container-left-right blue-row';
+        containerLeftRightBlueRow.appendChild(termBlock);
+        containerLeftRightBlueRow.appendChild(descrBlock);
+
+        let div = document.createElement('div');
+        div.appendChild(containerLeftRightBlueRow);
+
+        let divBlueRowMargin = document.createElement('div');
+        divBlueRowMargin.className='blue-row-margin';
+        divBlueRowMargin.appendChild(div);
+
+        this.term = term;
+        term.setAttribute("data-id", this.obj.id );
+        this.descr = descr;
+        this.root = divBlueRowMargin;
+
+        // this.setForm.add(term, descr, this.obj.id);
+        // this.divplaceholder.add(term, 'term');
+        // this.divplaceholder.add(descr, 'description');
+        // this.editableDiv.add(term);
+        // this.editableDiv.add(descr);
+
+        return div;
+    }
+}
+
+class TermController {
+    init(container, services,{ onTextNormalization } = {}) {
+        this.services = services;
+        this.container = container;
+        this.onTextNormalization = onTextNormalization;
+        this.container.addEventListener("row-created", e => {
+            const { term, descr, id } = e.detail;
+            this.services.addToForm(term, descr, id);
+            this.services.addToEditable(term);
+            this.services.addToEditable(descr);
+            this.services.addToPlaceholder(term, "term");
+            this.services.addToPlaceholder(descr, "description");
+        });
+    }
+    getTermContainer() {
+        return this.container;
+    }
+    addTerm(obj = null, first = false) {
+        const row = new TermRow(
+            {onTextNormalization: this.onTextNormalization},
+            obj,
+            first,
+            {
+                dataBasePlaceholder: this.container.getAttribute('data-base-placeholder'),
+                dataTermPlaceholder: this.container.getAttribute('data-term-placeholder'),
+                dataDescriptionPlaceholder: this.container.getAttribute('data-description-placeholder'),
+                dataTermText: this.container.getAttribute('data-term-text'),
+                dataDescrText: this.container.getAttribute('data-descr-text'),
+                dataLanguageText: this.container.getAttribute('data-language-text')
+            });
+        const el = row.getElement();
+        this.container.appendChild(el);
+
+        el.dispatchEvent(new CustomEvent('row-created', {
+            detail: {
+                term: row.term,
+                descr: row.descr,
+                id: row.obj.id
+            },
+            bubbles: true
+        }));
+    }
+    addTerms(data){
+        if (data && Array.isArray(data) && data.length > 0) {
+            data.forEach((d) => {
+                this.addTerm(d);
+            })
+        }
+    }
+}
+
+class TermButton {
+    init (button, termsController) {
+        if (!button || !termsController || !termsController.addTerm) return;
+        this.termsController = termsController;
+        button.style.display = 'block';
+        button.addEventListener("click", () => this.termsController.addTerm());
+    }
 }
 
 class TermsImport {
-    init (importButton, clearButton, form, errorDiv, previewDiv) {
-        if (importButton && clearButton && form && errorDiv && previewDiv) {
-            this.form = form;
-            this.textarea = this.form.elements['field-import'];
-            this.colSeparator = this.form.elements['col-separator'];
-            this.rowSeparator = this.form.elements['row-separator'];
-            this.colCustom = this.form.elements['col-custom'];
-            this.rowCustom = this.form.elements['row-custom'];
+    constructor( { getError } = {}, { createTermsFromImport } = {}, termsController) {
+        this.termsController = termsController;
+        this.getError = getError || (() => {});
+        this.createTermsFromImport = createTermsFromImport || (()=>{});
+        this.inited = false;
+        this.rowTemplate = document.createElement('template');
+        this.rowTemplate.innerHTML = `
+<div class="blue-row-margin">
+    <div class="container-left-right blue-row">
+        <div class="numberH"><span></span></div>
+        <div class="number"></div>
+        <div class="term-block">
+            <div class="term-input"></div>
+            <hr>
+            <div class="container-left-right"><span class="term"></span></div>
+        </div>
+        <div class="term-block">
+            <div class="term-input"></div>
+            <hr>
+            <div class="container-left-right"><span class="term"></span></div>
+        </div>
+    </div>
+</div>`;
+    }
+    init (textarea, importButton, clearButton, errorDiv, previewDiv) {
+        if (this.inited) return;
+        this.inited = true;
+        if (!textarea || !importButton || !clearButton || !errorDiv || !previewDiv)
+            return;
+        this.textarea = textarea;
+        this.errorDiv = errorDiv;
+        this.previewDiv = previewDiv;
 
-            this.errorDiv = errorDiv;
-            this.previewDiv = previewDiv;
+        this.colSeparator = this.textarea.form.elements['col-separator'];
+        this.rowSeparator = this.textarea.form.elements['row-separator'];
+        this.colCustom = this.textarea.form.elements['col-custom'];
+        this.rowCustom = this.textarea.form.elements['row-custom'];
 
-            this.placeholder = [];
-            let rows = this.textarea.placeholder.split('\n');
-            rows.forEach(row=>{
-                this.placeholder.push(row.split('\t'));
-            });
+        this.placeholderText = this.textarea.placeholder
+            .split("\n")
+            .map(r => r.split("\t"));
 
-            this.data = null;
+        this.data = null;
 
-            this.textarea.addEventListener('input', () => {
-                this.importText();
-            });
+        textarea.addEventListener('input', () => this.importText());
+        importButton.addEventListener('click', () => this.saveTerms());
+        clearButton.addEventListener('click', () => this.clear());
 
-            importButton.addEventListener('click', () => {
-                this.createTerms();
-            });
+        // const sepInputs = [
+        //     // ...document.querySelectorAll('input[name="col-separator"]'),
+        //     // ...document.querySelectorAll('input[name="row-separator"]'),
+        //         ...this.colSeparator,
+        //         ...this.rowSeparator,
+        //         this.colCustom,
+        //         this.rowCustom
+        // ];
+        const sepInputs = [
+            ...Array.from(this.colSeparator instanceof RadioNodeList ? this.colSeparator : [this.colSeparator]),
+            ...Array.from(this.rowSeparator instanceof RadioNodeList ? this.rowSeparator : [this.rowSeparator]),
+            this.colCustom,
+            this.rowCustom
+        ];
 
-            clearButton.addEventListener('click', () => {
-                this.clear();
-            });
-
-            const els = Array.from(document.querySelectorAll('input[name="col-separator"]'))
-                .concat(Array.from(document.querySelectorAll('input[name="row-separator"]')));
-            els.forEach(elo => {
-                elo.addEventListener('click', () => {
-                    this.placeholderChange();
-                });
-            });
-            [this.colCustom ,this.rowCustom].forEach(inp => {
-                inp.addEventListener('input', () => {
-                    this.placeholderChange();
-                });
-            });
-        }
+        sepInputs.forEach(el => {
+            const event = el.tagName === 'INPUT' && el.type === 'text' ? 'input' : 'click';
+            el.addEventListener(event, () => this.placeholderTextChange());
+        });
     }
     onHide () {
-        this.data = null;
-        this.textarea.value = '';
-        this.previewDiv.innerHTML = '';
+        this.clearPreview();
     }
     onShow () {
         this.textarea.focus();
@@ -584,37 +916,20 @@ class TermsImport {
         this.onHide();
         this.onShow();
     }
-    placeholderChange() {
-        let cS = '';
-        switch (this.colSeparator.value) {
-            case 'tab':
-                cS = '\t';
-                break;
-            case 'comma':
-                cS = ',';
-                break;
-            default:
-                cS = this.colCustom.value;
-                break;
-        }
-        let rS = '';
-        switch (this.rowSeparator.value) {
-                case 'newline':
-                    rS = '\n';
-                    break;
-                case 'semicolon':
-                    rS = ';';
-                    break;
-                default:
-                    rS = this.rowCustom.value;
-                    break;
-        }
+    placeholderTextChange() {
+        const colSep = this.colSeparator.value === 'tab' ? '\t'
+            : this.colSeparator.value === 'comma' ? ','
+                : this.colCustom.value;
 
-        let newPlaceholder=[];
-        this.placeholder.forEach(r => {
-            newPlaceholder.push(r.join(cS));
+        const rowSep = this.rowSeparator.value === 'newline' ? '\n'
+            : this.rowSeparator.value === 'semicolon' ? ';'
+                : this.rowCustom.value;
+
+        let newPlaceholderText=[];
+        this.placeholderText.forEach(r => {
+            newPlaceholderText.push(r.join(colSep));
         });
-        this.textarea.placeholder = newPlaceholder.join(rS);
+        this.textarea.placeholder = newPlaceholderText.join(rowSep);
         if (this.textarea.value !== '') {
             this.importText();
         }
@@ -625,10 +940,13 @@ class TermsImport {
             this.errorDiv.style.display = "block";
         }
     }
-    importText(){
+    clearPreview() {
         this.data = null;
         this.previewDiv.innerHTML = '';
         this.errorDiv.style.display = "none";
+    }
+    importText(){
+        this.clearPreview();
 
         const jsonData = {
             text: this.textarea.value,
@@ -656,190 +974,311 @@ class TermsImport {
                 console.log('Ответ:', data);
 
                 if (data.errors && typeof data.errors === 'object') {
-                    this.showErrors(errors.getError(data.errors));
+                    this.showErrors(this.getError(data.errors));
                 } else {
                     this.data = data;
-                    let i = 0;
-                    data.forEach( d => {
-                        const rDiv = document.createElement('div');
-                        rDiv.innerHTML=
-                            '<div class="container-left-right blue-row">' +
-                                '<div class="numberH"><span>'+(++i)+'</span></div><div class="number">'+i+'</div>' +
-                                '<div class="term-block"><div class="term-input">'+d.term+'</div>' +
-                                    '<hr><div class="container-left-right"><span class="term">'+this.previewDiv.dataset.term+'</span></div></div>' +
-                                '<div class="term-block"><div class="term-input">'+d.description+'</div>' +
-                                    '<hr><div class="container-left-right"><span class="term">'+this.previewDiv.dataset.description+'</span></div></div>' +
-                            '</div>';
-                        rDiv.className="blue-row-margin";
-                        this.previewDiv.appendChild(rDiv);
+                    const fragment = document.createDocumentFragment();
+
+                    data.forEach( (d, i) => {
+                        const index = i + 1;
+                        const clone = this.rowTemplate.content.cloneNode(true);
+                        clone.querySelector('.numberH span').textContent = index;
+                        clone.querySelector('.number').textContent = index;
+                        const termInputs = clone.querySelectorAll('.term-input');
+                        termInputs[0].textContent = d.term;
+                        termInputs[1].textContent = d.description;
+                        const termLabels = clone.querySelectorAll('.term');
+                        termLabels[0].textContent = this.previewDiv.dataset.term;
+                        termLabels[1].textContent = this.previewDiv.dataset.description;
+
+                        fragment.appendChild(clone);
+
+                        // rowDiv.innerHTML=
+                        //     '<div class="container-left-right blue-row">' +
+                        //         '<div class="numberH"><span>'+(++i)+'</span></div><div class="number">'+i+'</div>' +
+                        //         '<div class="term-block"><div class="term-input">'+d.term+'</div>' +
+                        //             '<hr><div class="container-left-right"><span class="term">'+this.previewDiv.dataset.term+'</span></div></div>' +
+                        //         '<div class="term-block"><div class="term-input">'+d.description+'</div>' +
+                        //             '<hr><div class="container-left-right"><span class="term">'+this.previewDiv.dataset.description+'</span></div></div>' +
+                        //     '</div>';
+
                     })
+                    this.previewDiv.appendChild(fragment);
                 }
             })
             .catch(error => {
+                this.showErrors(['Ошибка при импорте данных. Попробуйте позже.']);
                 console.error('Ошибка:', error);
             });
     }
-    createTerms(){
+
+    saveTerms(){
+        if (this.data && Array.isArray(this.data) && this.data.length > 0) {
+            // this.data.forEach((d) => {
+            //     this.termsController.addTerm(d);
+            // })
+            this.createTermsFromImport(this.data);
+        }
         this.onHide();
-        draft.saveTerms(this.data);
     }
 }
 
-class Errors {
-    getError (errors) {
-        let errorsArr = [];
-        Object.keys(errors).forEach(key => {
-            const error = errors[key];
-            if (Array.isArray(error)) {
-                error.forEach(message => {
-                    errorsArr.push(message);
-                });
-            } else {
-                errorsArr.push(error);
-            }
-        });
-        return errorsArr.join('<br>');
+class AutoSave {
+    constructor ({ onErrors } = {}, {termIsEmpty} = {}, { onNormalizeObj } = {}, {showTermsFromImport = {}}) {
+        this.onErrors = onErrors || ((t) => t);
+        this.termIsEmpty = termIsEmpty || (() => false);
+        this.onNormalizeObj = onNormalizeObj || ((t) => t);
+        this.showTermsFromImport = showTermsFromImport || (() => {});
+        this.s_d_Id = 0;
+        this.wait = 800;
     }
-}
+    init(termContainer, s_d_Id, draft = false){
+        const handleTermEvent = (event) => {
+            const el = event.target;
+            if (!el.classList.contains('term-input')) return;
+            const termRow = el.closest('.container-left-right.blue-row');
+            if (!termRow) return;
+            const termInps = termRow.querySelectorAll('.term-input');
+            const termEl = termInps[0];
+            const descriptionEl = termInps[1];
+            if (!termEl || !descriptionEl) return;
+            this.saveTerm(termEl, descriptionEl);
+        };
 
-class Draft {
-    constructor() {
-        this.draftId = 0;
-    }
-    init(termsRowArea, draftId){
-        this.draftId = draftId;
-        this.termsRowArea = termsRowArea;
-        this.dataBasePlaceholder = this.termsRowArea.getAttribute('data-base-placeholder');
-        this.dataTermPlaceholder = this.termsRowArea.getAttribute('data-term-placeholder');
-        this.dataDescriptionPlaceholder = this.termsRowArea.getAttribute('data-description-placeholder');
-        this.dataTermText = this.termsRowArea.getAttribute('data-term-text');
-        this.dataLanguageText = this.termsRowArea.getAttribute('data-language-text');
+        //termContainer.addEventListener('input', this.debounce(handleTermEvent, this.wait));
+        // termContainer.addEventListener('blur', handleTermEvent, true);
+        termContainer.addEventListener('focusout', handleTermEvent);
 
+        this.s_d_Id = s_d_Id;
+        if (draft) {
+            this.createURI = "http://localhost:8081/api/drafts/" + this.s_d_Id + "/terms";
+            this.updateURI = "http://localhost:8081/api/drafts/" + this.s_d_Id + "/terms/";
+            this.deleteURI = "http://localhost:8081/api/drafts/" + this.s_d_Id + "/terms/";
+        } else {
+            this.createURI = "http://localhost:8081/api/sets/" + this.s_d_Id + "/terms";
+            this.updateURI = "http://localhost:8081/api/sets/" + this.s_d_Id + "/terms/";
+            this.deleteURI = "http://localhost:8081/api/sets/" + this.s_d_Id + "/terms/";
+
+        }
     }
     showErrors(errors) {
-        setForm.showErrors(errors);
+        this.onErrors(errors)
     }
-    putTermsTogether(terms){
-        setForm.getTerms().forEach(ob=> {
-            terms.push(ob);
-        });
-        return terms;
+    add(term, description, id1) {
+        if (!term || !description) return;
+
+        if (id1 && !term.getAttribute("data-id")) {
+            term.setAttribute("data-id", id1);
+        }
+
+        term.dataset.last = this.hashCode(this.termIsEmpty(term) ? '' : this.onNormalizeObj(term));
+        description.dataset.last = this.hashCode(this.termIsEmpty(description) ? '' : this.onNormalizeObj(description));
+
+        // const saveHandler = () => this.saveTerm(term, description);
+        // const debouncedHandler = this.debounce(saveHandler, this.wait);
+        // [term, description].forEach(el => {
+        //     el.addEventListener('input', debouncedHandler);
+        //     el.addEventListener('blur', saveHandler);
+        // });
     }
-    saveTerms(terms){
-        fetch('http://localhost:8081/api/terms/create-terms', {
-            method: 'POST',
+    debounce(fn, wait) {
+        let t;
+        return function(...args) {
+            clearTimeout(t);
+            t = setTimeout(() => fn.apply(this, args), wait);
+        };
+    }
+    hashCode(str) {
+        let hash = 0;
+        for (let i = 0; i < str.length; i++) {
+            hash = ((hash << 5) - hash) + str.charCodeAt(i);
+            hash |= 0;
+        }
+        return hash;
+    }
+
+    saveTerm(term, description) {
+        const termText = this.termIsEmpty(term) ? '' : this.onNormalizeObj(term);
+        const descriptionText = this.termIsEmpty(description) ? '' : this.onNormalizeObj(description);
+        const lastTermText = term.dataset.last ?? '';
+        const lastDescriptionText  = description.dataset.last ?? '';
+        const termTextHash = this.hashCode(termText);
+        const descriptionTextHash = this.hashCode(descriptionText);
+
+        if (lastTermText == termTextHash && lastDescriptionText == descriptionTextHash) return;
+
+        const id = term.getAttribute("data-id");
+        // if (termText === "" && descriptionText === "" && (id === null || !id))
+        //     return;
+
+        term.dataset.last = termTextHash;
+        description.dataset.last = descriptionTextHash;
+
+        if (id === null || !id) {
+            // this.createTerms([{
+            //     term: termText,
+            //     description: descriptionText
+            // }]);
+
+            this.createTerm({
+                term: termText,
+                description: descriptionText
+            }).then(newTermData => {
+                if (newTermData && newTermData.id) {
+                    term.setAttribute("data-id", newTermData.id);
+                }
+            });
+        } else {
+            this.editTerm({
+                id: id,
+                term: termText,
+                description: descriptionText
+            });
+        }
+    }
+    createTerm(term){
+        return fetch(this.createURI, {
+            method: "POST",
             headers: {
                 "Content-Type": "application/json"
             },
             body: JSON.stringify({
-                id: this.draftId,
-                terms: this.putTermsTogether(terms)})
+                id: this.s_d_Id,
+                terms: [term]
+            })
         })
             .then(response => response.json())
             .then(data => {
                 console.log('Ответ:', data);
                 if (data.errors && typeof data.errors === 'object') {
-                    this.showErrors(errors.getError(data.errors));
+                    this.showErrors(data.errors);
+                    return null;
                 } else if (data.id) {
-                    this.draftId = data.id;
-                    this.showTerms(data.terms);
+                    this.s_d_Id = data.id;
+                    return data.terms ? data.terms[0] : null;
+                }
+                return null;
+            })
+            .catch(error => {
+                console.error('Ошибка:', error);
+                return null;
+            });
+    }
+    createTerms(terms){
+        fetch(this.createURI, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                id: this.s_d_Id,
+                terms: terms
+            })
+        })
+            .then(response => response.json())
+            .then(data => {
+                console.log('Ответ:', data);
+                if (data.errors && typeof data.errors === 'object') {
+                    this.showErrors(data.errors);
+                } else if (data.id) {
+                    this.s_d_Id = data.id;
+                    this.showTermsFromImport(data.terms);
                 }
             })
             .catch(error => {
                 console.error('Ошибка:', error);
             });
     }
-    showTerms(terms) {
-        this.termsRowArea.innerHTML = '';
-        setForm.deleteTerms();
-        languageMenu1.reset();
-        divplaceholder.reset();
-        editableDiv.reset();
-
-        let first = 1;
-        terms.forEach(row => {
-            this.termsRowArea.appendChild(this.addTerm(row, first));
-            first = 0;
-        });
-        document.querySelectorAll('.language-button').forEach(el => {
-            languageMenu1.addButton(el, el.dataset.language);
-        });
-
-        languageMenu1.reInit();
-        divplaceholder.reInit();
-        editableDiv.reInit();
+    editTerm(term){
+        fetch(`${this.updateURI}${term.id}`, {
+            method: "PATCH",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                id: this.s_d_Id,
+                term: term
+            })
+        })
+            .then(response => response.json())
+            .then(data => {
+                console.log('Ответ:', data);
+                if (data.errors && typeof data.errors === 'object') {
+                    this.showErrors(data.errors);
+                } else if (data.id) {
+//?????
+                }
+            })
+            .catch(error => {
+                console.error('Ошибка:', error);
+            });
     }
-
-    addTerm(obj, first){
-        let term = document.createElement('div');
-        term.className='term-input term-placeholder';
-        term.setAttribute('data-base-placeholder', this.dataBasePlaceholder);
-        term.setAttribute('data-placeholder', this.dataTermPlaceholder);
-        term.setAttribute('data-placeholder-class',"term-placeholder");
-        term.contentEditable='true';
-        term.innerHTML = textNormalization.norm(obj.term);
-
-        let containerLeftRight = document.createElement('div');
-        containerLeftRight.innerHTML='<span class="term">' + this.dataTermText + '</span>'
-            + (first ? '<span><span data-language="term" id="language-button-term" class="language-button">'+this.dataLanguageText+'</span></span>' : '');
-
-        let termBlock = document.createElement('div');
-        termBlock.className='term-block';
-        termBlock.appendChild(term);
-        termBlock.appendChild(document.createElement('hr'));
-        termBlock.appendChild(containerLeftRight);
-
-        let descr = document.createElement('div');
-        term.className='term-input description-placeholder';
-        term.setAttribute('data-base-placeholder', this.dataBasePlaceholder);
-        term.setAttribute('data-placeholder', this.dataDescriptionPlaceholder);
-        term.setAttribute('data-placeholder-class',"description-placeholder");
-        term.contentEditable='true';
-        term.innerHTML = textNormalization.norm(obj.description);
-
-        containerLeftRight = document.createElement('div');
-        containerLeftRight.innerHTML='<span class="term">' + this.dataDesrText + '</span>'
-            + (first ? '<span><span data-language="description" id="language-button-description" class="language-button">'+this.dataLanguageText+'</span></span>' : '');
-
-        let descrBlock = document.createElement('div');
-        descrBlock.className='term-block';
-        descrBlock.appendChild(descr);
-        descrBlock.appendChild(document.createElement('hr'));
-        descrBlock.appendChild(containerLeftRight);
-
-        let containerLeftRightBlueRow = document.createElement('div');
-        containerLeftRightBlueRow.className='container-left-right blue-row';
-        containerLeftRightBlueRow.appendChild(termBlock);
-        containerLeftRightBlueRow.appendChild(descrBlock);
-
-        let div = document.createElement('div');
-        div.appendChild(containerLeftRightBlueRow);
-
-        setForm.add(term, descr, obj.id);
-        divplaceholder.add(term, 'term');
-        divplaceholder.add(descr, 'description');
-        editableDiv.add(term);
-        editableDiv.add(descr);
-
-        // textNormalization.add(term);
-        // textNormalization.add(descr);
-
-        return div;
-    }
-
 }
-
-const overlay = new Overlay();
 const divplaceholder= new DivPlaceholder();
 const editableDiv= new EditableDiv();
-const languageMenu1 = new LanguageMenu();
-const setForm = new SetForm(true);
-const termsImport = new TermsImport();
-const draft = new Draft();
+const languageMenu1 = new LanguageMenu({
+    onChange(type, text) {
+        divplaceholder.update(type, text);
+    }
+});
+const setForm = new SetForm(
+    {
+        termIsEmpty(el) {
+            return divplaceholder.isActive(el);
+        }
+    }
+    );
 const errors = new Errors();
-const textNormalization = new TextNormalization();
+const termController = new TermController();
+const autoSave = new AutoSave(
+    {
+        onErrors(errs) {
+            setForm.showErrors(errors.getError(errs));
+        }
+    },{
+        termIsEmpty(el) {
+            return divplaceholder.isActive(el);
+        }
+    },
+    {
+        onNormalizeObj(html) {
+            return textNormalization.normalizeObj(html)
+        }
+    },
+    {
+        showTermsFromImport(terms) {
+            termController.addTerms(terms);
 
+        }
+    }
+);
+const termsImport = new TermsImport(
+    {
+        getError(errs) {
+            return errors.getError(errs);
+        }
+    },
+    {
+        createTermsFromImport(data) {
+            autoSave.createTerms(data);
+        }
+    });
+const overlay = new Overlay(() => termsImport.onHide(), () => termsImport.onShow());
+const textNormalization = new TextNormalization();
+const termButton = new TermButton();
 document.addEventListener('DOMContentLoaded', function () {
+    termController.init(document.getElementById('terms-description-area'),
+        {
+        addToForm: (term, descr, id) => setForm.add(term, descr, id),
+        addToPlaceholder: (el, type) => divplaceholder.add(el, type),
+        addToEditable: (el) => editableDiv.add(el)
+        },
+        {
+            onTextNormalization(text) {
+                return textNormalization.normalizeText(text);
+            }
+        });
+
     document.querySelectorAll('.language-button').forEach(el => {
         languageMenu1.addButton(el, el.dataset.language);
     });
@@ -853,7 +1292,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const labels = new Labels();
     labels.add(document.getElementById('field-title'));
     labels.add(document.getElementById('field-description'));
-    labels.init();
+    // labels.init();
 
     let i = 0;
     let term = document.getElementById('term'+i);
@@ -863,10 +1302,9 @@ document.addEventListener('DOMContentLoaded', function () {
         divplaceholder.add(descr, 'description');
         editableDiv.add(term);
         editableDiv.add(descr);
-
         textNormalization.add(term);
         textNormalization.add(descr);
-
+        autoSave.add(term, descr, term.getAttribute("data-id"));
         setForm.add(term, descr, term.getAttribute("data-id"));
 
         i++;
@@ -875,26 +1313,86 @@ document.addEventListener('DOMContentLoaded', function () {
     }
     // divplaceholder.add(document.getElementById("overlay"), 'overlay', overlay.onfocus);
 
-    divplaceholder.init();
-    editableDiv.init();
-    textNormalization.init();
-    setForm.init('');
+    //divplaceholder.init();
+    //editableDiv.init();
+    //textNormalization.init();
+    setForm.init();
     overlay.init(
         document.getElementById("overlay"),
         document.getElementById("overlay_show_button"),
-        document.getElementById("overlay_hide_button"),
-        termsImport, termsImport);
+        document.getElementById("overlay_hide_button"));
 
     termsImport.init(
+        document.getElementById("field-import"),
         document.getElementById('overlay_import_button'),
         document.getElementById('overlay_clear_button'),
-        document.getElementById("field-import").form,
         document.getElementById("field-import-error"),
-        document.getElementById("field-import-preview"));
+        document.getElementById("field-import-preview")
+        );
 
     const importButton = document.getElementById('overlay_import_button');
-    draft.init(document.getElementById('terms-description-area'), ((importButton && importButton.dataset != null && importButton.dataset.draftId !=null) ? importButton.dataset.draftId : 0));
-
+    //autoSave.init(((importButton && importButton.dataset != null && importButton.dataset.draftId !=null) ? importButton.dataset.draftId : 0));
+    const fieldId = document.getElementById("field-id");
+    const el = document.getElementById("auto-save");
+    const isDraft = el?.dataset.set !== "true";
+    autoSave.init(termController.container,fieldId ? fieldId.value : 0, isDraft);
+    termButton.init(document.getElementById('add_term_button'), termController);
 });
 
 //console.log(event.target.classList);
+// addTermDepr(obj, first){
+//     let term = document.createElement('div');
+//     term.className='term-input term-placeholder';
+//     term.setAttribute('data-base-placeholder', this.dataBasePlaceholder);
+//     term.setAttribute('data-placeholder', this.dataTermPlaceholder);
+//     term.setAttribute('data-placeholder-class',"term-placeholder");
+//     term.contentEditable='true';
+//     term.innerHTML = textNormalization.norm(obj.term);
+//
+//     let containerLeftRight = document.createElement('div');
+//     containerLeftRight.innerHTML='<span class="term">' + this.dataTermText + '</span>'
+//         + (first ? '<span><span data-language="term" id="language-button-term" class="language-button">'+this.dataLanguageText+'</span></span>' : '');
+//
+//     let termBlock = document.createElement('div');
+//     termBlock.className='term-block';
+//     termBlock.appendChild(term);
+//     termBlock.appendChild(document.createElement('hr'));
+//     termBlock.appendChild(containerLeftRight);
+//
+//     let descr = document.createElement('div');
+//     descr.className='term-input description-placeholder';
+//     descr.setAttribute('data-base-placeholder', this.dataBasePlaceholder);
+//     descr.setAttribute('data-placeholder', this.dataDescriptionPlaceholder);
+//     descr.setAttribute('data-placeholder-class',"description-placeholder");
+//     descr.contentEditable='true';
+//     descr.innerHTML = textNormalization.norm(obj.description);
+//
+//     containerLeftRight = document.createElement('div');
+//     containerLeftRight.innerHTML='<span class="term">' + this.dataDescrText + '</span>'
+//         + (first ? '<span><span data-language="description" id="language-button-description" class="language-button">'+this.dataLanguageText+'</span></span>' : '');
+//
+//     let descrBlock = document.createElement('div');
+//     descrBlock.className='term-block';
+//     descrBlock.appendChild(descr);
+//     descrBlock.appendChild(document.createElement('hr'));
+//     descrBlock.appendChild(containerLeftRight);
+//
+//     let containerLeftRightBlueRow = document.createElement('div');
+//     containerLeftRightBlueRow.className='container-left-right blue-row';
+//     containerLeftRightBlueRow.appendChild(termBlock);
+//     containerLeftRightBlueRow.appendChild(descrBlock);
+//
+//     let div = document.createElement('div');
+//     div.appendChild(containerLeftRightBlueRow);
+//
+//     setForm.add(term, descr, obj.id);
+//     divplaceholder.add(term, 'term');
+//     divplaceholder.add(descr, 'description');
+//     editableDiv.add(term);
+//     editableDiv.add(descr);
+//
+//     // textNormalization.add(term);
+//     // textNormalization.add(descr);
+//
+//     return div;
+// }

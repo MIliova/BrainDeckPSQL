@@ -23,7 +23,7 @@ import java.util.Map;
 @RequiredArgsConstructor
 @RequestMapping("/api")
 @CrossOrigin(origins = "http://localhost:8080")
-public class DraftRestController {
+public class MyDraftRestController {
 
     private final UserService userService;
     private final DraftSetService draftSetService;
@@ -48,7 +48,7 @@ public class DraftRestController {
         }
     }
 
-    @PostMapping(value = "/terms/create-terms")
+    @PostMapping(value = "/terms/create")
     public DraftSetDto createDraftTerms (@RequestBody @Valid NewSetFromDraftPayload payload, BindingResult bindingResult ) throws BindException {
         System.out.println(payload);
 
@@ -103,7 +103,7 @@ public class DraftRestController {
             }
         } else {
             UserEntity user = this.userService.findById(1);
-            SetDto set = this.setService.createSet(payload.title(), payload.description(), payload.termLanguageId(), payload.descriptionLanguageId(), user, payload.terms());
+            SetDto set = this.setService.create(payload.title(), payload.description(), payload.termLanguageId(), payload.descriptionLanguageId(), user, payload.terms());
             this.draftSetService.delete(draftId);
             return ResponseEntity.created(uriBuilder
                             .replacePath("/api/sets/{setId}").build(Map.of("setId", set.id())))

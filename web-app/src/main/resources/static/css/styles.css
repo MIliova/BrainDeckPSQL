@@ -147,6 +147,13 @@ hr {
     justify-content: space-between; /* Прижимает элементы к разным сторонам */
     align-items: center; /* Вертикальное выравнивание (по центру, если нужно) */
 }
+
+.container-center {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
 .blue-row {
     background-color: #244f73;
     border-radius: 9px;

@@ -55,8 +55,12 @@
                th:data-message="#{messages.set.create.j.adl}">
         <input type="hidden" id="field-terms" name="terms" value=""
                th:data-message="#{messages.set.create.j.ats}">
+
+
         <input type="hidden" id="field-id" name="id" value="" th:value="${payload != null ? payload.id() : set.id}">
-<!--        <input type="hidden" id="field-user-id" name="user-id" value="" th:value="${payload != null ? payload.userId() : set.userId}">-->
+        <div id="auto-save" data-set="true"></div>
+
+        <!--        <input type="hidden" id="field-user-id" name="user-id" value="" th:value="${payload != null ? payload.userId() : set.userId}">-->
 
         <!--        <input type="hidden" name="_method" value="PATCH">-->
 
@@ -144,6 +148,9 @@
 
 
       </form>
+    </div>
+    <div class="container-center" style="margin: 40px 0">
+      <div class="blue-row"><button id="addButton" class="blue-row-button" type="button" aria-label="Add"><span th:data="messages.set.edit.add">Add term</span></button></div>
     </div>
   </div>
   <div class="main-right">&nbsp;</div>

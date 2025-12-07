@@ -2,8 +2,9 @@ package dev.braindeck.api.repository;
 
 import dev.braindeck.api.entity.UserEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
 
-
+@Repository
 public interface UserRepository extends JpaRepository<UserEntity, Integer> {
 
 //    @Query(value = "SELECT t_user.*, t_draft_sets.set_id FROM t_user " +

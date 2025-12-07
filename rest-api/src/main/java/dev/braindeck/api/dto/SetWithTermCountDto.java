@@ -1,12 +1,14 @@
 package dev.braindeck.api.dto;
 
-public record SetWithCountDto(
+import java.time.Instant;
+
+public record SetWithTermCountDto(
         Integer id,
         String title,
         String description,
         Integer termLanguageId,
         Integer descriptionLanguageId,
-        UserDto user,
+        Instant updatedAt,
         Long termCount
 ) {
 }

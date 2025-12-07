@@ -32,11 +32,11 @@ public class DefaultDraftSetService implements DraftSetService {
         if (draftSetEntity == null || draftSetEntity.getId() == null || Objects.equals(payload.id(), draftSetEntity.getId())) {
 
             if (draftSetEntity == null){
-                draftSetEntity = this.draftSetRepository.save(new DraftSetEntity(null, payload.title(), payload.description(), payload.termLanguageId(), payload.descriptionLanguageId(), user, null));
+                draftSetEntity = this.draftSetRepository.save(new DraftSetEntity(payload.title(), payload.description(), payload.termLanguageId(), payload.descriptionLanguageId(), user));
             }
 
-            this.draftTermService.createTerms(draftSetEntity, payload.terms());
-            List<TermDto> terms = this.draftTermService.findTermsByDraftId(draftSetEntity.getId());
+            this.draftTermService.create(draftSetEntity, payload.terms());
+            List<TermDto> terms = this.draftTermService.findById(draftSetEntity.getId());
             return Mapper.DraftSetToDto(draftSetEntity, terms);
 
         } else {
@@ -50,7 +50,7 @@ public class DefaultDraftSetService implements DraftSetService {
                 .orElse(null);
                 //.orElseThrow(()-> new NoSuchElementException("errors.draft.not_found"));
         List<TermDto> terms = (draftSetEntity != null)
-                ? this.draftTermService.findTermsByDraftId(draftSetEntity.getId())
+                ? this.draftTermService.findById(draftSetEntity.getId())
                 : Collections.emptyList();
         return Mapper.DraftSetToDto(draftSetEntity, terms);
     }
@@ -59,7 +59,7 @@ public class DefaultDraftSetService implements DraftSetService {
     public DraftSetDto findById(int draftId) {
         DraftSetEntity draftSetEntity = this.draftSetRepository.findById(draftId)
                 .orElseThrow(()-> new NoSuchElementException("errors.draft.not_found"));
-        List<TermDto> terms = this.draftTermService.findTermsByDraftId(draftSetEntity.getId());
+        List<TermDto> terms = this.draftTermService.findById(draftSetEntity.getId());
         return Mapper.DraftSetToDto(draftSetEntity, terms);
     }
 

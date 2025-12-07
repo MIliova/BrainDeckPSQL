@@ -10,10 +10,10 @@ import java.util.List;
 public interface DraftTermService {
     List<ImportTermDto> prepareImport(String text, String colSeparator, String rowSeparator, String colCustom, String rowCustom);
 
-    void createTerms(DraftSetEntity draft, List<NewTermPayload> terms);
+    void create(DraftSetEntity draft, List<NewTermPayload> terms);
 
-    List<TermDto> findTermsByDraftId(int draftId);
+    List<TermDto> findById(int draftId);
 
-    void deleteByDraftId(int id);
+    void deleteById(int id);
 
 }

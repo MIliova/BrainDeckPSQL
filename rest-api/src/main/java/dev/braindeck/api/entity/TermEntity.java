@@ -13,7 +13,8 @@ import lombok.*;
 public class TermEntity {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "term_seq")
+    @SequenceGenerator(name = "term_seq", sequenceName = "term_seq", allocationSize=50)
     private Integer id;
 
     @Column(name="term", length=950, nullable = false, unique = false)
@@ -22,8 +23,15 @@ public class TermEntity {
     @Column(name="description", length=950, nullable = true, unique = false)
     private String description;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name="set_id", updatable = false, nullable = false)
     private SetEntity set;
+
+    public TermEntity(String term, String description, SetEntity set) {
+        this.term = term;
+        this.description = description;
+        this.set = set;
+    }
+
 
 }

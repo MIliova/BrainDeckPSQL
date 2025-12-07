@@ -3,19 +3,20 @@ package dev.braindeck.api.service;
 import dev.braindeck.api.controller.payload.NewTermPayload;
 import dev.braindeck.api.controller.payload.UpdateTermPayload;
 import dev.braindeck.api.dto.SetDto;
-import dev.braindeck.api.dto.SetWithCountDto;
+import dev.braindeck.api.dto.SetWithTermCountDto;
 import dev.braindeck.api.dto.TermDto;
 import dev.braindeck.api.entity.*;
 import dev.braindeck.api.repository.SetRepository;
-import dev.braindeck.api.repository.UserRepository;
-import jakarta.persistence.Tuple;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.NoSuchElementException;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -23,59 +24,78 @@ public class DefaultSetService implements SetService {
 
     private final SetRepository setRepository;
     private final TermService termService;
-    private final UserRepository userRepository;
 
-
-    @Override
-    public List<SetWithCountDto> findAllByUserId(int userId) {
-        UserEntity user = this.userRepository.findById(userId).orElseThrow(NoSuchElementException::new);
-        List<Tuple> sets = this.setRepository.findAllByUserIdWithTermCount(userId);
-        return Mapper.setsWithCountWithUserToDto(sets, user);
-    }
-
-
-
-    @Override
     @Transactional
-    public SetDto createSet(String title, String description, int termLanguageId, int descriptionLanguageId, UserEntity user, List<NewTermPayload> listTerms) {
-        SetEntity setEntity =  this.setRepository.save(new SetEntity(null, title, description, termLanguageId, descriptionLanguageId, user, null));
-
-        this.termService.createTerms(setEntity, listTerms);
-        List<TermDto> terms = this.termService.findTermsBySetId(setEntity.getId());
-
-        return Mapper.setToDto(setEntity, terms);
+    @Override
+    public SetDto create(String title, String description, int termLanguageId, int descriptionLanguageId, UserEntity user, List<NewTermPayload> listTerms) {
+        SetEntity set = new SetEntity(title, description, termLanguageId, descriptionLanguageId, user);
+        List<TermEntity> terms = listTerms.stream()
+                .map(payload -> new TermEntity(payload.getTerm(), payload.getDescription(), set))
+                .toList();
+        set.setTerms(terms);
+        return Mapper.setToDto(setRepository.save(set));
     }
 
-
+    @Transactional
     @Override
-    public SetDto findSetById(int setId) {
-        SetEntity setEntity =  this.setRepository.findByIdWithTerms(setId)
+    public void update(int setId, String title, String description, int termLanguageId, int descriptionLanguageId,
+                       UserEntity user, List<UpdateTermPayload> termsPayload) {
+        SetEntity set = setRepository.findById(setId).orElseThrow(() -> new NoSuchElementException("Set not found"));
+
+        set.setTitle(title);
+        set.setDescription(description);
+        set.setTermLanguageId(termLanguageId);
+        set.setDescriptionLanguageId(descriptionLanguageId);
+
+        Map<Integer, TermEntity> existingTerms = set.getTerms().stream().collect(Collectors.toMap(TermEntity::getId, termEntity -> termEntity));
+
+        List<TermEntity> newTermList = new ArrayList<>();
+        for (UpdateTermPayload payload : termsPayload) {
+            if (payload.id() != null && existingTerms.containsKey(payload.id()) ) {
+                TermEntity term = existingTerms.get(payload.id());
+                if (!term.getTerm().equals(payload.term()) || !term.getDescription().equals(payload.description())) {
+                    term.setTerm(payload.term());
+                    term.setDescription(payload.description());
+                }
+            } else {
+                TermEntity term = new TermEntity(payload.term(), payload.description(), set);
+                newTermList.add(term);
+            }
+        }
+
+        set.getTerms().removeIf(t -> termsPayload.stream()
+                .noneMatch(p -> p.id() != null && p.id().equals(t.getId())));
+
+        set.getTerms().addAll(newTermList);
+
+        setRepository.save(set);
+    }
+
+    @Transactional
+    @Override
+    public void delete(int setId) {
+        setRepository.deleteById(setId);
+    }
+
+    @Transactional
+    @Override
+    public List<SetWithTermCountDto> findAllByUserId(int userId) {
+        return setRepository.findAllByUser(userId);
+    }
+
+    @Transactional(readOnly = true)
+    @Override
+    public SetDto findById(int setId) {
+        SetEntity setEntity = setRepository.findById(setId)
                 .orElseThrow(()-> new NoSuchElementException("errors.set.not_found"));
-        List<TermDto> terms = this.termService.findTermsBySetId(setEntity.getId());
+        List<TermDto> terms = termService.findAllBySet(setEntity);
         return Mapper.setToDto(setEntity, terms);
     }
 
+    @Transactional(readOnly = true)
     @Override
-    @Transactional
-    public void updateSet(int setId, String title, String description, int termLanguageId, int descriptionLanguageId, UserEntity user, List<UpdateTermPayload> terms) {
-        this.setRepository.findById(setId)
-                .ifPresentOrElse(set -> {
-                    set.setTitle(title);
-                    set.setDescription(description);
-                    set.setTermLanguageId(termLanguageId);
-                    set.setDescriptionLanguageId(descriptionLanguageId);
-//                    this.setRepository.save(set);
-                }, () -> {
-                    throw new NoSuchElementException("errors.set.not_found");
-                });
-        this.termService.updateTerms(terms);
+    public SetEntity findEntityById(int setId) {
+        return setRepository.findById(setId)
+                .orElseThrow(()-> new NoSuchElementException("errors.set.not_found"));
     }
-    @Override
-    @Transactional
-    public void deleteSet(int setId) {
-        this.termService.deleteTermsBySetId(setId);
-        this.setRepository.deleteById(setId);
-    }
-
-
 }

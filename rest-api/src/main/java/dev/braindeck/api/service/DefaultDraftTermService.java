@@ -53,20 +53,21 @@ public class DefaultDraftTermService implements DraftTermService {
         return list;
     }
 
+    // TODO
     @Override
-    public void createTerms(DraftSetEntity draft, List<NewTermPayload> terms) {
+    public void create(DraftSetEntity draft, List<NewTermPayload> terms) {
         for (NewTermPayload term : terms) {
             this.draftTermRepository.save(new DraftTermEntity(null, term.getTerm(), term.getDescription(), draft));
         }
     }
 
     @Override
-    public List<TermDto> findTermsByDraftId(int draftId) {
+    public List<TermDto> findById(int draftId) {
         return Mapper.draftTermsToDto(this.draftTermRepository.findAllByDraftId(draftId));
     }
 
     @Override
-    public void deleteByDraftId(int id) {
+    public void deleteById(int id) {
 
         this.draftTermRepository.deleteByDraftId(id);
     }

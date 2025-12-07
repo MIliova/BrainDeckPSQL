@@ -1,5 +1,6 @@
 package dev.braindeck.api.repository;
 
+import dev.braindeck.api.entity.SetEntity;
 import dev.braindeck.api.entity.TermEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
@@ -11,10 +12,10 @@ import java.util.List;
 
 @Repository
 public interface TermRepository extends JpaRepository<TermEntity, Integer> {
-    List<TermEntity> findAllBySetId(Integer setId);
-
     @Modifying
     @Query("DELETE FROM TermEntity t WHERE t.set.id = :setId")
     void deleteBySetId(@Param("setId") Integer setId);
+
+    List<TermEntity> findAllBySet(SetEntity setEntity);
 }
 

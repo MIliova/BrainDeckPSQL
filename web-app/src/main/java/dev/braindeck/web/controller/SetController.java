@@ -53,24 +53,42 @@ public class SetController {
         return userDto;
     }
 
-    @ModelAttribute("set")
-    public SetDto getSet(@PathVariable("setId") int setId) {
-        SetDto setDto = this.setsRestClient.findSetById(setId).orElse(null);
-        System.out.println(setDto);
-        return setDto;
-    }
+//    @ModelAttribute("set")
+//    public SetDto getSet(@PathVariable("setId") int setId) {
+//        SetDto setDto = this.setsRestClient.findSetById(setId).orElse(null);
+//        System.out.println(setDto);
+//        return setDto;
+//    }
 
 
     @GetMapping
-    public String findSet(@PathVariable("setId") int setId, Model model) {
-        SetDto set = (SetDto) model.getAttribute("set");
+    public String findSet(@PathVariable("setId") int setId,
+                          Model model) {
+//        SetDto set = (SetDto) model.getAttribute("set");
+        SetDto setDto = this.setsRestClient.findSetById(setId).orElse(null);
+        System.out.println(setDto);
+        model.addAttribute("set", setDto);
 
-        if (set != null) {
-            model.addAttribute("pageTitle", set.title());
+        if (setDto != null) {
+            model.addAttribute("pageTitle", setDto.title());
         } else {
             model.addAttribute("pageTitle", "");
         }
         return "set";
+    }
+
+    @GetMapping("/edit")
+    public String getEditSetPage(@PathVariable("setId") int setId,
+                                 Model model, Locale locale) {
+        SetDto setDto = this.setsRestClient.findSetById(setId).orElse(null);
+        System.out.println(setDto);
+        model.addAttribute("set", setDto);
+
+        Map<String, Map<Integer, String>> languagesList = languagesRestClient.findAllByTypes();
+        ControllersUtil.getLanguages(languagesList, model, setDto.termLanguageId(), setDto.descriptionLanguageId());
+
+        model.addAttribute("pageTitle", messageSource.getMessage("messages.set.edit", null, locale));
+        return "edit-set";
     }
 
     @PostMapping("/delete")
@@ -81,17 +99,6 @@ public class SetController {
             return "redirect:/"; // Или другая страница, например, главная
         }
         return "redirect:/user/"+userDto.id()+"/sets";
-    }
-
-    @GetMapping("/edit")
-    public String getEditSetPage(@PathVariable("setId") int setId, @ModelAttribute("set") SetDto set,
-                                 Model model, Locale locale) {
-
-        Map<String, Map<Integer, String>> languagesList = languagesRestClient.findAllByTypes();
-        ControllersUtil.getLanguages(languagesList, model, set.termLanguageId(), set.descriptionLanguageId());
-
-        model.addAttribute("pageTitle", messageSource.getMessage("messages.set.edit", null, locale));
-        return "edit-set";
     }
 
     @PostMapping("/edit")

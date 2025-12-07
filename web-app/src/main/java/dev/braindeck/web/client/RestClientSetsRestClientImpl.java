@@ -123,7 +123,6 @@ public class RestClientSetsRestClientImpl implements SetsRestClient {
         System.out.println("colCustom='"+colCustom+"'");
         System.out.println("rowCustom='"+rowCustom+"'");
 
-
         try {
             return this.restClient
                     .post()

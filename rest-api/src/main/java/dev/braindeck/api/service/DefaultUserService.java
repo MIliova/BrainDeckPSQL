@@ -11,6 +11,7 @@ import java.util.NoSuchElementException;
 @RequiredArgsConstructor
 @Service
 public class DefaultUserService implements UserService {
+
     private final UserRepository userRepository;
 
     @Override

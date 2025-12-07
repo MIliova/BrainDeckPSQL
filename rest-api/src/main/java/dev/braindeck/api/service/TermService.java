@@ -1,6 +1,7 @@
 package dev.braindeck.api.service;
 
 import dev.braindeck.api.controller.payload.NewTermPayload;
+import dev.braindeck.api.controller.payload.NewTermWithSetIdPayload;
 import dev.braindeck.api.controller.payload.UpdateTermPayload;
 import dev.braindeck.api.entity.SetEntity;
 import dev.braindeck.api.dto.TermDto;
@@ -8,15 +9,16 @@ import dev.braindeck.api.dto.TermDto;
 import java.util.List;
 
 public interface TermService {
-    List<TermDto> findTermsBySetId(int setId);
+    List<TermDto> findAllBySet(SetEntity set);
 
-    void createTerms(SetEntity set, List<NewTermPayload> jsonTerms);
+    List<TermDto> create(SetEntity set, List<NewTermPayload> payloads);
 
-    void updateTerms(List<UpdateTermPayload> jsonTerms);
-    void updateTerm(Integer id, String term, String description);
+    TermDto create(SetEntity entityById, NewTermWithSetIdPayload term);
 
-    void deleteTermById(int id);
-    void deleteTermsBySetId(int setId);
+    void update(UpdateTermPayload payload);
+
+    void deleteById(int id);
+    void deleteAllBySetId(int setId);
 
 
 }

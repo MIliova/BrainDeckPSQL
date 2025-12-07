@@ -22,32 +22,31 @@ public class MySetsRestController {
     private final UserService userService;
     private final SetService setService;
 
-
-
     @PostMapping
-    public ResponseEntity<?> createSet(
+    public ResponseEntity<?> create(
             @Valid @RequestBody NewSetPayload payload,
             UriComponentsBuilder uriBuilder) {
         System.out.println(payload);
         UserEntity user = userService.findById(1);
-        SetDto set = this.setService.createSet(payload.title(), payload.description(), payload.termLanguageId(), payload.descriptionLanguageId(), user, payload.terms());
+        SetDto set = setService.create(payload.title(), payload.description(), payload.termLanguageId(), payload.descriptionLanguageId(), user, payload.terms());
         return ResponseEntity.created(uriBuilder
                         .replacePath("/api/sets/{setId}").build(Map.of("setId", set.id())))
                 .body(set);
     }
 
     @PatchMapping("/{setId:\\d+}")
-    public ResponseEntity<Void> updateSet(@PathVariable("setId") int setId,
-                                          @Valid @RequestBody UpdateSetPayload payload) {
+    public ResponseEntity<Void> update(@PathVariable("setId") int setId,
+                                       @Valid @RequestBody UpdateSetPayload payload) {
         System.out.println(payload);
         UserEntity user = userService.findById(1);
-        this.setService.updateSet(setId, payload.title(), payload.description(), payload.termLanguageId(), payload.descriptionLanguageId(), user, payload.terms());
+        setService.update(setId, payload.title(), payload.description(), payload.termLanguageId(), payload.descriptionLanguageId(), user, payload.terms());
         return ResponseEntity.noContent().build();
     }
 
     @DeleteMapping("/{setId:\\d+}")
-    public ResponseEntity<Void> deleteSet(@PathVariable("setId") int setId) {
-        this.setService.deleteSet(setId);
+    public ResponseEntity<Void> delete(@PathVariable("setId") int setId) {
+        System.out.println("Deleting set " + setId);
+        setService.delete(setId);
         return ResponseEntity.noContent().build();
     }
 

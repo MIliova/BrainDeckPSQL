@@ -70,10 +70,10 @@
                 <div id="field-error" class="field-error"
                  th:attr="style=${errors} ? 'display:block;' : ''"
                  th:data-message="#{messages.set.create.j.yn}">
-                <div th:if="${errors}" >
-                    <div style="display: block;" th:each="error:${errors}" th:text="${error.message}"></div>&nbsp;
+                    <div th:if="${errors}" >
+                        <div style="display: block;" th:each="error:${errors}" th:text="${error.message}"></div>&nbsp;
+                    </div>
                 </div>
-            </div>
 
 
 
@@ -150,6 +150,13 @@
                 </div>
             </form>
         </div>
+
+
+        <div class="container-center" style="margin: 40px 0">
+            <div class="blue-row" id="add_term_button" style="display: none;"><button class="blue-row-button" type="button" aria-label="Add" ><span th:data="messages.set.edit.add">Add term</span></button></div>
+        </div>
+
+
     </div>
     <div class="main-right">&nbsp;</div>
 </div>
@@ -211,6 +218,8 @@
             </div>
         </div>
         </form>
+
+
 
         <div class="container-right">
             <div class="transp-button" id="overlay_clear_button">

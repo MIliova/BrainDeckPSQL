@@ -5,6 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -37,4 +38,21 @@ public class DraftSetEntity {
 
     @OneToMany(mappedBy = "draft", cascade = CascadeType.REMOVE, fetch = FetchType.LAZY, orphanRemoval = true)
     private List<DraftTermEntity> terms = new ArrayList<>();
+
+    @Column (name="created_at", nullable = false)
+    private Instant createdAt;
+
+    public DraftSetEntity(String title, String description, Integer termLanguageId, Integer descriptionLanguageId, UserEntity user) {
+        this.title = title;
+        this.description = description;
+        this.termLanguageId = termLanguageId;
+        this.descriptionLanguageId = descriptionLanguageId;
+        this.user = user;
+    }
+
+    @PrePersist
+    public void prePersist() {
+        createdAt = Instant.now();
+    }
+
 }

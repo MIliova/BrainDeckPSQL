@@ -1,6 +1,7 @@
 package dev.braindeck.api.service;
 
 import dev.braindeck.api.controller.payload.NewTermPayload;
+import dev.braindeck.api.controller.payload.NewTermWithSetIdPayload;
 import dev.braindeck.api.controller.payload.UpdateTermPayload;
 import dev.braindeck.api.entity.SetEntity;
 import dev.braindeck.api.dto.TermDto;
@@ -8,6 +9,7 @@ import dev.braindeck.api.entity.TermEntity;
 import dev.braindeck.api.repository.TermRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.NoSuchElementException;
@@ -19,54 +21,50 @@ public class DefaultTermService implements TermService {
     private final TermRepository termRepository;
 
     @Override
-    public List<TermDto> findTermsBySetId(int setId) {
-        return Mapper.termsToDto(this.termRepository.findAllBySetId(setId));
+    public List<TermDto> create(SetEntity set, List<NewTermPayload> terms) {
+        return Mapper.termsToDto(termRepository.saveAll(
+                terms.stream()
+                        .map(payload -> new TermEntity(payload.getTerm(), payload.getDescription(), set))
+                        .toList()
+        ));
     }
 
     @Override
-    public void createTerms(SetEntity set, List<NewTermPayload> terms) {
-            for (NewTermPayload term : terms) {
-                    this.termRepository.save(new TermEntity(null, term.getTerm(), term.getDescription(), set));
-            }
+    public List<TermDto> findAllBySet(SetEntity setEntity) {
+        return Mapper.termsToDto(termRepository.findAllBySet(setEntity));
     }
 
     @Override
-    public void updateTerms(List<UpdateTermPayload> terms) {
-        //ObjectMapper objectMapper = new ObjectMapper();
-        //try {
-            //List<Map<String, String>> terms = objectMapper.readValue(jsonTerms, new TypeReference<List<Map<String, String>>>() {});
-            //for (Map<String, String> term : terms) {
-            //this.updateTerm(Integer.parseInt(term.get("id")), term.get("term"), term.get("description"));
-        System.out.println(terms);
-            for (UpdateTermPayload term: terms) {
-                this.updateTerm(term.id(), term.term(), term.description());
-            }
-        //} catch (IOException e) {
-        //    e.printStackTrace();
-        //}
-    }
-    @Override
-    public void updateTerm(Integer id, String term, String description) {
-        this.termRepository.findById(id)
-                .ifPresentOrElse(t -> {
-                    t.setTerm(term);
-                    t.setDescription(description);
-                    this.termRepository.save(t);
-                }, () -> {
-                    throw new NoSuchElementException("errors.term.not_found");
-                });
-    }
-
-
-    @Override
-    public void deleteTermsBySetId(int setId) {
-        this.termRepository.deleteBySetId(setId);
+    public TermDto create(SetEntity set, NewTermWithSetIdPayload payload) {
+        TermEntity entity = new TermEntity(payload.getTerm(), payload.getDescription(), set);
+        entity = termRepository.save(entity);
+        return new TermDto(entity.getId(), entity.getTerm(), entity.getDescription());
     }
 
     @Override
-    public void deleteTermById(int id) {
-        this.termRepository.deleteById(id);
+    @Transactional
+    public void update(UpdateTermPayload payload) {
+        TermEntity term = termRepository.findById(payload.id()).orElseThrow(() -> new NoSuchElementException("Term not found"));
+        if (!payload.description().equals(term.getDescription())) {
+            term.setDescription(payload.description());
+        }
+        if (!payload.term().equals(term.getTerm())) {
+            term.setTerm(payload.term());
+        }
+        termRepository.save(term);
     }
+
+    @Override
+    public void deleteById(int id) {
+        termRepository.deleteById(id);
+    }
+
+    @Override
+    public void deleteAllBySetId(int setId) {
+        termRepository.deleteBySetId(setId);
+    }
+
+
 
 
 
