@@ -11,7 +11,7 @@ import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
-public class DefaultLanguageService implements LanguageService {
+public class LanguageServiceImpl implements LanguageService {
 
     private final LanguagesRepository languagesRepository;
 

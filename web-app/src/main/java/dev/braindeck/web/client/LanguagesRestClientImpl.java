@@ -7,7 +7,7 @@ import org.springframework.web.client.RestClient;
 import java.util.*;
 
 @RequiredArgsConstructor
-public class RestClientLanguagesRestClientImpl implements LanguagesRestClient {
+public class LanguagesRestClientImpl implements LanguagesRestClient {
 
     private final RestClient restClient;
 

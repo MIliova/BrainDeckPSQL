@@ -10,7 +10,7 @@ import lombok.*;
 @NoArgsConstructor
 @Entity
 @Table(name="t_drafts_terms")
-public class DraftTermEntity {
+public class DTermEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

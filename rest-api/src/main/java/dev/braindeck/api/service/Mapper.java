@@ -2,12 +2,10 @@ package dev.braindeck.api.service;
 
 import dev.braindeck.api.dto.*;
 import dev.braindeck.api.entity.*;
-import jakarta.persistence.Tuple;
 import lombok.experimental.UtilityClass;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @UtilityClass
 public class Mapper {
@@ -23,15 +21,22 @@ public class Mapper {
         return lDto;
     }
 
-    public List<TermDto> draftTermsToDto(List<DraftTermEntity> listEntity) {
+    public List<TermDto> draftTermsToDto(List<DTermEntity> listEntity) {
         if (listEntity == null) {
             return null;
         }
         List<TermDto> lDto = new ArrayList<>();
-        for (DraftTermEntity entity : listEntity) {
+        for (DTermEntity entity : listEntity) {
             lDto.add(new TermDto(entity.getId(), entity.getTerm(), entity.getDescription()));
         }
         return lDto;
+    }
+
+    public TermDto draftTermToDto(DTermEntity entity) {
+        if (entity == null) {
+            return null;
+        }
+        return new TermDto(entity.getId(), entity.getTerm(), entity.getDescription());
     }
 
     public SetDto setToDto(SetEntity entity) {
@@ -67,6 +72,7 @@ public class Mapper {
         return lDto;
     }
 
+
     public UserDto userToDto(UserEntity user) {
         if (user == null) {
             return null;
@@ -74,6 +80,21 @@ public class Mapper {
         return new UserDto(user.getId(), user.getName());
     }
 
+    public DraftSetDto DraftSetToDto(DraftSetEntity entity) {
+        if (entity == null) {
+            return null;
+        }
+        return new DraftSetDto(entity.getId(), entity.getTitle(), entity.getDescription(), entity.getTermLanguageId(), entity.getDescriptionLanguageId(),
+                userToDto(entity.getUser()),draftTermsToDto(entity.getTerms()));
+    }
+
+    public DraftSetDto DraftSetToDto(DraftSetEntity entity, List<TermDto> terms) {
+        if (entity == null) {
+            return null;
+        }
+        return new DraftSetDto(entity.getId(), entity.getTitle(), entity.getDescription(), entity.getTermLanguageId(), entity.getDescriptionLanguageId(),
+                userToDto(entity.getUser()),terms);
+    }
 //    public List<SetWithCountDto> setsWithCountWithUserToDto(List<Tuple> listTuple, UserEntity user) {
 //        if (listTuple == null) {
 //            return null;
@@ -104,10 +125,5 @@ public class Mapper {
         return new DraftDto(entity.getId(), entity.getUser().getId(),terms);
     }
 
-    public DraftSetDto DraftSetToDto(DraftSetEntity entity, List<TermDto> terms) {
-        if (entity == null) {
-            return null;
-        }
-        return new DraftSetDto(entity.getId(), entity.getTitle(), entity.getDescription(), entity.getTermLanguageId(), entity.getDescriptionLanguageId(), userToDto(entity.getUser()),terms);
-    }
+
 }

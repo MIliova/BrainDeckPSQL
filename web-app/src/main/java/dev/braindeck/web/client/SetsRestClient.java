@@ -1,6 +1,5 @@
 package dev.braindeck.web.client;
 
-import dev.braindeck.web.controller.payload.NewTermPayload;
 import dev.braindeck.web.entity.*;
 
 import java.util.List;
@@ -12,20 +11,11 @@ public interface SetsRestClient {
 
     List<SetWithCountDto> findAllSets(int userId);
 
-    SetDto createSet(String title, String description, Integer termLanguageId, Integer descriptionLanguageId, List<NewTermPayload> terms);
-
     Optional<SetDto> findSetById(int setId);
-
-    void updateSet(int setId, String title, String description, Integer termLanguageId, Integer descriptionLanguageId, List<TermDto> terms);
-
-    void deleteSet(int setId);
-
-    List<ImportTermDto> prepareImport(String text, String colSeparator, String rowSeparator, String colCustom, String rowCustom);
 
     Optional<DraftSetDto> findDraftByUserId(int userId);
 
     Optional<DraftSetDto> findDraftById(int draftId);
 
-    SetDto createSetFromDraft(int draftId, String title, String description, Integer termLanguageId, Integer descriptionLanguageId, List<NewTermPayload> terms);
 
     }

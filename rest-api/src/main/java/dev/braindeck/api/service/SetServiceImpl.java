@@ -1,5 +1,6 @@
 package dev.braindeck.api.service;
 
+import dev.braindeck.api.controller.exception.ForbiddenException;
 import dev.braindeck.api.controller.payload.NewTermPayload;
 import dev.braindeck.api.controller.payload.UpdateTermPayload;
 import dev.braindeck.api.dto.SetDto;
@@ -20,10 +21,11 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
-public class DefaultSetService implements SetService {
+public class SetServiceImpl implements SetService {
 
     private final SetRepository setRepository;
     private final TermService termService;
+    private final UserService userService;
 
     @Transactional
     @Override
@@ -41,6 +43,11 @@ public class DefaultSetService implements SetService {
     public void update(int setId, String title, String description, int termLanguageId, int descriptionLanguageId,
                        UserEntity user, List<UpdateTermPayload> termsPayload) {
         SetEntity set = setRepository.findById(setId).orElseThrow(() -> new NoSuchElementException("Set not found"));
+
+        UserEntity currentUser = userService.getCurrentUser();
+        if (!set.getUser().getId().equals(currentUser.getId())) {
+            throw new ForbiddenException("Set does not belong to this user");
+        }
 
         set.setTitle(title);
         set.setDescription(description);

@@ -37,7 +37,7 @@ public class DraftSetEntity {
     private UserEntity user;
 
     @OneToMany(mappedBy = "draft", cascade = CascadeType.REMOVE, fetch = FetchType.LAZY, orphanRemoval = true)
-    private List<DraftTermEntity> terms = new ArrayList<>();
+    private List<DTermEntity> terms = new ArrayList<>();
 
     @Column (name="created_at", nullable = false)
     private Instant createdAt;

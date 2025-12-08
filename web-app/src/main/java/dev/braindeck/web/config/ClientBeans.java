@@ -1,7 +1,7 @@
 package dev.braindeck.web.config;
 
-import dev.braindeck.web.client.RestClientLanguagesRestClientImpl;
-import dev.braindeck.web.client.RestClientSetsRestClientImpl;
+import dev.braindeck.web.client.LanguagesRestClientImpl;
+import dev.braindeck.web.client.SetsRestClientImpl;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -12,16 +12,16 @@ import org.springframework.web.filter.CommonsRequestLoggingFilter;
 public class ClientBeans {
 
     @Bean
-    public RestClientSetsRestClientImpl setsRestClient(@Value("${braindeck.api.uri}") String apiBaseUrl) {
-        return new RestClientSetsRestClientImpl(RestClient
+    public SetsRestClientImpl setsRestClient(@Value("${braindeck.api.uri}") String apiBaseUrl) {
+        return new SetsRestClientImpl(RestClient
                 .builder()
                 .baseUrl(apiBaseUrl)
                 .build());
     }
 
     @Bean
-    public RestClientLanguagesRestClientImpl languagesRestClient(@Value("${braindeck.api.uri}") String apiBaseUrl) {
-        return new RestClientLanguagesRestClientImpl(RestClient
+    public LanguagesRestClientImpl languagesRestClient(@Value("${braindeck.api.uri}") String apiBaseUrl) {
+        return new LanguagesRestClientImpl(RestClient
                 .builder()
                 .baseUrl(apiBaseUrl)
                 .build());

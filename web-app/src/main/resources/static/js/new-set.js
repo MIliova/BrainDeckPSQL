@@ -962,7 +962,7 @@ class TermsImport {
             jsonData['rowCustom']  = this.rowCustom.value//form.elements['row-custom'];
         }
 
-        fetch('http://localhost:8081/api/terms/prepare-import', {
+        fetch('http://localhost:8081/api/import/terms', {
             method: 'POST',
             headers: {
                 "Content-Type": "application/json"
@@ -1058,9 +1058,9 @@ class AutoSave {
             this.createURI = "http://localhost:8081/api/sets/" + this.s_d_Id + "/terms";
             this.updateURI = "http://localhost:8081/api/sets/" + this.s_d_Id + "/terms/";
             this.deleteURI = "http://localhost:8081/api/sets/" + this.s_d_Id + "/terms/";
-
         }
     }
+
     showErrors(errors) {
         this.onErrors(errors)
     }

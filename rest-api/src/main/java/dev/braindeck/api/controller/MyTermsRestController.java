@@ -1,6 +1,6 @@
 package dev.braindeck.api.controller;
 
-import dev.braindeck.api.controller.payload.NewTermWithSetIdPayload;
+import dev.braindeck.api.controller.payload.NewTermPayload;
 import dev.braindeck.api.controller.payload.UpdateTermPayload;
 import dev.braindeck.api.dto.TermDto;
 import dev.braindeck.api.service.SetService;
@@ -9,26 +9,27 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/drafts/{setId:\\d+}/terms")
-public class MyDraftTermRestController {
+@RequestMapping("/api/me")
+public class MyTermsRestController {
 
     private final TermService termService;
     private final SetService setService;
 
-    @PostMapping
-    public TermDto create(@PathVariable("setId") int setId, @RequestBody NewTermWithSetIdPayload term) {
+    @PostMapping("/sets/{setId:\\d+}/terms")
+    public TermDto create(@PathVariable("setId") int setId, @RequestBody NewTermPayload term) {
         return termService.create(setService.findEntityById(setId), term);
     }
 
-    @PutMapping("/{termId:\\d+}")
+    @PutMapping("/terms/")
     public ResponseEntity<Void> update(@RequestBody UpdateTermPayload term) {
         termService.update(term);
         return ResponseEntity.noContent().build();
     }
 
-    @DeleteMapping("/{termId:\\d+}")
+    @DeleteMapping("/terms/{termId:\\d+}")
     public ResponseEntity<Void> delete(@PathVariable("termId") int termId) {
         termService.deleteById(termId);
         return ResponseEntity.noContent().build();

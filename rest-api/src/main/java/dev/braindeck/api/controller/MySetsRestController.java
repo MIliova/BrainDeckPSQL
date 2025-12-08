@@ -27,7 +27,7 @@ public class MySetsRestController {
             @Valid @RequestBody NewSetPayload payload,
             UriComponentsBuilder uriBuilder) {
         System.out.println(payload);
-        UserEntity user = userService.findById(1);
+        UserEntity user = userService.getCurrentUser();
         SetDto set = setService.create(payload.title(), payload.description(), payload.termLanguageId(), payload.descriptionLanguageId(), user, payload.terms());
         return ResponseEntity.created(uriBuilder
                         .replacePath("/api/sets/{setId}").build(Map.of("setId", set.id())))
@@ -38,7 +38,7 @@ public class MySetsRestController {
     public ResponseEntity<Void> update(@PathVariable("setId") int setId,
                                        @Valid @RequestBody UpdateSetPayload payload) {
         System.out.println(payload);
-        UserEntity user = userService.findById(1);
+        UserEntity user = userService.getCurrentUser();
         setService.update(setId, payload.title(), payload.description(), payload.termLanguageId(), payload.descriptionLanguageId(), user, payload.terms());
         return ResponseEntity.noContent().build();
     }
@@ -49,7 +49,5 @@ public class MySetsRestController {
         setService.delete(setId);
         return ResponseEntity.noContent().build();
     }
-
-
 
 }

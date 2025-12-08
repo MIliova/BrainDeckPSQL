@@ -1,7 +1,6 @@
 package dev.braindeck.api.service;
 
 import dev.braindeck.api.entity.UserEntity;
-import dev.braindeck.api.dto.UserDto;
 import dev.braindeck.api.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -10,7 +9,7 @@ import java.util.NoSuchElementException;
 
 @RequiredArgsConstructor
 @Service
-public class DefaultUserService implements UserService {
+public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
 
@@ -20,8 +19,9 @@ public class DefaultUserService implements UserService {
     }
 
     @Override
-    public UserDto findCurrentUser () {
-        return Mapper.userToDto(this.findById(1));
+    public UserEntity getCurrentUser () {
+
+        return this.findById(1);
     }
 
 //    public UserWithDraftDto findByIdWithDraft(int id) {
