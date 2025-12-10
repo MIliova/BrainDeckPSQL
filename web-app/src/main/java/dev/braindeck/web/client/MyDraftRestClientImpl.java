@@ -1,13 +1,16 @@
 package dev.braindeck.web.client;
 
-import dev.braindeck.web.controller.payload.NewTermPayload;
-import dev.braindeck.web.controller.payload.RestNewSetPayload;
-import dev.braindeck.web.controller.payload.RestUpdateSetPayload;
-import dev.braindeck.web.entity.*;
+import dev.braindeck.web.controller.payload.*;
+import dev.braindeck.web.entity.DraftSetDto;
+import dev.braindeck.web.entity.NewDraftDto;
+import dev.braindeck.web.entity.SetDto;
+import dev.braindeck.web.entity.TermDto;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
 import org.springframework.http.ProblemDetail;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestClient;
 
@@ -18,20 +21,20 @@ import java.util.Optional;
 
 @Slf4j
 @RequiredArgsConstructor
-public class MySetsRestClientImpl implements MySetsRestClient {
+public class MyDraftRestClientImpl implements MyDraftRestClient {
 
     private final RestClient restClient;
 
     @Override
-    public SetDto create(String title, String description, Integer termLanguageId, Integer descriptionLanguageId, List<NewTermPayload> terms) {
+    public NewDraftDto create(String title, String description, Integer termLanguageId, Integer descriptionLanguageId) {
         try {
-            return this.restClient
+            return restClient
                     .post()
-                    .uri("/api/users/me/sets")
+                    .uri("/api/me/draft")
                     .contentType(MediaType.APPLICATION_JSON)
-                    .body(new RestNewSetPayload( title,  description,  termLanguageId,  descriptionLanguageId, terms))
+                    .body(new RestNewDraftPayload(title,  description,  termLanguageId,  descriptionLanguageId))
                     .retrieve()
-                    .body(SetDto.class);
+                    .body(NewDraftDto.class);
         } catch (HttpClientErrorException.BadRequest e) {
             ProblemDetail problemDetail =  e.getResponseBodyAs(ProblemDetail.class);
             if(problemDetail != null) {
@@ -42,14 +45,13 @@ public class MySetsRestClientImpl implements MySetsRestClient {
     }
 
     @Override
-    public void update(int setId, String title, String description, Integer termLanguageId, Integer descriptionLanguageId, List<TermDto> terms) {
+    public void update(int draftId, String title, String description, Integer termLanguageId, Integer descriptionLanguageId) {
         try {
-            System.out.println(terms);
             this.restClient
                     .patch()
-                    .uri("/api/users/me/sets/{setId}", setId)
+                    .uri("/api/me/draft/{draftId}", draftId)
                     .contentType(MediaType.APPLICATION_JSON)
-                    .body(new RestUpdateSetPayload( setId, title,  description,  termLanguageId,  descriptionLanguageId, terms))
+                    .body(new RestUpdateDraftPayload(draftId, title,  description,  termLanguageId,  descriptionLanguageId))
                     .retrieve()
                     .toBodilessEntity();
         } catch (HttpClientErrorException.BadRequest e) {
@@ -62,11 +64,11 @@ public class MySetsRestClientImpl implements MySetsRestClient {
     }
 
     @Override
-    public void delete(int setId) {
+    public void delete(int draftId) {
         try {
             this.restClient
                     .delete()
-                    .uri("/api/users/me/sets/{setId}", setId)
+                    .uri("/api/me/draft/{draftId}", draftId)
                     .retrieve()
                     .toBodilessEntity();
         } catch (HttpClientErrorException.NotFound exception) {
@@ -79,7 +81,7 @@ public class MySetsRestClientImpl implements MySetsRestClient {
         try {
             return this.restClient
                     .post()
-                    .uri("/api/users/me/sets/draft/{draftId}", draftId)
+                    .uri("/api/me/draft/{draftId}/convert", draftId)
                     .contentType(MediaType.APPLICATION_JSON)
                     .body(new RestNewSetPayload(title,  description,  termLanguageId,  descriptionLanguageId, terms))
                     .retrieve()
@@ -94,12 +96,12 @@ public class MySetsRestClientImpl implements MySetsRestClient {
     }
 
     @Override
-    public Optional<SetDto> findMySetById(int setId) {
+    public Optional<DraftSetDto> get() {
         try {
             return Optional.ofNullable(this.restClient.get()
-                    .uri("/api/users/me/sets/{setId}", setId)
+                    .uri("/api/me/draft")
                     .retrieve()
-                    .body(SetDto.class));
+                    .body(DraftSetDto.class));
         } catch (HttpClientErrorException.NotFound exception) {
             ProblemDetail problemDetail =  exception.getResponseBodyAs(ProblemDetail.class);
             if(problemDetail != null) {
@@ -108,4 +110,5 @@ public class MySetsRestClientImpl implements MySetsRestClient {
             throw new ProblemDetailException("Problem detail is null");
         }
     }
+
 }

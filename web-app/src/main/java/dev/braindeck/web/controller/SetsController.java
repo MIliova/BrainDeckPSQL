@@ -2,9 +2,7 @@ package dev.braindeck.web.controller;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import dev.braindeck.web.client.BadRequestException;
-import dev.braindeck.web.client.LanguagesRestClient;
-import dev.braindeck.web.client.SetsRestClient;
+import dev.braindeck.web.client.*;
 import dev.braindeck.web.controller.payload.NewSetPayload;
 import dev.braindeck.web.entity.*;
 import dev.braindeck.web.controller.payload.NewTermPayload;
@@ -21,6 +19,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Optional;
 
 @Controller
 @RequiredArgsConstructor
@@ -30,8 +29,9 @@ public class SetsController {
     private final LanguagesRestClient languagesRestClient;
     private final MyLocale myLocale;
     private final MessageSource messageSource;
+    private final MySetsRestClient mySetsRestClient;
 
-
+    private final MyDraftRestClient myDraftRestClient;
 
     @ModelAttribute("curLang")
     public String getCurLang() {
@@ -42,13 +42,11 @@ public class SetsController {
         return this.myLocale.getAvailables();
     }
 
-
     @ModelAttribute("user")
     public UserDto findCurrentUser() {
         System.out.println("findCurrentUser");
         return this.setsRestClient.findCurrentUser();
     }
-
 
     @GetMapping("/user/{userId:\\d+}/sets")
     public String getSetsList(@PathVariable("userId") int userId, Model model, Locale locale) {
@@ -56,34 +54,28 @@ public class SetsController {
         List<SetWithCountDto> sets = this.setsRestClient.findAllSets(userId);
         System.out.println(sets);
 
-
         model.addAttribute("sets", sets);
         model.addAttribute("pageTitle", messageSource.getMessage("messages.sets", null, locale));
         return "sets";
     }
 
-
-
-
-
     @GetMapping("/create-set")
     public String getNewSetPage (Model model, @ModelAttribute("user") UserDto user, Locale locale) {
+        DraftSetDto draft = myDraftRestClient.get().orElse(null);
 
-        DraftSetDto draftDto = this.setsRestClient.findDraftByUserId(user.id()).orElse(null);
+        if (draft != null) {
+//            ControllersUtil.getLanguages(languagesList, model, draft.termLanguageId(), draft.descriptionLanguageId());
+//            model.addAttribute("pageTitle", messageSource.getMessage("messages.set.create_new", null, locale));
+//            model.addAttribute("draft", draft);
+//            return "draft-set";
 
+            model.addAttribute("draft", draft);
+            return "redirect:/draft/";
+        }
         Map<String, Map<Integer, String>> languagesList = languagesRestClient.findAllByTypes();
         ControllersUtil.getLanguages(languagesList, model);
-
-        if (draftDto != null) {
-            model.addAttribute("draft", draftDto);
-
-            return "redirect:/draft/" + draftDto.id() ;
-
-        } else {
-            model.addAttribute("pageTitle", messageSource.getMessage("messages.set.create_new", null, locale));
-            return "new-set";
-
-        }
+        model.addAttribute("pageTitle", messageSource.getMessage("messages.set.create_new", null, locale));
+        return "new-set";
     }
 
     @PostMapping(value = "/create-set")
@@ -103,7 +95,7 @@ public class SetsController {
         System.out.println(terms);
 
         try {
-            SetDto set = this.setsRestClient.createSet(
+            SetDto set = this.mySetsRestClient.create(
                     payload.title(), payload.description(), payload.termLanguageId(),payload.descriptionLanguageId(),
                     terms);
             return "redirect:/set/" + set.id();

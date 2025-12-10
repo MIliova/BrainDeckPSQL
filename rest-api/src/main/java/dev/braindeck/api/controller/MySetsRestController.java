@@ -26,28 +26,32 @@ public class MySetsRestController {
     public ResponseEntity<?> create(
             @Valid @RequestBody NewSetPayload payload,
             UriComponentsBuilder uriBuilder) {
-        System.out.println(payload);
         UserEntity user = userService.getCurrentUser();
         SetDto set = setService.create(payload.title(), payload.description(), payload.termLanguageId(), payload.descriptionLanguageId(), user, payload.terms());
         return ResponseEntity.created(uriBuilder
                         .replacePath("/api/sets/{setId}").build(Map.of("setId", set.id())))
-                .body(set);
+                        .body(set);
     }
 
     @PatchMapping("/{setId:\\d+}")
     public ResponseEntity<Void> update(@PathVariable("setId") int setId,
                                        @Valid @RequestBody UpdateSetPayload payload) {
-        System.out.println(payload);
         UserEntity user = userService.getCurrentUser();
-        setService.update(setId, payload.title(), payload.description(), payload.termLanguageId(), payload.descriptionLanguageId(), user, payload.terms());
+        setService.update(setId, payload.title(), payload.description(), payload.termLanguageId(), payload.descriptionLanguageId(), payload.terms(), user.getId());
         return ResponseEntity.noContent().build();
     }
 
     @DeleteMapping("/{setId:\\d+}")
     public ResponseEntity<Void> delete(@PathVariable("setId") int setId) {
-        System.out.println("Deleting set " + setId);
-        setService.delete(setId);
+        UserEntity user = userService.getCurrentUser();
+        setService.delete(setId, user.getId());
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/{setId:\\d+}")
+    public SetDto findMySet(@PathVariable("setId") int setId) {
+        UserEntity user = userService.getCurrentUser();
+        return setService.findByIdForUser(setId, user.getId());
     }
 
 }

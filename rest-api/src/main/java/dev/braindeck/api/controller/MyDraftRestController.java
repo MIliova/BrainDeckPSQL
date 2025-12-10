@@ -4,6 +4,7 @@ import dev.braindeck.api.controller.payload.NewDraftPayload;
 import dev.braindeck.api.controller.payload.NewSetPayload;
 import dev.braindeck.api.controller.payload.UpdateSetPayload;
 import dev.braindeck.api.dto.DraftSetDto;
+import dev.braindeck.api.dto.NewDraftDto;
 import dev.braindeck.api.dto.SetDto;
 import dev.braindeck.api.entity.UserEntity;
 import dev.braindeck.api.service.*;
@@ -18,36 +19,38 @@ import java.util.Map;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/me/drafts")
+@RequestMapping("/api/me/draft")
 @CrossOrigin(origins = "http://localhost:8080")
-public class MyDraftsRestController {
+public class MyDraftRestController {
 
     private final UserService userService;
     private final DraftService draftService;
     private final SetService setService;
 
     @PostMapping(value = "")
-    public ResponseEntity<DraftSetDto> create(@Valid @RequestBody NewDraftPayload payload) {
+    public ResponseEntity<NewDraftDto> create(@Valid @RequestBody NewDraftPayload payload) {
         UserEntity user = userService.getCurrentUser();
-        DraftSetDto draft = draftService.create(user, payload);
+        NewDraftDto draft = draftService.create(payload, user);
         return ResponseEntity.status(HttpStatus.CREATED).body(draft);
     }
 
     @PatchMapping("/{draftId:\\d+}")
     public ResponseEntity<Void> update(@PathVariable int draftId,
                                        @Valid @RequestBody UpdateSetPayload payload) {
-        draftService.update(draftId, payload.title(), payload.description(), payload.termLanguageId(), payload.descriptionLanguageId());
+        UserEntity user = userService.getCurrentUser();
+        draftService.update(draftId, payload.title(), payload.description(), payload.termLanguageId(), payload.descriptionLanguageId(), user.getId());
         return ResponseEntity.noContent().build();
     }
 
     @DeleteMapping("/{draftId:\\d+}")
-    public ResponseEntity<Void> delete(@PathVariable("draftId") int draftId) {
-        draftService.delete(draftId);
+    public ResponseEntity<Void> delete(@PathVariable int draftId) {
+        UserEntity user = userService.getCurrentUser();
+        draftService.delete(draftId, user.getId());
         return ResponseEntity.noContent().build();
     }
 
     @GetMapping
-    public ResponseEntity<DraftSetDto> getCurrentUserDraft() {
+    public ResponseEntity<DraftSetDto> get() {
         UserEntity user = userService.getCurrentUser();
         DraftSetDto draft = draftService.findFirstByUserId(user.getId());
         if (draft == null) {
@@ -56,10 +59,10 @@ public class MyDraftsRestController {
         return ResponseEntity.ok(draft);
     }
 
-    @GetMapping("/{draftId:\\d+}")
-    public DraftSetDto getDraftById(@PathVariable int draftId) {
-        return draftService.findByIdForUser(draftId);
-    }
+//    @GetMapping("/{draftId:\\d+}")
+//    public DraftSetDto getDraftById(@PathVariable int draftId) {
+//        return draftService.findByIdForUser(draftId);
+//    }
 
     @PostMapping("/{draftId:\\d+}/convert")
     public ResponseEntity<SetDto>  createFromDraft(
@@ -74,7 +77,7 @@ public class MyDraftsRestController {
                 payload.descriptionLanguageId(),
                 user,
                 payload.terms());
-        draftService.delete(draftId);
+        draftService.delete(draftId, user.getId());
         return ResponseEntity.created(
                 uriBuilder.replacePath("/api/sets/{setId}")
                         .build(Map.of("setId", set.id())))

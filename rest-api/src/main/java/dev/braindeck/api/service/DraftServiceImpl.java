@@ -4,6 +4,7 @@ import dev.braindeck.api.controller.exception.DraftExistException;
 import dev.braindeck.api.controller.exception.ForbiddenException;
 import dev.braindeck.api.controller.payload.NewDraftPayload;
 import dev.braindeck.api.dto.DraftSetDto;
+import dev.braindeck.api.dto.NewDraftDto;
 import dev.braindeck.api.dto.TermDto;
 import dev.braindeck.api.entity.DraftSetEntity;
 import dev.braindeck.api.entity.UserEntity;
@@ -22,26 +23,23 @@ public class DraftServiceImpl implements DraftService {
 
     private final DraftRepository draftRepository;
     private final DTermService draftTermService;
-    private final UserService userService;
 
     @Override
-    public DraftSetDto create(UserEntity user, NewDraftPayload payload) {
+    public NewDraftDto create(NewDraftPayload payload, UserEntity user) {
         DraftSetEntity draft = draftRepository.findFirstByUserId(user.getId()).orElse(null);
         if (draft != null) {
             throw new DraftExistException("errors.draft.exist");
         }
         draft = draftRepository.save(
                 new DraftSetEntity(payload.title(), payload.description(), payload.termLanguageId(), payload.descriptionLanguageId(), user));
-        return Mapper.DraftSetToDto(draft);
+        return Mapper.NewDraftToDto(draft);
     }
 
     @Override
-    public void update (int id, String title, String description, int termLanguageId, int descriptionLanguageId) {
-        DraftSetEntity draft = draftRepository.findById(id).orElseThrow(()-> new NoSuchElementException("errors.draft.not_found"));
-
-        UserEntity user = userService.getCurrentUser();
-        if (!draft.getUser().getId().equals(user.getId())) {
-            throw new ForbiddenException("Draft does not belong to this user");
+    public void update (int id, String title, String description, int termLanguageId, int descriptionLanguageId, int currentUserId) {
+        DraftSetEntity draft = draftRepository.findById(id).orElseThrow(()-> new NoSuchElementException("errors.draft.not.found"));
+        if (!draft.getUser().getId().equals(currentUserId)) {
+            throw new ForbiddenException("errors.draft.not.belong.user");
         }
 
         draft.setTitle(title);
@@ -54,24 +52,28 @@ public class DraftServiceImpl implements DraftService {
 
     @Override
     @Transactional
-    public void delete(int id) {
+    public void delete(int id, int currentUserId) {
         DraftSetEntity draft = draftRepository.findById(id)
-                .orElseThrow(() -> new NoSuchElementException("errors.draft.not_found"));
+                .orElseThrow(() -> new NoSuchElementException("errors.draft.not.found"));
 
-        UserEntity user = userService.getCurrentUser();
-        if (!draft.getUser().getId().equals(user.getId())) {
-            throw new ForbiddenException("errors.draft.forbidden");
+        if (!draft.getUser().getId().equals(currentUserId)) {
+            throw new ForbiddenException("errors.draft.not.belong.user");
         }
 
-        draftTermService.deleteByDraftId(id);
+        draftTermService.deleteByDraftId(id, currentUserId);
         draftRepository.delete(draft);
     }
 
     @Transactional(readOnly = true)
     @Override
-    public DraftSetEntity findEntityById(int id) {
-        return draftRepository.findById(id)
-                .orElseThrow(()-> new NoSuchElementException("errors.draft.not_found"));
+    public DraftSetEntity findEntityById(int id, int currentUserId) {
+        DraftSetEntity draft = draftRepository.findById(id)
+                .orElseThrow(()-> new NoSuchElementException("errors.draft.not.found"));
+
+        if (!draft.getUser().getId().equals(currentUserId)) {
+            throw new ForbiddenException("errors.draft.not.belong.user");
+        }
+        return draft;
     }
 
     @Override
@@ -80,23 +82,21 @@ public class DraftServiceImpl implements DraftService {
                 .orElse(null);
                 //.orElseThrow(()-> new NoSuchElementException("errors.draft.not_found"));
         List<TermDto> terms = (draft != null)
-                ? draftTermService.findById(draft.getId())
+                ? draftTermService.findById(draft.getId(), userId)
                 : Collections.emptyList();
         return Mapper.DraftSetToDto(draft, terms);
     }
 
-    @Override
-    public DraftSetDto findByIdForUser(int id) {
-        DraftSetEntity draft = draftRepository.findById(id)
-                .orElseThrow(() -> new NoSuchElementException("errors.draft.not_found"));
-
-        UserEntity user = userService.getCurrentUser();
-
-        if (!draft.getUser().getId().equals(user.getId())) {
-            throw new ForbiddenException("errors.draft.forbidden");
-        }
-        List<TermDto> terms = draftTermService.findById(draft.getId());
-        return Mapper.DraftSetToDto(draft, terms);
-    }
+//    @Override
+//    public DraftSetDto findByIdForUser(int id, int currentUserId) {
+//        DraftSetEntity draft = draftRepository.findById(id)
+//                .orElseThrow(() -> new NoSuchElementException("errors.draft.not_found"));
+//
+//        if (!draft.getUser().getId().equals(currentUserId)) {
+//            throw new ForbiddenException("errors.draft.forbidden");
+//        }
+//        List<TermDto> terms = draftTermService.findById(draft.getId());
+//        return Mapper.DraftSetToDto(draft, terms);
+//    }
 
 }

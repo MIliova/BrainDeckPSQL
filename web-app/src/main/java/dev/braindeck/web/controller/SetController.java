@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import dev.braindeck.web.client.BadRequestException;
 import dev.braindeck.web.client.LanguagesRestClient;
+import dev.braindeck.web.client.MySetsRestClient;
 import dev.braindeck.web.client.SetsRestClient;
 import dev.braindeck.web.controller.payload.UpdateSetPayload;
 import dev.braindeck.web.entity.*;
@@ -34,6 +35,7 @@ public class SetController {
     private final LanguagesRestClient languagesRestClient;
     private final MessageSource messageSource;
     private final MyLocale myLocale;
+    private final MySetsRestClient mySetsRestClient;
 
     @ModelAttribute("curLang")
     public String getCurLang() {
@@ -80,7 +82,7 @@ public class SetController {
     @GetMapping("/edit")
     public String getEditSetPage(@PathVariable("setId") int setId,
                                  Model model, Locale locale) {
-        SetDto setDto = this.setsRestClient.findSetById(setId).orElse(null);
+        SetDto setDto = this.mySetsRestClient.findMySetById(setId).orElse(null);
         System.out.println(setDto);
         model.addAttribute("set", setDto);
 
@@ -93,7 +95,7 @@ public class SetController {
 
     @PostMapping("/delete")
     public String deleteSet(@ModelAttribute("setId") int setId, Model model) {
-        this.setsRestClient.deleteSet(setId);
+        this.mySetsRestClient.delete(setId);
         UserDto userDto = (UserDto) model.getAttribute("user");
         if (userDto == null) {
             return "redirect:/"; // Или другая страница, например, главная
@@ -118,7 +120,7 @@ public class SetController {
 //        System.out.println(terms);
 
         try {
-            this.setsRestClient.updateSet(setId, payload.title(), payload.description(), payload.termLanguageId(),
+            this.mySetsRestClient.update(setId, payload.title(), payload.description(), payload.termLanguageId(),
                     payload.descriptionLanguageId(), terms);
             return "redirect:/set/" + setId;
         } catch (BadRequestException e) {

@@ -15,12 +15,12 @@ public interface DTermService {
 
     List<TermDto> create(DraftSetEntity draft, List<NewDTermPayload> terms);
 
-    void update(int draftId, int termId, UpdateDTermPayload payload);
+    void update(int termId, int draftId, int currentUserId, UpdateDTermPayload payload);
 
-    void delete(int draftId, int id);
+    void delete(int termId, int draftId, int currentUserId);
 
-    void deleteByDraftId(int draftId);
+    void deleteByDraftId(int draftId, int currentUserId);
 
-    List<TermDto> findById(int draftId);
+    List<TermDto> findById(int draftId, int currentUserId);
 
 }

@@ -1,39 +1,43 @@
 package dev.braindeck.api.service;
 
 import dev.braindeck.api.controller.exception.ForbiddenException;
+import dev.braindeck.api.controller.payload.NewDTermPayload;
 import dev.braindeck.api.controller.payload.NewTermPayload;
+import dev.braindeck.api.controller.payload.UpdateDTermPayload;
 import dev.braindeck.api.controller.payload.UpdateTermPayload;
-import dev.braindeck.api.entity.SetEntity;
+import dev.braindeck.api.entity.*;
 import dev.braindeck.api.dto.TermDto;
-import dev.braindeck.api.entity.TermEntity;
-import dev.braindeck.api.entity.UserEntity;
 import dev.braindeck.api.repository.TermRepository;
 import dev.braindeck.api.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.Objects;
 
 @Service
 @RequiredArgsConstructor
 public class TermServiceImpl implements TermService {
 
     private final TermRepository termRepository;
-    private final UserService userService;
 
     @Override
-    public TermDto create(SetEntity set, NewTermPayload payload) {
-        TermEntity entity = new TermEntity(payload.getTerm(), payload.getDescription(), set);
+    public TermDto create(SetEntity set, NewDTermPayload payload) {
+        TermEntity entity = new TermEntity(
+                payload.getTerm(),
+                payload.getDescription(),
+                set);
         entity = termRepository.save(entity);
         return new TermDto(entity.getId(), entity.getTerm(), entity.getDescription());
     }
 
     @Override
-    public List<TermDto> create(SetEntity set, List<NewTermPayload> terms) {
+    public List<TermDto> create(SetEntity set, List<NewDTermPayload> payloads) {
         return Mapper.termsToDto(termRepository.saveAll(
-                terms.stream()
+                payloads.stream()
                         .map(payload -> new TermEntity(payload.getTerm(), payload.getDescription(), set))
                         .toList()
         ));
@@ -41,21 +45,38 @@ public class TermServiceImpl implements TermService {
 
     @Override
     @Transactional
-    public void update(UpdateTermPayload payload) {
-        TermEntity term = termRepository.findById(payload.id()).orElseThrow(() -> new NoSuchElementException("Term not found"));
-
-        UserEntity currentUser = userService.getCurrentUser();
-        if (!term.getSet().getUser().getId().equals(currentUser.getId())) {
-            throw new ForbiddenException("Term does not belong to this user");
+    public void update(int termId, int setId, int currentUserId, UpdateTermPayload payload) {
+        TermEntity term = termRepository.findById(termId)
+                .orElseThrow(() -> new NoSuchElementException("errors.term.not.found"));
+        if (!term.getSet().getId().equals(setId)) {
+            throw new ForbiddenException("errors.term.not.belong.set");
         }
-
-        if (!payload.description().equals(term.getDescription())) {
-            term.setDescription(payload.description());
+        if (!term.getSet().getUser().getId().equals(currentUserId)) {
+            throw new ForbiddenException("errors.term.not.belong.user");
         }
         if (!payload.term().equals(term.getTerm())) {
             term.setTerm(payload.term());
         }
+        if (!payload.description().equals(term.getDescription())) {
+            term.setDescription(payload.description());
+        }
         termRepository.save(term);
+    }
+
+    @Override
+    public void delete(int termId, int setId, int currentUserId) {
+        TermEntity term = termRepository.findById(termId)
+                .orElseThrow(() -> new NoSuchElementException("errors.term.not.found"));
+
+        if (!term.getSet().getId().equals(setId)) {
+            throw new ForbiddenException("errors.term.not.belong.set");
+        }
+
+        if (!term.getSet().getUser().getId().equals(currentUserId)) {
+            throw new ForbiddenException("errors.term.not.belong.user");
+        }
+
+        termRepository.delete(term);
     }
 
     @Override
@@ -66,20 +87,9 @@ public class TermServiceImpl implements TermService {
 
 
 
-
-    @Override
-    public void deleteById(int id) {
-        termRepository.deleteById(id);
-    }
-
-    @Override
-    public void deleteAllBySetId(int setId) {
-        termRepository.deleteBySetId(setId);
-    }
-
-
-
-
-
+//    @Override
+//    public void deleteAllBySetId(int setId) {
+//        termRepository.deleteBySetId(setId);
+//    }
 }
 

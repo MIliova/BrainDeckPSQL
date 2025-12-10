@@ -1,6 +1,7 @@
 package dev.braindeck.web.config;
 
 import dev.braindeck.web.client.LanguagesRestClientImpl;
+import dev.braindeck.web.client.MyDraftRestClientImpl;
 import dev.braindeck.web.client.SetsRestClientImpl;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -10,6 +11,14 @@ import org.springframework.web.filter.CommonsRequestLoggingFilter;
 
 @Configuration
 public class ClientBeans {
+
+    @Bean
+    public MyDraftRestClientImpl myDraftRestClient(@Value("${braindeck.api.uri}") String apiBaseUrl) {
+        return new MyDraftRestClientImpl(RestClient
+                .builder()
+                .baseUrl(apiBaseUrl)
+                .build());
+    }
 
     @Bean
     public SetsRestClientImpl setsRestClient(@Value("${braindeck.api.uri}") String apiBaseUrl) {

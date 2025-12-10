@@ -20,7 +20,6 @@ import java.util.*;
 public class DTermServiceImpl implements DTermService {
 
     private final DraftTermRepository draftTermRepository;
-    private final UserService userService;
 
     @Override
     public TermDto create(DraftSetEntity draft, NewDTermPayload payload) {
@@ -45,17 +44,17 @@ public class DTermServiceImpl implements DTermService {
 
     @Override
     @Transactional
-    public void update(int draftId, int termId, UpdateDTermPayload payload) {
+    public void update(int termId, int draftId, int currentUserId, UpdateDTermPayload payload) {
         DTermEntity term = draftTermRepository.findById(termId)
-                .orElseThrow(() -> new NoSuchElementException("errors.term.not_found"));
+                .orElseThrow(() -> new NoSuchElementException("errors.term.not.found"));
 
-        UserEntity user = userService.getCurrentUser();
         if (!term.getDraft().getId().equals(draftId)) {
-            throw new ForbiddenException("errors.draft.forbidden");
+            throw new ForbiddenException("errors.term.not.belong.draft");
         }
 
-        if (!term.getDraft().getUser().getId().equals(user.getId())) {
-            throw new ForbiddenException("errors.term.forbidden");
+        if (!term.getDraft().getUser().getId().equals(currentUserId)) {
+            throw new ForbiddenException("errors.term.not.belong.user");
+
         }
 
         if (!Objects.equals(payload.term(), term.getTerm())) {
@@ -70,30 +69,28 @@ public class DTermServiceImpl implements DTermService {
     }
 
     @Override
-    public void delete(int draftId, int termId) {
+    public void delete(int termId, int draftId, int currentUserId) {
         DTermEntity term = draftTermRepository.findById(termId)
-                .orElseThrow(() -> new NoSuchElementException("errors.term.not_found"));
+                .orElseThrow(() -> new NoSuchElementException("errors.term.not.found"));
 
         if (!term.getDraft().getId().equals(draftId)) {
-            throw new ForbiddenException("errors.draft.forbidden");
+            throw new ForbiddenException("errors.term.not.belong.draft");
         }
 
-        UserEntity user = userService.getCurrentUser();
-        if (!term.getDraft().getUser().getId().equals(user.getId())) {
-            throw new ForbiddenException("errors.term.forbidden");
+        if (!term.getDraft().getUser().getId().equals(currentUserId)) {
+            throw new ForbiddenException("errors.term.not.belong.user");
         }
 
         draftTermRepository.delete(term);
     }
 
     @Override
-    public void deleteByDraftId(int draftId) {
+    public void deleteByDraftId(int draftId, int currentUserId) {
         draftTermRepository.deleteByDraftId(draftId);
     }
 
-
     @Override
-    public List<TermDto> findById(int draftId) {
+    public List<TermDto> findById(int draftId, int currentUserId) {
         return Mapper.draftTermsToDto(this.draftTermRepository.findAllByDraftId(draftId));
     }
 

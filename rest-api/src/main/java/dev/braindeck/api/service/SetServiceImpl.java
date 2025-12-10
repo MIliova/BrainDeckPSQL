@@ -25,7 +25,6 @@ public class SetServiceImpl implements SetService {
 
     private final SetRepository setRepository;
     private final TermService termService;
-    private final UserService userService;
 
     @Transactional
     @Override
@@ -40,13 +39,12 @@ public class SetServiceImpl implements SetService {
 
     @Transactional
     @Override
-    public void update(int setId, String title, String description, int termLanguageId, int descriptionLanguageId,
-                       UserEntity user, List<UpdateTermPayload> termsPayload) {
-        SetEntity set = setRepository.findById(setId).orElseThrow(() -> new NoSuchElementException("Set not found"));
+    public void update(int id, String title, String description, int termLanguageId, int descriptionLanguageId,
+                       List<UpdateTermPayload> termsPayload, int currentUserId) {
+        SetEntity set = setRepository.findById(id).orElseThrow(() -> new NoSuchElementException("errors.set.not.found"));
 
-        UserEntity currentUser = userService.getCurrentUser();
-        if (!set.getUser().getId().equals(currentUser.getId())) {
-            throw new ForbiddenException("Set does not belong to this user");
+        if (!set.getUser().getId().equals(currentUserId)) {
+            throw new ForbiddenException("errors.set.not.belong.user");
         }
 
         set.setTitle(title);
@@ -80,8 +78,40 @@ public class SetServiceImpl implements SetService {
 
     @Transactional
     @Override
-    public void delete(int setId) {
-        setRepository.deleteById(setId);
+    public void delete(int id, int currentUserId) {
+        SetEntity set = setRepository.findById(id)
+                .orElseThrow(() -> new NoSuchElementException("errors.set.not.found"));
+
+        if (!set.getUser().getId().equals(currentUserId)) {
+            throw new ForbiddenException("errors.set.not.belong.user");
+        }
+
+        setRepository.deleteById(id);
+    }
+
+    @Transactional(readOnly = true)
+    @Override
+    public SetDto findByIdForUser(int id, int currentUserId) {
+        SetEntity set = setRepository.findById(id)
+                .orElseThrow(()-> new NoSuchElementException("errors.set.not.found"));
+
+        if (!set.getUser().getId().equals(currentUserId)) {
+            throw new ForbiddenException("errors.set.not.belong.user");
+        }
+
+        List<TermDto> terms = termService.findAllBySet(set);
+        return Mapper.setToDto(set, terms);
+    }
+
+    @Transactional(readOnly = true)
+    @Override
+    public SetEntity findEntityById(int id, int userId) {
+        SetEntity setEntity = setRepository.findById(id)
+                .orElseThrow(()-> new NoSuchElementException("errors.set.not.found"));
+        if (!setEntity.getUser().getId().equals(userId)) {
+            throw new ForbiddenException("errors.set.not.belong.user");
+        }
+        return setEntity;
     }
 
     @Transactional
@@ -92,17 +122,11 @@ public class SetServiceImpl implements SetService {
 
     @Transactional(readOnly = true)
     @Override
-    public SetDto findById(int setId) {
-        SetEntity setEntity = setRepository.findById(setId)
-                .orElseThrow(()-> new NoSuchElementException("errors.set.not_found"));
+    public SetDto findById(int id) {
+        SetEntity setEntity = setRepository.findById(id)
+                .orElseThrow(()-> new NoSuchElementException("errors.set.not.found"));
         List<TermDto> terms = termService.findAllBySet(setEntity);
         return Mapper.setToDto(setEntity, terms);
     }
 
-    @Transactional(readOnly = true)
-    @Override
-    public SetEntity findEntityById(int setId) {
-        return setRepository.findById(setId)
-                .orElseThrow(()-> new NoSuchElementException("errors.set.not_found"));
-    }
 }

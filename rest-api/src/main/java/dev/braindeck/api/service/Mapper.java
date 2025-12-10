@@ -95,6 +95,12 @@ public class Mapper {
         return new DraftSetDto(entity.getId(), entity.getTitle(), entity.getDescription(), entity.getTermLanguageId(), entity.getDescriptionLanguageId(),
                 userToDto(entity.getUser()),terms);
     }
+    public NewDraftDto NewDraftToDto(DraftSetEntity entity) {
+        if (entity == null) {
+            return null;
+        }
+        return new NewDraftDto(entity.getId(), entity.getTitle(), entity.getDescription(), entity.getTermLanguageId(), entity.getDescriptionLanguageId());
+    }
 //    public List<SetWithCountDto> setsWithCountWithUserToDto(List<Tuple> listTuple, UserEntity user) {
 //        if (listTuple == null) {
 //            return null;

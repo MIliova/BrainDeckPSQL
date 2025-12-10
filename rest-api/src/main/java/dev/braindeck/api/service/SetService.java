@@ -10,17 +10,21 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 
 public interface SetService {
-    List<SetWithTermCountDto> findAllByUserId(int userId);
 
     SetDto create(String title, String description, int termLanguageId, int descriptionLanguageId, UserEntity user, List<NewTermPayload> terms);
 
-    SetDto findById(int setId);
+    void update(int id, String title, String description, int termLanguageId, int descriptionLanguageId, List<UpdateTermPayload> terms, int currentUseId);
 
-    void update(int setId, String title, String description, int termLanguageId, int descriptionLanguageId, UserEntity user, List<UpdateTermPayload> terms);
+    void delete(int id, int currentUseId);
 
-    void delete(int setId);
+    SetDto findByIdForUser(int id, int currentUserId);
 
-    SetEntity findEntityById(int setId);
+    SetDto findById(int id);
+
+    SetEntity findEntityById(int id, int currentUserId);
+
+    List<SetWithTermCountDto> findAllByUserId(int userId);
+
 }
 
 
