@@ -32,12 +32,6 @@ public class Mapper {
         return lDto;
     }
 
-    public TermDto draftTermToDto(DTermEntity entity) {
-        if (entity == null) {
-            return null;
-        }
-        return new TermDto(entity.getId(), entity.getTerm(), entity.getDescription());
-    }
     public NewDTermDto newDTermToDto(DTermEntity entity) {
         if (entity == null) {
             return null;
@@ -120,28 +114,6 @@ public class Mapper {
         }
         return new NewDraftDto(entity.getId(), entity.getTitle(), entity.getDescription(), entity.getTermLanguageId(), entity.getDescriptionLanguageId());
     }
-//    public List<SetWithCountDto> setsWithCountWithUserToDto(List<Tuple> listTuple, UserEntity user) {
-//        if (listTuple == null) {
-//            return null;
-//        }
-//        List<SetWithCountEntity> listEntity = listTuple
-//                .stream()
-//                .map(tuple -> new SetWithCountEntity(tuple.get(0, SetEntity.class), tuple.get(1, Long.class)))
-//                .toList();
-//
-//        List<SetWithCountDto> lDto = new ArrayList<>();
-//        for (SetWithCountEntity entity : listEntity) {
-//            lDto.add(new SetWithCountDto(
-//                    entity.getSet().getId(), entity.getSet().getTitle(),
-//                    entity.getSet().getDescription(),
-//                    entity.getSet().getTermLanguageId(),
-//                    entity.getSet().getDescriptionLanguageId(), userToDto(user),
-//                    entity.getTermCount()
-//            ));
-//        }
-//        return lDto;
-//
-//    }
 
 
 

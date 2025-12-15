@@ -12,11 +12,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.NoSuchElementException;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -61,7 +57,7 @@ public class SetServiceImpl implements SetService {
         for (UpdateTermPayload payload : termsPayload) {
             if (payload.id() != null && existingTerms.containsKey(payload.id()) ) {
                 TermEntity term = existingTerms.get(payload.id());
-                if (!term.getTerm().equals(payload.term()) || !term.getDescription().equals(payload.description())) {
+                if (!Objects.equals(term.getTerm(), payload.term()) || !Objects.equals(term.getDescription(), payload.description())) {
                     term.setTerm(payload.term());
                     term.setDescription(payload.description());
                 }

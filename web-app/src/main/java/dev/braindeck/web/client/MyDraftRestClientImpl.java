@@ -32,8 +32,8 @@ public class MyDraftRestClientImpl implements MyDraftRestClient {
                     .uri("/api/me/draft")
                     .retrieve()
                     .body(DraftDto.class));
-        } catch (HttpClientErrorException.NotFound exception) {
-            ProblemDetail problemDetail =  exception.getResponseBodyAs(ProblemDetail.class);
+        } catch (HttpClientErrorException.NotFound e) {
+            ProblemDetail problemDetail = e.getResponseBodyAs(ProblemDetail.class);
             if(problemDetail != null) {
                 throw new NoSuchElementException(String.valueOf(Objects.requireNonNull(problemDetail.getProperties()).get("errors")));
             }

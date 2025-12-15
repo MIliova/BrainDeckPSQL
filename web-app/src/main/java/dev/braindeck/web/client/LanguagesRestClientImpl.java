@@ -1,26 +1,20 @@
 package dev.braindeck.web.client;
 
+import dev.braindeck.web.entity.LanguagesDto;
 import lombok.RequiredArgsConstructor;
-import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.web.client.RestClient;
-
-import java.util.*;
 
 @RequiredArgsConstructor
 public class LanguagesRestClientImpl implements LanguagesRestClient {
 
     private final RestClient restClient;
 
-    private static final ParameterizedTypeReference<Map<String, Map<Integer, String>>> LANGUAGES_TYPE_REFERENCE =
-            new ParameterizedTypeReference<>() {
-            };
-
     @Override
-    public  Map<String, Map<Integer, String>>  findAllByTypes(){
+    public LanguagesDto findAllByTypes(){
         return restClient
                 .get()
                 .uri("/api/languages")
                 .retrieve()
-                .body(LANGUAGES_TYPE_REFERENCE);
+                .body(LanguagesDto.class);
     }
 }

@@ -1,7 +1,10 @@
 package dev.braindeck.web.client;
 
+import dev.braindeck.web.domain.LanguageType;
+import dev.braindeck.web.entity.LanguagesDto;
+
 import java.util.Map;
 
 public interface LanguagesRestClient {
-    Map<String, Map<Integer, String>> findAllByTypes();
+    LanguagesDto findAllByTypes();
 }

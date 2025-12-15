@@ -1,12 +1,14 @@
 package dev.braindeck.api.service;
 
+import dev.braindeck.api.domain.LanguageType;
+import dev.braindeck.api.dto.LanguagesDto;
 import dev.braindeck.api.entity.LanguageEntity;
 import dev.braindeck.api.repository.LanguagesRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.util.EnumMap;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 @Service
@@ -15,23 +17,23 @@ public class LanguageServiceImpl implements LanguageService {
 
     private final LanguagesRepository languagesRepository;
 
-
     @Override
-    public Map<String, Map<Integer, String>> findAllByType() {
-        List<LanguageEntity> languagesList = this.languagesRepository.findAll();
-        Map<String, Map<Integer, String>> languagesByType = new HashMap<>();
-        languagesByType.put("my", new HashMap<Integer, String>());
-        languagesByType.put("top", new HashMap<Integer, String>());
-        languagesByType.put("rest", new HashMap<Integer, String>());
+    public LanguagesDto findAllByType() {
+        Map<LanguageType, Map<Integer, String>> result = new EnumMap<>(LanguageType.class);
+        result.put(LanguageType.MY, new HashMap<>());
+        result.put(LanguageType.TOP, new HashMap<>());
+        result.put(LanguageType.REST, new HashMap<>());
 
-        for (LanguageEntity language : languagesList) {
-            if (language.getTop() == Boolean.TRUE) {
-                languagesByType.get("top").put(language.getId(), language.getName());
-            } else {
-                languagesByType.get("rest").put(language.getId(), language.getName());
-            }
+        for (LanguageEntity language : languagesRepository.findAll()) {
+            LanguageType type = Boolean.TRUE.equals(language.getTop()) ? LanguageType.TOP : LanguageType.REST;
+            result.get(type).put(language.getId(), language.getName());
         }
-        return languagesByType;
+
+        return new LanguagesDto(
+                result.get(LanguageType.TOP),
+                result.get(LanguageType.REST),
+                result.get(LanguageType.MY)
+        );
 
     }
 }

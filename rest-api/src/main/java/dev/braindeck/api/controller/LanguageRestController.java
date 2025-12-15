@@ -1,5 +1,7 @@
 package dev.braindeck.api.controller;
 
+import dev.braindeck.api.domain.LanguageType;
+import dev.braindeck.api.dto.LanguagesDto;
 import dev.braindeck.api.service.LanguageService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -16,9 +18,8 @@ public class LanguageRestController {
     private final LanguageService languageService;
 
     @GetMapping("/api/languages")
-    public Map<String, Map<Integer, String>> findAllByType() {
+    public LanguagesDto findAllByType() {
         return languageService.findAllByType();
     }
-
 
 }
