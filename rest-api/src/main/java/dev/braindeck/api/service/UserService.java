@@ -6,5 +6,5 @@ import dev.braindeck.api.dto.UserDto;
 public interface UserService {
     UserEntity findById(int id);
     UserEntity getCurrentUser();
-    //UserWithDraftDto findByIdWithDraft (int id);
+    UserDto getCurrent();
 }

@@ -17,7 +17,7 @@ public class LanguageRestController {
 
     @GetMapping("/api/languages")
     public Map<String, Map<Integer, String>> findAllByType() {
-        return this.languageService.findAllByType();
+        return languageService.findAllByType();
     }
 
 

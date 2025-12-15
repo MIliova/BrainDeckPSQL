@@ -1,25 +1,48 @@
 package dev.braindeck.web.controller;
 
-import dev.braindeck.web.client.MyDraftRestClient;
-import dev.braindeck.web.client.MyDraftTermsRestClient;
-import dev.braindeck.web.controller.payload.NewDraftPayload;
-import dev.braindeck.web.entity.NewDraftDto;
+import dev.braindeck.web.client.MyDTermsRestClient;
+import dev.braindeck.web.controller.payload.DTermPayload;
+import dev.braindeck.web.entity.NewDTermDto;
+import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @Controller
 @RequiredArgsConstructor
-@RequestMapping("/me/draft/{draftId:\\d+}")
+@RequestMapping("/me/draft/{draftId:\\d+}/terms")
 public class DTermController {
 
-    private final MyDraftTermsRestClient myDraftTermsRestClient;
+    private final MyDTermsRestClient myDTermsRestClient;
 
     @PostMapping()
-    public NewDraftDto create(NewDraftPayload payload) {
-        return myDraftsRestClient.create(
-                payload.title(), payload.description(), payload.termLanguageId(), payload.descriptionLanguageId());
+    public NewDTermDto create(@PathVariable int draftId, DTermPayload payload) {
+        return myDTermsRestClient.create(draftId, payload);
+    }
+
+    @PostMapping("/batch")
+    public List<NewDTermDto> createBatch(
+            @PathVariable int draftId,
+            @RequestBody List<DTermPayload> terms) {
+        return myDTermsRestClient.create(draftId, terms);
+    }
+
+    @PutMapping("/{termId:\\d+}")
+    public void update(
+            @PathVariable @Positive (message = "errors.draft.id") int draftId,
+            @PathVariable @Positive (message = "errors.term.id") int termId,
+            @RequestBody DTermPayload payload) {
+        myDTermsRestClient.update(draftId, termId, payload);
+    }
+
+    @DeleteMapping("/{termId:\\d+}")
+    public void delete(
+            @PathVariable @Positive (message = "errors.draft.id") int draftId,
+            @PathVariable @Positive (message = "errors.term.id") int termId) {
+        myDTermsRestClient.delete(termId);
+
     }
 
 //    @ModelAttribute("draft")

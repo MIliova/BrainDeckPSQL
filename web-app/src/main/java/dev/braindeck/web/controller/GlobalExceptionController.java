@@ -1,6 +1,6 @@
 package dev.braindeck.web.controller;
 
-import dev.braindeck.web.client.ProblemDetailException;
+import dev.braindeck.web.controller.exception.ProblemDetailException;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.json.JsonParseException;

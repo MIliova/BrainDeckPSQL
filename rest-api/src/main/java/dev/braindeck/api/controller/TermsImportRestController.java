@@ -12,14 +12,14 @@ import java.util.List;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/import/terms")
-@CrossOrigin(origins = "http://localhost:8080")
-public class MyDTermsImportRestController {
+public class TermsImportRestController {
 
     private final DTermService draftTermService;
 
-    @PostMapping()
-    public List<ImportTermDto> prepare(@RequestBody @Valid TermsImportPayload payload) {
-        return this.draftTermService.prepareImport(
+    @PostMapping("/preview")
+    public List<ImportTermDto> prepare(
+            @RequestBody @Valid TermsImportPayload payload) {
+        return draftTermService.prepareImport(
                 payload.text(), payload.colSeparator(), payload.rowSeparator(), payload.colCustom(), payload.rowCustom());
     }
 }

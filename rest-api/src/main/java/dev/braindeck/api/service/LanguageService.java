@@ -7,7 +7,5 @@ import java.util.Map;
 public interface LanguageService {
 
     Map<String, Map<Integer, String>> findAllByType();
-//    Map<Integer, String> getMy();
-//    Map<Integer, String> getTop();
-//    Map<Integer, String> getRest();
+
 }

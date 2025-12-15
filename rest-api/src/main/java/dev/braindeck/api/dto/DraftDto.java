@@ -4,7 +4,11 @@ import java.util.List;
 
 public record DraftDto(
         Integer id,
-        Integer userId,
+        String title,
+        String description,
+        Integer termLanguageId,
+        Integer descriptionLanguageId,
+        UserDto user,
         List<TermDto> terms
 ) {
 }

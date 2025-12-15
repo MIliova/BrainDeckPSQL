@@ -1,4 +1,4 @@
-package dev.braindeck.web.client;
+package dev.braindeck.web.controller.exception;
 
 import lombok.Data;
 import lombok.EqualsAndHashCode;

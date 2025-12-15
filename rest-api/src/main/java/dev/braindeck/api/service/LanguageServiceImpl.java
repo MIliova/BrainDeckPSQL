@@ -32,11 +32,6 @@ public class LanguageServiceImpl implements LanguageService {
             }
         }
         return languagesByType;
-//        return Map.of(
-//                "all", this.languageService.findAll(),
-//                "my", this.languageService.getMy(),
-//                "top", this.languageService.getTop(),
-//                "rest", this.languageService.getRest()
-//        );
+
     }
 }

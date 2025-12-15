@@ -11,6 +11,7 @@ import org.springframework.validation.BindException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.servlet.NoHandlerFoundException;
 
 import java.util.Locale;
@@ -18,8 +19,8 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.stream.Collectors;
 
-@org.springframework.web.bind.annotation.ControllerAdvice
 @RequiredArgsConstructor
+@RestControllerAdvice
 public class ControllerAdvice {
 
     private final MessageSource messageSource;

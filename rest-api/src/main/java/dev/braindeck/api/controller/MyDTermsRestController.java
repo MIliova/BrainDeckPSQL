@@ -1,12 +1,11 @@
 package dev.braindeck.api.controller;
 
-import dev.braindeck.api.controller.payload.NewDTermPayload;
-import dev.braindeck.api.controller.payload.UpdateDTermPayload;
-import dev.braindeck.api.dto.TermDto;
+import dev.braindeck.api.controller.payload.DTermPayload.DTermPayload;
+import dev.braindeck.api.dto.NewDTermDto;
 import dev.braindeck.api.entity.UserEntity;
-import dev.braindeck.api.service.DraftService;
 import dev.braindeck.api.service.DTermService;
 import dev.braindeck.api.service.UserService;
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -17,36 +16,33 @@ import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/me/drafts/{draftId:\\d+}/terms")
-@Validated
+@RequestMapping("/api/me/draft/{draftId:\\d+}/terms")
 public class MyDTermsRestController {
 
     private final DTermService draftTermService;
-    private final DraftService draftService;
     private final UserService userService;
 
-
     @PostMapping
-    public TermDto create(
-            @PathVariable @Positive(message = "errors.draft.id") int draftId,
-            @RequestBody NewDTermPayload term) {
+    public NewDTermDto create(
+            @PathVariable int draftId,
+            @RequestBody @Valid DTermPayload term) {
         UserEntity user = userService.getCurrentUser();
-        return draftTermService.create(draftService.findEntityById(draftId, user.getId()), term);
+        return draftTermService.create(user, draftId, term);
     }
 
     @PostMapping("/batch")
-    public List<TermDto> createBatch(
-            @PathVariable @Positive(message = "errors.draft.id") int draftId,
-            @RequestBody List<NewDTermPayload> terms) {
+    public List<NewDTermDto> createBatch(
+            @PathVariable int draftId,
+            @RequestBody @Valid List<@Valid DTermPayload> terms) {
         UserEntity user = userService.getCurrentUser();
-        return draftTermService.create(draftService.findEntityById(draftId, user.getId()), terms);
+        return draftTermService.create(user, draftId, terms);
     }
 
     @PutMapping("/{termId:\\d+}")
     public ResponseEntity<Void> update(
-            @PathVariable int draftId,
-            @PathVariable int termId,
-            @RequestBody UpdateDTermPayload payload) {
+            @PathVariable @Positive (message = "errors.draft.id") int draftId,
+            @PathVariable @Positive (message = "errors.term.id") int termId,
+            @RequestBody @Valid DTermPayload payload) {
         UserEntity user = userService.getCurrentUser();
         draftTermService.update(termId, draftId, user.getId(), payload);
         return ResponseEntity.noContent().build();
@@ -54,8 +50,8 @@ public class MyDTermsRestController {
 
     @DeleteMapping("/{termId:\\d+}")
     public ResponseEntity<Void> delete(
-            @PathVariable int draftId,
-            @PathVariable int termId) {
+            @PathVariable @Positive (message = "errors.draft.id") int draftId,
+            @PathVariable @Positive (message = "errors.term.id") int termId) {
         UserEntity user = userService.getCurrentUser();
         draftTermService.delete(termId, draftId, user.getId());
         return ResponseEntity.noContent().build();

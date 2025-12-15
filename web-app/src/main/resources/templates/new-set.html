@@ -21,18 +21,21 @@
 
 
         <div aria-hidden="true">
-            <form method="post" id="set-form" data-th-action="@{/create-set}">
+            <form method="post" id="set-form" th:object="${payload}" data-th-action="@{/create-set}">
                 <div class=""><div class="textarea-description"><span
                     th:if="${payload?.title() != null && payload?.title() !=''}"
                     th:text="#{messages.set.create.t}"
                     th:data-message="#{messages.set.create.t}">&nbsp;</span><span
                     th:if="${payload?.title()== null || payload?.title() ==''}"
                     th:data-message="#{messages.set.create.t}">&nbsp;</span><input
-                    id="field-title" type="text" name="title" maxlength="255" value=""
+                    id="field-title" type="text" th:field="*{title}" name="title" maxlength="255" value=""
                     th:value="${payload?.title()}"
                     th:placeholder="#{messages.set.create.et}"
                     th:aria-label="#{messages.set.create.t}"
-                    th:data-message="#{messages.set.create.j.et}"></div></div><br>
+                    th:data-message="#{messages.set.create.j.et}">
+                    <div class="field-error" th:if="${#fields.hasErrors('title')}" th:errors="*{title}"></div>
+
+                </div></div><br>
                 <div class=""><div class="textarea-description"><span
                     th:if="${payload?.description() != null && payload?.description() !=''}"
                     th:text="#{messages.set.create.d}"
@@ -45,13 +48,14 @@
                           th:aria-label="#{messages.set.create.d}"
                           th:data-message="#{messages.set.create.j.ad}"></textarea></div>
                 </div>
-                <input type="hidden" id="field-term-language" name="termLanguageId" value=""
+                <input type="hidden" id="field-term-language" th:field="*{termLanguageId}" name="termLanguageId" value=""
                    th:value="${payload!= null ? payload.termLanguageId() : ''}"
                    th:data-message="#{messages.set.create.j.atl}">
 
                 <input type="hidden" id="field-description-language" name="descriptionLanguageId" value=""
                    th:value="${payload!= null ? payload.descriptionLanguageId() : ''}"
                    th:data-message="#{messages.set.create.j.adl}">
+
                 <input type="hidden" id="field-terms" name="terms" value=""
                     th:data-message="#{messages.set.create.j.ats}">
 

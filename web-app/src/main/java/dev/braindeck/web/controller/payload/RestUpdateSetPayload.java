@@ -5,6 +5,7 @@ import dev.braindeck.web.entity.TermDto;
 import java.util.List;
 
 public record RestUpdateSetPayload(
+
         Integer id,
 
         String title,
@@ -15,6 +16,7 @@ public record RestUpdateSetPayload(
 
         Integer descriptionLanguageId,
 
-        List<TermDto> terms
+        List<UpdateTermPayload> terms
+
 ) {
 }

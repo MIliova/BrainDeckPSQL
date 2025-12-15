@@ -1,20 +1,18 @@
 package dev.braindeck.web.controller;
 
 import dev.braindeck.web.client.*;
-import dev.braindeck.web.controller.payload.NewDraftPayload;
+import dev.braindeck.web.controller.payload.DraftPayload;
 import dev.braindeck.web.entity.*;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.MessageSource;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.util.UriComponentsBuilder;
 
 import java.util.Locale;
 import java.util.Map;
-import java.util.Optional;
 
 @Controller
 @RequiredArgsConstructor
@@ -26,7 +24,7 @@ public class DraftController {
     private final MessageSource messageSource;
 
     @PostMapping
-    public NewDraftDto create(@Valid @RequestBody NewDraftPayload payload) {
+    public NewDraftDto create(@Valid @RequestBody DraftPayload payload) {
         return myDraftRestClient.create(
                 payload.title(),
                 payload.description(),
@@ -36,7 +34,7 @@ public class DraftController {
     }
 
     @PatchMapping("/{draftId:\\d+}")
-    public void update(@PathVariable int draftId, NewDraftPayload payload) {
+    public void update(@PathVariable @Positive(message = "errors.draft.id") int draftId, DraftPayload payload) {
          myDraftRestClient.update(
                 draftId,
                 payload.title(),
@@ -46,15 +44,15 @@ public class DraftController {
     }
 
     @DeleteMapping("/{draftId:\\d+}")
-    public void delete(@PathVariable int draftId) {
+    public void delete(@PathVariable @Positive(message = "errors.draft.id") int draftId) {
         myDraftRestClient.delete(draftId);
     }
 
     @GetMapping()
-    public String get(@ModelAttribute("draft") DraftSetDto draft, Model model, Locale locale) {
+    public String get(@ModelAttribute("draft") DraftDto draft, Model model, Locale locale) {
         Map<String, Map<Integer, String>> languagesList = languagesRestClient.findAllByTypes();
         ControllersUtil.getLanguages(languagesList, model, draft.termLanguageId(), draft.descriptionLanguageId());
-        model.addAttribute("pageTitle", messageSource.getMessage("messages.set.create_new", null, locale));
+        model.addAttribute("pageTitle", messageSource.getMessage("messages.set.create.new", null, locale));
         return "draft-set";
     }
 

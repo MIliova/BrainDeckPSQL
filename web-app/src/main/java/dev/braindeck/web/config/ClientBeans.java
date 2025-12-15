@@ -1,8 +1,6 @@
 package dev.braindeck.web.config;
 
-import dev.braindeck.web.client.LanguagesRestClientImpl;
-import dev.braindeck.web.client.MyDraftRestClientImpl;
-import dev.braindeck.web.client.SetsRestClientImpl;
+import dev.braindeck.web.client.*;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -13,8 +11,40 @@ import org.springframework.web.filter.CommonsRequestLoggingFilter;
 public class ClientBeans {
 
     @Bean
+    public UserRestClientImpl userRestClient(@Value("${braindeck.api.uri}") String apiBaseUrl) {
+        return new UserRestClientImpl(RestClient
+                .builder()
+                .baseUrl(apiBaseUrl)
+                .build());
+    }
+
+    @Bean
+    public LanguagesRestClientImpl languagesRestClient(@Value("${braindeck.api.uri}") String apiBaseUrl) {
+        return new LanguagesRestClientImpl(RestClient
+                .builder()
+                .baseUrl(apiBaseUrl)
+                .build());
+    }
+
+    @Bean
     public MyDraftRestClientImpl myDraftRestClient(@Value("${braindeck.api.uri}") String apiBaseUrl) {
         return new MyDraftRestClientImpl(RestClient
+                .builder()
+                .baseUrl(apiBaseUrl)
+                .build());
+    }
+
+    @Bean
+    public MyDTermsRestClientImpl myDTermsRestClientImpl(@Value("${braindeck.api.uri}") String apiBaseUrl) {
+        return new MyDTermsRestClientImpl(RestClient
+                .builder()
+                .baseUrl(apiBaseUrl)
+                .build());
+    }
+
+    @Bean
+    public MySetsRestClientImpl mySetsRestClient(@Value("${braindeck.api.uri}") String apiBaseUrl) {
+        return new MySetsRestClientImpl(RestClient
                 .builder()
                 .baseUrl(apiBaseUrl)
                 .build());
@@ -29,8 +59,8 @@ public class ClientBeans {
     }
 
     @Bean
-    public LanguagesRestClientImpl languagesRestClient(@Value("${braindeck.api.uri}") String apiBaseUrl) {
-        return new LanguagesRestClientImpl(RestClient
+    public MyTermsRestClientImpl myTermsRestClientImpl(@Value("${braindeck.api.uri}") String apiBaseUrl) {
+        return new MyTermsRestClientImpl(RestClient
                 .builder()
                 .baseUrl(apiBaseUrl)
                 .build());

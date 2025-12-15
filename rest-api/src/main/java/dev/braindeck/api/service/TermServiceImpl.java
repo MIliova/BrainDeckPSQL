@@ -1,44 +1,53 @@
 package dev.braindeck.api.service;
 
 import dev.braindeck.api.controller.exception.ForbiddenException;
-import dev.braindeck.api.controller.payload.NewDTermPayload;
-import dev.braindeck.api.controller.payload.NewTermPayload;
-import dev.braindeck.api.controller.payload.UpdateDTermPayload;
+import dev.braindeck.api.controller.payload.DTermPayload.DTermPayload;
 import dev.braindeck.api.controller.payload.UpdateTermPayload;
 import dev.braindeck.api.entity.*;
 import dev.braindeck.api.dto.TermDto;
 import dev.braindeck.api.repository.TermRepository;
-import dev.braindeck.api.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.NoSuchElementException;
-import java.util.Objects;
 
 @Service
 @RequiredArgsConstructor
 public class TermServiceImpl implements TermService {
 
     private final TermRepository termRepository;
+    private final SetService setService;
 
     @Override
-    public TermDto create(SetEntity set, NewDTermPayload payload) {
+    public TermDto create(
+            int userId,
+            int setId,
+            DTermPayload payload
+    ) {
+
+        SetEntity set = setService.findEntityById(setId, userId);
+
         TermEntity entity = new TermEntity(
-                payload.getTerm(),
-                payload.getDescription(),
+                payload.term(),
+                payload.description(),
                 set);
         entity = termRepository.save(entity);
         return new TermDto(entity.getId(), entity.getTerm(), entity.getDescription());
     }
 
     @Override
-    public List<TermDto> create(SetEntity set, List<NewDTermPayload> payloads) {
+    public List<TermDto> create(
+            int userId,
+            int setId,
+            List<DTermPayload> payloads) {
+
+        SetEntity set = setService.findEntityById(setId, userId);
+
         return Mapper.termsToDto(termRepository.saveAll(
                 payloads.stream()
-                        .map(payload -> new TermEntity(payload.getTerm(), payload.getDescription(), set))
+                        .map(payload -> new TermEntity(payload.term(), payload.description(), set))
                         .toList()
         ));
     }

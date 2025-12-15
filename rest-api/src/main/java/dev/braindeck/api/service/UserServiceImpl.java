@@ -1,5 +1,6 @@
 package dev.braindeck.api.service;
 
+import dev.braindeck.api.dto.UserDto;
 import dev.braindeck.api.entity.UserEntity;
 import dev.braindeck.api.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -15,17 +16,17 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public UserEntity findById(int id) {
-        return this.userRepository.findById(id).orElseThrow(() -> new NoSuchElementException("errors.user.not_found"));
+        return userRepository.findById(id).orElseThrow(() -> new NoSuchElementException("errors.user.not_found"));
     }
 
     @Override
     public UserEntity getCurrentUser () {
-
         return this.findById(1);
     }
 
-//    public UserWithDraftDto findByIdWithDraft(int id) {
-//        return this.userRepository.findByIdWithDraft(id).orElseThrow(() -> new NoSuchElementException("errors.user.not_found"));
-//    }
+    @Override
+    public UserDto getCurrent () {
+        return Mapper.userToDto(findById(1));
+    }
 
 }

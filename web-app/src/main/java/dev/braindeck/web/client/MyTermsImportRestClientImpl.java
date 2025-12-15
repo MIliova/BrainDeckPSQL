@@ -1,5 +1,7 @@
 package dev.braindeck.web.client;
 
+import dev.braindeck.web.controller.exception.BadRequestException;
+import dev.braindeck.web.controller.exception.ProblemDetailException;
 import dev.braindeck.web.controller.payload.ImportTermPayload;
 import dev.braindeck.web.entity.*;
 import lombok.RequiredArgsConstructor;
@@ -33,9 +35,9 @@ public class MyTermsImportRestClientImpl implements MyTermsImportRestClient {
         System.out.println("rowCustom='"+rowCustom+"'");
 
         try {
-            return this.restClient
+            return restClient
                     .post()
-                    .uri("/api/import/terms/")
+                    .uri("/api/import/terms/preview")
                     .contentType(MediaType.APPLICATION_JSON)
                     .body(new ImportTermPayload(text,  colSeparator,  rowSeparator,  colCustom, rowCustom))
                     .retrieve()
@@ -43,7 +45,7 @@ public class MyTermsImportRestClientImpl implements MyTermsImportRestClient {
         } catch (HttpClientErrorException.BadRequest e) {
             ProblemDetail problemDetail =  e.getResponseBodyAs(ProblemDetail.class);
             if(problemDetail != null) {
-                throw new BadRequestException(Objects.requireNonNull(problemDetail.getProperties()).get("errors"));
+                throw new BadRequestException(String.valueOf(Objects.requireNonNull(problemDetail.getProperties()).get("errors")));
             }
             throw new ProblemDetailException("Problem detail is null");
         }

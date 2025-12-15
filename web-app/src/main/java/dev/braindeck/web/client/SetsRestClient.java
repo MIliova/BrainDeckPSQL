@@ -7,16 +7,8 @@ import java.util.Optional;
 
 public interface SetsRestClient {
 
-    UserDto findCurrentUser();
+    Optional<SetDto> findSetById(int setId);
 
     List<SetWithCountDto> findAllSets(int userId);
 
-    Optional<SetDto> findSetById(int setId);
-
-
-    Optional<DraftSetDto> findDraftByUserId(int userId);
-
-    Optional<DraftSetDto> findDraftById(int draftId);
-
-
-    }
+}

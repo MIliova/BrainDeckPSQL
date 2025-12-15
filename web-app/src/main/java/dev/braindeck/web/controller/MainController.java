@@ -1,6 +1,7 @@
 package dev.braindeck.web.controller;
 
 import dev.braindeck.web.client.SetsRestClient;
+import dev.braindeck.web.client.UserRestClient;
 import dev.braindeck.web.entity.SetWithCountDto;
 import dev.braindeck.web.entity.UserDto;
 import lombok.RequiredArgsConstructor;
@@ -16,12 +17,12 @@ import java.util.List;
 @RequiredArgsConstructor
 public class MainController {
 
-    private final SetsRestClient setsRestClient;
+    private final UserRestClient userRestClient;
 
     @ModelAttribute("user")
     public UserDto findCurrentUser() {
         System.out.println("findCurrentUser");
-        return this.setsRestClient.findCurrentUser();
+        return userRestClient.get();
     }
 
     @GetMapping("")

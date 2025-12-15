@@ -2,7 +2,7 @@ package dev.braindeck.web.controller.payload;
 
 import java.util.List;
 
-public record RestNewSetPayload(
+public record RestDraftPayload(
 
         String title,
 
@@ -12,8 +12,7 @@ public record RestNewSetPayload(
 
         Integer descriptionLanguageId,
 
-        List<NewTermPayload> terms
-
+        List<DTermPayload> terms
 
 ) {
 }

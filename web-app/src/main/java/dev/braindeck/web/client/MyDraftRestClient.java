@@ -1,10 +1,9 @@
 package dev.braindeck.web.client;
 
-import dev.braindeck.web.controller.payload.NewTermPayload;
-import dev.braindeck.web.entity.DraftSetDto;
+import dev.braindeck.web.controller.payload.DTermPayload;
+import dev.braindeck.web.entity.DraftDto;
 import dev.braindeck.web.entity.NewDraftDto;
 import dev.braindeck.web.entity.SetDto;
-import dev.braindeck.web.entity.TermDto;
 
 import java.util.List;
 import java.util.Optional;
@@ -17,8 +16,9 @@ public interface MyDraftRestClient {
 
     void delete(int id);
 
-    Optional<DraftSetDto> get();
+    Optional<DraftDto> get();
 
-    SetDto createFromDraft(int id, String title, String description, Integer termLanguageId, Integer descriptionLanguageId, List<NewTermPayload> terms);
+    SetDto createFromDraft(int id, String title, String description, Integer termLanguageId, Integer descriptionLanguageId,
+                           List<DTermPayload> terms);
 
 }

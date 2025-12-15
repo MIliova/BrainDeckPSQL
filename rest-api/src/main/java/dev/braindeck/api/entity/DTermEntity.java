@@ -24,6 +24,6 @@ public class DTermEntity {
 
     @ManyToOne
     @JoinColumn(name="draft_id", updatable = false, nullable = false)
-    private DraftSetEntity draft;
+    private DraftEntity draft;
 
 }

@@ -28,7 +28,10 @@ public class SetServiceImpl implements SetService {
 
     @Transactional
     @Override
-    public SetDto create(String title, String description, int termLanguageId, int descriptionLanguageId, UserEntity user, List<NewTermPayload> listTerms) {
+    public SetDto create(
+            String title, String description,
+            int termLanguageId, int descriptionLanguageId,
+            UserEntity user, List<NewTermPayload> listTerms) {
         SetEntity set = new SetEntity(title, description, termLanguageId, descriptionLanguageId, user);
         List<TermEntity> terms = listTerms.stream()
                 .map(payload -> new TermEntity(payload.getTerm(), payload.getDescription(), set))
