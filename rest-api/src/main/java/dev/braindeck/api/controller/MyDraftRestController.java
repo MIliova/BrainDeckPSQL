@@ -26,6 +26,13 @@ public class MyDraftRestController {
     private final DraftService draftService;
     private final SetService setService;
 
+    @GetMapping
+    public ResponseEntity<DraftDto> get() {
+        UserEntity user = userService.getCurrentUser();
+        DraftDto draft = draftService.findFirstByUserIdOrCreate(user);
+        return ResponseEntity.ok(draft);
+    }
+
     @PostMapping
     public ResponseEntity<NewDraftDto> create(@Valid @RequestBody DraftPayload payload) {
         UserEntity user = userService.getCurrentUser();
@@ -52,12 +59,7 @@ public class MyDraftRestController {
         return ResponseEntity.noContent().build();
     }
 
-    @GetMapping
-    public ResponseEntity<DraftDto> get() {
-        UserEntity user = userService.getCurrentUser();
-        DraftDto draft = draftService.findFirstByUserId(user.getId());
-        return ResponseEntity.ok(draft);
-    }
+
 
 //    @GetMapping("/{draftId:\\d+}")
 //    public DraftSetDto getDraftById(@PathVariable int draftId) {

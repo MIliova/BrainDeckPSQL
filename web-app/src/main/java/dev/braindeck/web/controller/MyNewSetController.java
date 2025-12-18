@@ -34,10 +34,6 @@ public class MyNewSetController {
 
     @GetMapping
     public String create (Model model, Locale locale) {
-        DraftDto draft = myDraftRestClient.get().orElse(null);
-        if (draft != null) {
-            return "redirect:/draft/";
-        }
         modelPreparationService.prepareModel(model, locale, messageSource.getMessage("messages.set.create.new", null, locale));
         return "new-set";
     }

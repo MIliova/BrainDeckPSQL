@@ -25,21 +25,25 @@ public class ControllerAdvice {
 
     private final MessageSource messageSource;
 
-    private ProblemDetail problem(HttpStatus status, String titleKey, Locale locale) {
-        ProblemDetail pd = ProblemDetail.forStatusAndDetail(
-                status,
-                messageSource.getMessage(titleKey, null, titleKey, locale)
-        );
+    private ProblemDetail problem(
+            HttpStatus status,
+            String titleKey,
+            String detailKey,
+            Locale locale
+    ) {
+        ProblemDetail pd = ProblemDetail.forStatus(status);
+
         pd.setTitle(messageSource.getMessage(titleKey, null, titleKey, locale));
+        pd.setDetail(messageSource.getMessage(detailKey, null, detailKey, locale));
+
         return pd;
     }
-
 
     // 1. Ошибки валидации JSON: @Valid @RequestBody
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ProblemDetail handleMethodArgumentNotValid(MethodArgumentNotValidException ex, Locale locale) {
 
-        ProblemDetail pd = problem(HttpStatus.BAD_REQUEST, "errors.400.title", locale);
+        ProblemDetail pd = problem(HttpStatus.BAD_REQUEST, "errors.400.title", "errors.400.title", locale);
 
         Map<String, String> errors = ex.getBindingResult().getFieldErrors().stream()
                 .collect(Collectors.groupingBy(
@@ -55,7 +59,7 @@ public class ControllerAdvice {
     @ExceptionHandler(BindException.class)
     public ProblemDetail handleBindException(BindException ex, Locale locale) {
 
-        ProblemDetail pd = problem(HttpStatus.BAD_REQUEST, "errors.400.title", locale);
+        ProblemDetail pd = problem(HttpStatus.BAD_REQUEST, "errors.400.title", "errors.400.title", locale);
 
         Map<String, String> errors = ex.getFieldErrors().stream()
                 .collect(Collectors.groupingBy(
@@ -70,13 +74,10 @@ public class ControllerAdvice {
     // 3. Невалидный JSON
     @ExceptionHandler(HttpMessageNotReadableException.class)
     public ProblemDetail handleJsonParse(HttpMessageNotReadableException ex, Locale locale) {
-        ProblemDetail pd = problem(HttpStatus.BAD_REQUEST, "errors.400.title", locale);
+        String errors = ex.getLocalizedMessage();
+        if (errors != null && errors.length() > 200) errors = errors.substring(0, 200) + "...";
 
-        String msg = ex.getLocalizedMessage();
-        if (msg != null && msg.length() > 200) msg = msg.substring(0, 200) + "...";
-
-        pd.setProperty("errors", msg);
-        return pd;
+        return problem(HttpStatus.BAD_REQUEST, "errors.400.title", errors, locale);
     }
 
     // 4. Not found — нет ресурса
@@ -86,7 +87,7 @@ public class ControllerAdvice {
             org.springframework.web.servlet.resource.NoResourceFoundException.class
     })
     public ProblemDetail handleNotFound(Exception ex, Locale locale) {
-        ProblemDetail pd = problem(HttpStatus.NOT_FOUND, "errors.404.title", locale);
+        ProblemDetail pd = problem(HttpStatus.NOT_FOUND, "errors.404.title", ex.getMessage(), locale);
 
         pd.setProperty("errors",
                 messageSource.getMessage(ex.getMessage(), null, ex.getMessage(), locale)
@@ -101,8 +102,7 @@ public class ControllerAdvice {
             DraftExistException.class
     })
     public ProblemDetail handleConstraintViolation(Exception ex, Locale locale) {
-
-        ProblemDetail pd = problem(HttpStatus.BAD_REQUEST, "errors.400.title", locale);
+        ProblemDetail pd = problem(HttpStatus.BAD_REQUEST, "errors.400.title", ex.getMessage(), locale);
 
         pd.setProperty("errors",
                 messageSource.getMessage(ex.getMessage(), null, ex.getMessage(), locale)
@@ -112,11 +112,13 @@ public class ControllerAdvice {
     }
 
     @ExceptionHandler(ForbiddenException.class)
-    public ResponseEntity<ProblemDetail> handleForbidden(ForbiddenException ex) {
-        ProblemDetail pd = ProblemDetail.forStatusAndDetail(HttpStatus.FORBIDDEN, ex.getMessage());
+    public ResponseEntity<ProblemDetail> handleForbidden(ForbiddenException ex, Locale locale) {
+        ProblemDetail pd = problem(HttpStatus.FORBIDDEN, "errors.403.title", ex.getMessage(), locale);
+        pd.setProperty("errors",
+                messageSource.getMessage(ex.getMessage(), null, ex.getMessage(), locale)
+        );
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(pd);
     }
-
 
 }
 

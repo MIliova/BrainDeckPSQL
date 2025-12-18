@@ -19,7 +19,7 @@ public class SetController {
     private final ModelPreparationService modelPreparationService;
 
     @GetMapping
-    public String find(@PathVariable("setId") int setId,
+    public String get(@PathVariable("setId") int setId,
                           Model model, Locale locale) {
         SetDto setDto = setsRestClient.findSetById(setId).orElse(null);
         System.out.println(setDto);

@@ -13,6 +13,8 @@ import org.springframework.http.ProblemDetail;
 
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestClient;
+import org.springframework.web.client.RestClientException;
+import org.springframework.web.client.RestClientResponseException;
 
 import java.util.List;
 import java.util.NoSuchElementException;
@@ -32,7 +34,7 @@ public class MyDraftRestClientImpl implements MyDraftRestClient {
                     .uri("/api/me/draft")
                     .retrieve()
                     .body(DraftDto.class));
-        } catch (HttpClientErrorException.NotFound e) {
+        } catch (RestClientResponseException e) {
             ProblemDetail problemDetail = e.getResponseBodyAs(ProblemDetail.class);
             if(problemDetail != null) {
                 throw new NoSuchElementException(String.valueOf(Objects.requireNonNull(problemDetail.getProperties()).get("errors")));
@@ -41,24 +43,24 @@ public class MyDraftRestClientImpl implements MyDraftRestClient {
         }
     }
 
-    @Override
-    public NewDraftDto create(String title, String description, Integer termLanguageId, Integer descriptionLanguageId) {
-        try {
-            return restClient
-                    .post()
-                    .uri("/api/me/draft")
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .body(new DraftPayload(title,  description,  termLanguageId,  descriptionLanguageId))
-                    .retrieve()
-                    .body(NewDraftDto.class);
-        } catch (HttpClientErrorException.BadRequest e) {
-            ProblemDetail problemDetail =  e.getResponseBodyAs(ProblemDetail.class);
-            if(problemDetail != null) {
-                throw new BadRequestException(String.valueOf(Objects.requireNonNull(problemDetail.getProperties()).get("errors")));
-            }
-            throw new ProblemDetailException("Problem detail is null");
-        }
-    }
+//    @Override
+//    public NewDraftDto create(String title, String description, Integer termLanguageId, Integer descriptionLanguageId) {
+//        try {
+//            return restClient
+//                    .post()
+//                    .uri("/api/me/draft")
+//                    .contentType(MediaType.APPLICATION_JSON)
+//                    .body(new DraftPayload(title,  description,  termLanguageId,  descriptionLanguageId))
+//                    .retrieve()
+//                    .body(NewDraftDto.class);
+//        } catch (HttpClientErrorException.BadRequest e) {
+//            ProblemDetail problemDetail =  e.getResponseBodyAs(ProblemDetail.class);
+//            if(problemDetail != null) {
+//                throw new BadRequestException(String.valueOf(Objects.requireNonNull(problemDetail.getProperties()).get("errors")));
+//            }
+//            throw new ProblemDetailException("Problem detail is null");
+//        }
+//    }
 
     @Override
     public void update(int draftId, String title, String description, Integer termLanguageId, Integer descriptionLanguageId) {
@@ -113,6 +115,5 @@ public class MyDraftRestClientImpl implements MyDraftRestClient {
             throw new ProblemDetailException("Problem detail is null");
         }
     }
-
 
 }

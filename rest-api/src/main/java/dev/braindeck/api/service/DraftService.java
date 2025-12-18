@@ -20,7 +20,7 @@ public interface DraftService {
 
     DraftEntity findEntityOrCreate(UserEntity user, int draftId);
 
-    DraftDto findFirstByUserId(int userId);
+    DraftDto findFirstByUserIdOrCreate(UserEntity userId);
 
 
 }

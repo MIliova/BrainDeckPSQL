@@ -27,6 +27,15 @@ public class DraftServiceImpl implements DraftService {
     private final DTermService draftTermService;
 
     @Override
+    public DraftDto findFirstByUserIdOrCreate(UserEntity user) {
+        DraftEntity draft = draftRepository.findFirstByUserId(user.getId()).orElseGet(() -> create(user));
+        List<TermDto> terms = (draft != null)
+                ? draftTermService.findById(draft.getId(), user.getId())
+                : Collections.emptyList();
+        return Mapper.DraftSetToDto(draft, terms);
+    }
+
+    @Override
     public NewDraftDto create(DraftPayload payload, UserEntity user) {
         ensureNoExistingDraft(user);
         return Mapper.NewDraftToDto(draftRepository.save(new DraftEntity(payload.title(), payload.description(), payload.termLanguageId(), payload.descriptionLanguageId(), user)));
@@ -88,15 +97,7 @@ public class DraftServiceImpl implements DraftService {
         return draftRepository.findFirstByUserId(user.getId()).orElseGet(() -> create(user));
     }
 
-    @Override
-    public DraftDto findFirstByUserId(int userId) {
-        DraftEntity draft = draftRepository.findFirstByUserId(userId)
-                .orElse(null);
-        List<TermDto> terms = (draft != null)
-                ? draftTermService.findById(draft.getId(), userId)
-                : Collections.emptyList();
-        return Mapper.DraftSetToDto(draft, terms);
-    }
+
 
     private void checkOwner(DraftEntity draft, int currentUserId) {
         if (!draft.getUser().getId().equals(currentUserId)) {

@@ -705,6 +705,15 @@ class TermRow {
     getElement() {
         return this.root;
     }
+    createWrapBloc(field, label, error) {
+        const div = document.createElement('div');
+        div.className='term-block';
+        div.appendChild(field);
+        div.appendChild(document.createElement('hr'));
+        div.appendChild(label);
+        div.appendChild(error);
+        return div;
+    }
     createField(placeholderClass, placeholder, type, text) {
         const div = document.createElement('div');
         div.className = `term-input ${placeholderClass}`;
@@ -715,15 +724,7 @@ class TermRow {
         div.innerHTML = this.onTextNormalization(text);
         return div;
     }
-    createWrapBloc(field, label) {
-        const div = document.createElement('div');
-        div.className='term-block';
-        div.appendChild(field);
-        div.appendChild(document.createElement('hr'));
-        div.appendChild(label);
-        return div;
-    }
-    createButton(labelText, first, type) {
+    createLabel(labelText, first, type) {
         const div = document.createElement('div');
         const span = document.createElement("span");
         span.className = "term";
@@ -741,17 +742,24 @@ class TermRow {
         }
         return div;
     }
-    buildRow(){
+    createError () {
+        const div = document.createElement('div');
+        div.className = "field-error";
+        return div;
+    }
+    buildRow() {
         const term = this.createField('term-placeholder', this.data.dataTermPlaceholder, "term", this.obj.term);
-        const containerLeftRightTerm = this.createButton(this.data.dataTermText, this.first, "term");
-        const termBlock = this.createWrapBloc(term, containerLeftRightTerm);
+        const termLabel = this.createLabel(this.data.dataTermText, this.first, "term");
+        const termError = this.createError();
+        const termBlock = this.createWrapBloc(term, termLabel, termError);
 
         const descr = this.createField('description-placeholder', this.data.dataDescriptionPlaceholder, "description", this.obj.description);
-        const containerLeftRightDescr = this.createButton(this.data.dataDescrText, this.first, "description");
-        const descrBlock = this.createWrapBloc(descr, containerLeftRightDescr);
+        const descrLabel = this.createLabel(this.data.dataDescrText, this.first, "description");
+        const descrError = this.createError();
+        const descrBlock = this.createWrapBloc(descr, descrLabel, descrError);
 
         let containerLeftRightBlueRow = document.createElement('div');
-        containerLeftRightBlueRow.className='container-left-right blue-row';
+        containerLeftRightBlueRow.className = 'container-left-right blue-row';
         containerLeftRightBlueRow.appendChild(termBlock);
         containerLeftRightBlueRow.appendChild(descrBlock);
 
@@ -759,11 +767,17 @@ class TermRow {
         div.appendChild(containerLeftRightBlueRow);
 
         let divBlueRowMargin = document.createElement('div');
-        divBlueRowMargin.className='blue-row-margin';
+        divBlueRowMargin.className = 'blue-row-margin';
         divBlueRowMargin.appendChild(div);
 
         this.term = term;
-        term.setAttribute("data-id", this.obj.id );
+        term.setAttribute("data-id", this.obj.id);
+        term.errorEl = termError;
+        descr.errorEl = descrError;
+        // term.setAttribute("id", this.obj.id);//?????
+        // termError.setAttribute("id", "error-term-" + this.obj.id);//????
+        // descrError.setAttribute("id", "error-description-" + this.obj.id);//?????
+
         this.descr = descr;
         this.root = divBlueRowMargin;
 
@@ -778,7 +792,7 @@ class TermRow {
 }
 
 class TermController {
-    init(container, services,{ onTextNormalization } = {}) {
+    init(container, services, {onTextNormalization } = {}) {
         this.services = services;
         this.container = container;
         this.onTextNormalization = onTextNormalization;
@@ -1012,12 +1026,12 @@ class TermsImport {
             });
     }
 
-    saveTerms(){
+    async saveTerms() {
         if (this.data && Array.isArray(this.data) && this.data.length > 0) {
             // this.data.forEach((d) => {
             //     this.termsController.addTerm(d);
             // })
-            this.createTermsFromImport(this.data);
+            await this.createTermsFromImport(this.data);
         }
         this.onHide();
     }
@@ -1025,7 +1039,7 @@ class TermsImport {
 
 class AutoSave {
     constructor ({ onErrors } = {}, {termIsEmpty} = {}, { onNormalizeObj } = {}, {showTermsFromImport = {}}) {
-        this.onErrors = onErrors || ((t) => t);
+        this.onErrors = onErrors;
         this.termIsEmpty = termIsEmpty || (() => false);
         this.onNormalizeObj = onNormalizeObj || ((t) => t);
         this.showTermsFromImport = showTermsFromImport || (() => {});
@@ -1033,6 +1047,8 @@ class AutoSave {
         this.wait = 800;
     }
     init(termContainer, s_d_Id, draft = false){
+        if (Number(s_d_Id) < 1)
+            return;
         const handleTermEvent = (event) => {
             const el = event.target;
             if (!el.classList.contains('term-input')) return;
@@ -1051,18 +1067,14 @@ class AutoSave {
 
         this.s_d_Id = s_d_Id;
         if (draft) {
-            this.createURI = "http://localhost:8081/api/drafts/" + this.s_d_Id + "/terms";
-            this.updateURI = "http://localhost:8081/api/drafts/" + this.s_d_Id + "/terms/";
-            this.deleteURI = "http://localhost:8081/api/drafts/" + this.s_d_Id + "/terms/";
+            this.createURI = "http://localhost:8081/api/me/draft/" + this.s_d_Id + "/terms";
+            this.updateURI = "http://localhost:8081/api/me/draft/" + this.s_d_Id + "/terms/";
+            this.deleteURI = "http://localhost:8081/api/me/draft/" + this.s_d_Id + "/terms/";
         } else {
-            this.createURI = "http://localhost:8081/api/sets/" + this.s_d_Id + "/terms";
-            this.updateURI = "http://localhost:8081/api/sets/" + this.s_d_Id + "/terms/";
-            this.deleteURI = "http://localhost:8081/api/sets/" + this.s_d_Id + "/terms/";
-        }
-    }
 
-    showErrors(errors) {
-        this.onErrors(errors)
+
+        }
+
     }
     add(term, description, id1) {
         if (!term || !description) return;
@@ -1071,8 +1083,8 @@ class AutoSave {
             term.setAttribute("data-id", id1);
         }
 
-        term.dataset.last = this.hashCode(this.termIsEmpty(term) ? '' : this.onNormalizeObj(term));
-        description.dataset.last = this.hashCode(this.termIsEmpty(description) ? '' : this.onNormalizeObj(description));
+        term.dataset.last = String(this.hashCode(this.termIsEmpty(term) ? '' : this.onNormalizeObj(term)));
+        description.dataset.last = String(this.hashCode(this.termIsEmpty(description) ? '' : this.onNormalizeObj(description)));
 
         // const saveHandler = () => this.saveTerm(term, description);
         // const debouncedHandler = this.debounce(saveHandler, this.wait);
@@ -1094,46 +1106,67 @@ class AutoSave {
             hash = ((hash << 5) - hash) + str.charCodeAt(i);
             hash |= 0;
         }
-        return hash;
+        return String(hash);
     }
-
+    showFieldError(el, message) {
+        if (!el || !el.errorEl) return;
+        if (message === "") {
+            this.clearFieldError(el);
+            return;
+        }
+        el.errorEl.innerHTML = message;
+        el.errorEl.style.display = 'block';
+    }
+    clearFieldError(el) {
+        if (!el || !el.errorEl) return;
+        el.errorEl.innerHTML = '';
+        el.errorEl.style.display = 'none';
+    }
     saveTerm(term, description) {
         const termText = this.termIsEmpty(term) ? '' : this.onNormalizeObj(term);
         const descriptionText = this.termIsEmpty(description) ? '' : this.onNormalizeObj(description);
-        const lastTermText = term.dataset.last ?? '';
-        const lastDescriptionText  = description.dataset.last ?? '';
+        const lastTermText = (term.dataset.last ?? '');
+        const lastDescriptionText  = (description.dataset.last ?? '');
         const termTextHash = this.hashCode(termText);
         const descriptionTextHash = this.hashCode(descriptionText);
 
-        if (lastTermText == termTextHash && lastDescriptionText == descriptionTextHash) return;
+        if (lastTermText === termTextHash && lastDescriptionText === descriptionTextHash) return;
 
         const id = term.getAttribute("data-id");
-        // if (termText === "" && descriptionText === "" && (id === null || !id))
-        //     return;
-
-        term.dataset.last = termTextHash;
-        description.dataset.last = descriptionTextHash;
 
         if (id === null || !id) {
-            // this.createTerms([{
-            //     term: termText,
-            //     description: descriptionText
-            // }]);
-
-            this.createTerm({
-                term: termText,
-                description: descriptionText
-            }).then(newTermData => {
-                if (newTermData && newTermData.id) {
-                    term.setAttribute("data-id", newTermData.id);
-                }
-            });
+            this.createTerm({ term: termText, description: descriptionText })
+                .then(response => {
+                    if (!response) return;
+                    if (response.errors) {
+                        this.showFieldError(term, response.errors.term || '');
+                        this.showFieldError(description, response.errors.description || '')
+                        return;
+                    }
+                    if (response.id) {
+                        term.dataset.last = (termTextHash);
+                        description.dataset.last = (descriptionTextHash);
+                        term.setAttribute("data-id", response.id);
+                    }
+                })
+                .catch(err => {
+                    console.error('Ошибка сети:', err);
+                });
         } else {
-            this.editTerm({
-                id: id,
-                term: termText,
-                description: descriptionText
-            });
+            this.editTerm(id, {term: termText, description: descriptionText})
+                .then(response => {
+                    if (!response) return;
+                    if (response.errors) {
+                        this.showFieldError(term, response.errors.term || '');
+                        this.showFieldError(description, response.errors.description || '')
+                        return;
+                    }
+                    term.dataset.last = termTextHash;
+                    description.dataset.last = descriptionTextHash;
+                })
+                .catch(err => {
+                    console.error('Ошибка сети:', err);
+                });
         }
     }
     createTerm(term){
@@ -1142,38 +1175,28 @@ class AutoSave {
             headers: {
                 "Content-Type": "application/json"
             },
-            body: JSON.stringify({
-                id: this.s_d_Id,
-                terms: [term]
-            })
+            body: JSON.stringify(term)
         })
             .then(response => response.json())
             .then(data => {
                 console.log('Ответ:', data);
-                if (data.errors && typeof data.errors === 'object') {
-                    this.showErrors(data.errors);
-                    return null;
-                } else if (data.id) {
-                    this.s_d_Id = data.id;
-                    return data.terms ? data.terms[0] : null;
-                }
-                return null;
+                return data;
             })
             .catch(error => {
                 console.error('Ошибка:', error);
                 return null;
             });
     }
+    showErrors(errors) {
+        this.onErrors(errors)
+    }
     createTerms(terms){
-        fetch(this.createURI, {
+        return fetch(this.createURI, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json"
             },
-            body: JSON.stringify({
-                id: this.s_d_Id,
-                terms: terms
-            })
+            body: JSON.stringify(terms)
         })
             .then(response => response.json())
             .then(data => {
@@ -1184,36 +1207,33 @@ class AutoSave {
                     this.s_d_Id = data.id;
                     this.showTermsFromImport(data.terms);
                 }
+                return data;
             })
             .catch(error => {
                 console.error('Ошибка:', error);
+                return null;
             });
     }
-    editTerm(term){
-        fetch(`${this.updateURI}${term.id}`, {
+    editTerm(id, term){
+        return fetch(`${this.updateURI}${id}`, {
             method: "PATCH",
             headers: {
                 "Content-Type": "application/json"
             },
-            body: JSON.stringify({
-                id: this.s_d_Id,
-                term: term
-            })
+            body: JSON.stringify(term)
         })
             .then(response => response.json())
             .then(data => {
                 console.log('Ответ:', data);
-                if (data.errors && typeof data.errors === 'object') {
-                    this.showErrors(data.errors);
-                } else if (data.id) {
-//?????
-                }
+                return data;
             })
             .catch(error => {
                 console.error('Ошибка:', error);
+                return null;
             });
     }
 }
+
 const divplaceholder= new DivPlaceholder();
 const editableDiv= new EditableDiv();
 const languageMenu1 = new LanguageMenu({
@@ -1235,7 +1255,8 @@ const autoSave = new AutoSave(
         onErrors(errs) {
             setForm.showErrors(errors.getError(errs));
         }
-    },{
+    },
+    {
         termIsEmpty(el) {
             return divplaceholder.isActive(el);
         }
@@ -1260,7 +1281,7 @@ const termsImport = new TermsImport(
     },
     {
         createTermsFromImport(data) {
-            autoSave.createTerms(data);
+            return autoSave.createTerms(data);
         }
     });
 const overlay = new Overlay(() => termsImport.onHide(), () => termsImport.onShow());
@@ -1333,9 +1354,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const importButton = document.getElementById('overlay_import_button');
     //autoSave.init(((importButton && importButton.dataset != null && importButton.dataset.draftId !=null) ? importButton.dataset.draftId : 0));
     const fieldId = document.getElementById("field-id");
-    const el = document.getElementById("auto-save");
-    const isDraft = el?.dataset.set !== "true";
-    autoSave.init(termController.container,fieldId ? fieldId.value : 0, isDraft);
+    autoSave.init(termController.container,fieldId ? fieldId.value : 0, fieldId?.dataset.set !== "true");
     termButton.init(document.getElementById('add_term_button'), termController);
 });
 

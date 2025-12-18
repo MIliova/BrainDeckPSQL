@@ -10,7 +10,7 @@ import java.util.Optional;
 
 public interface MyDraftRestClient {
 
-    NewDraftDto create(String title, String description, Integer termLanguageId, Integer descriptionLanguageId);
+//    NewDraftDto create(String title, String description, Integer termLanguageId, Integer descriptionLanguageId);
 
     void update(int id, String title, String description, Integer termLanguageId, Integer descriptionLanguageId);
 

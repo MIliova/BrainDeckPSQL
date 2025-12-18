@@ -1,8 +1,10 @@
 package dev.braindeck.web.controller;
 
 import dev.braindeck.web.client.*;
+import dev.braindeck.web.controller.exception.BadRequestException;
 import dev.braindeck.web.controller.payload.DraftPayload;
 import dev.braindeck.web.entity.*;
+import dev.braindeck.web.utills.Util;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
@@ -11,6 +13,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
@@ -23,38 +26,57 @@ public class DraftController {
     private final LanguagesRestClient languagesRestClient;
     private final MessageSource messageSource;
 
-    @PostMapping
-    public NewDraftDto create(@Valid @RequestBody DraftPayload payload) {
-        return myDraftRestClient.create(
-                payload.title(),
-                payload.description(),
-                payload.termLanguageId(),
-                payload.descriptionLanguageId()
-        );
-    }
-
-    @PatchMapping("/{draftId:\\d+}")
-    public void update(@PathVariable @Positive(message = "errors.draft.id") int draftId, DraftPayload payload) {
-         myDraftRestClient.update(
-                draftId,
-                payload.title(),
-                payload.description(),
-                payload.termLanguageId(),
-                payload.descriptionLanguageId());
-    }
-
-    @DeleteMapping("/{draftId:\\d+}")
-    public void delete(@PathVariable @Positive(message = "errors.draft.id") int draftId) {
-        myDraftRestClient.delete(draftId);
-    }
-
-    @GetMapping()
-    public String get(@ModelAttribute("draft") DraftDto draft, Model model, Locale locale) {
-        Map<String, Map<Integer, String>> languagesList = languagesRestClient.findAllByTypes();
+    @GetMapping
+    public String get(Model model, Locale locale) {
+        DraftDto draft = myDraftRestClient.get().orElse(null);
+        if (draft == null) {
+            return "redirect:/set";
+        }
+        model.addAttribute("draft", draft);
+        LanguagesDto languagesList = languagesRestClient.findAllByTypes();
         ControllersUtil.getLanguages(languagesList, model, draft.termLanguageId(), draft.descriptionLanguageId());
         model.addAttribute("pageTitle", messageSource.getMessage("messages.set.create.new", null, locale));
         return "draft-set";
     }
+
+//    @PostMapping
+//    public NewDraftDto create(@Valid @RequestBody DraftPayload payload) {
+//        return myDraftRestClient.create(
+//                payload.title(),
+//                payload.description(),
+//                payload.termLanguageId(),
+//                payload.descriptionLanguageId()
+//        );
+//    }
+
+//    @PatchMapping("/{draftId:\\d+}")
+//    @ResponseBody
+//    public Map<String, Object> update(@PathVariable @Positive(message = "errors.draft.id") int draftId, @RequestBody DraftPayload payload) {
+//        try {
+//            myDraftRestClient.update(
+//                    draftId,
+//                    payload.title(),
+//                    payload.description(),
+//                    payload.termLanguageId(),
+//                    payload.descriptionLanguageId()
+//            );
+//            return Map.of("status", "success");
+//        } catch (BadRequestException e) {
+//            List<FieldErrorDto> errors = Util.problemDetailErrorToDtoList(e.getJsonObject());
+//            return Map.of(
+//                    "status", "error",
+//                    "errors", errors
+//            );
+//        }
+//    }
+
+    @DeleteMapping("/{draftId:\\d+}")
+    @ResponseBody
+    public String delete(@PathVariable @Positive(message = "errors.draft.id") int draftId) {
+        myDraftRestClient.delete(draftId);
+        return "redirect:/draft";
+    }
+
 
 //    @PostMapping("/{draftId:\\d+}/convert")
 //    public ResponseEntity<SetDto>  createFromDraft(

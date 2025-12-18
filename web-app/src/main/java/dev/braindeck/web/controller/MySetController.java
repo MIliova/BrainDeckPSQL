@@ -34,7 +34,7 @@ public class MySetController {
 
     @GetMapping("/edit")
     public String edit(
-            @PathVariable("setId") int setId,
+            @PathVariable int setId,
             Model model, Locale locale) {
         SetDto setDto = mySetsRestClient.findMySetById(setId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));

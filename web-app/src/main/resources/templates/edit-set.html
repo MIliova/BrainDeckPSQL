@@ -57,8 +57,9 @@
                th:data-message="#{messages.set.create.j.ats}">
 
 
-        <input type="hidden" id="field-id" name="id" value="" th:value="${payload != null ? payload.id() : set.id}">
-        <div id="auto-save" data-set="true"></div>
+        <input type="hidden" id="field-id" name="id" value=""
+               th:data-set="true"
+               th:value="${payload != null ? payload.id() : set.id}">
 
         <!--        <input type="hidden" id="field-user-id" name="user-id" value="" th:value="${payload != null ? payload.userId() : set.userId}">-->
 
@@ -86,7 +87,9 @@
           <div class="">
             <div class="container-left-right blue-row" >
               <div class="term-block">
-                <div class="term-input" th:data-id="${term.id}" th:id="'term'+${iter.index}"
+                <div class="term-input"
+                     th:data-id="${term.id}"
+                     th:id="'term'+${iter.index}"
                      th:data-base-placeholder="#{messages.set.create.placeholder} "
                      th:data-placeholder="|#{messages.set.create.placeholder} ${extra.termLangName}|"
                      data-placeholder-class="term-placeholder"

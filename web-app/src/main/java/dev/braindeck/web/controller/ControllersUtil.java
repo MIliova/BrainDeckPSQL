@@ -2,6 +2,7 @@ package dev.braindeck.web.controller;
 
 import dev.braindeck.web.controller.exception.LanguagesException;
 import dev.braindeck.web.domain.LanguageType;
+import dev.braindeck.web.entity.LanguagesDto;
 import dev.braindeck.web.entity.SetExtraDto;
 import lombok.experimental.UtilityClass;
 import org.springframework.ui.Model;
@@ -11,10 +12,10 @@ import java.util.*;
 @UtilityClass
 public class ControllersUtil {
 
-    public void getLanguages(Map<LanguageType, Map<Integer, String>> languages, Model model) {
+    public void getLanguages(LanguagesDto languages, Model model) {
         getLanguages(languages, model, null, null);
     }
-    public void getLanguages(Map<LanguageType, Map<Integer, String>> languages, Model model, Integer termLanguageId, Integer descriptionLanguageId) {
+    public void getLanguages(LanguagesDto languages, Model model, Integer termLanguageId, Integer descriptionLanguageId) {
         model.addAttribute("languages",
                 languages.getOrDefault(LanguageType.REST, Map.of()));
         model.addAttribute("topLanguages",
