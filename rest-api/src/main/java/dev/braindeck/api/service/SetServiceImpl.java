@@ -21,7 +21,32 @@ public class SetServiceImpl implements SetService {
 
     private final SetRepository setRepository;
     private final TermService termService;
+    private final DraftService draftService;
+    private final DTermService dTermService;
 
+    @Transactional
+    @Override
+    public SetDto createFromDraft(
+            int draftId,
+            String title,
+            String description,
+            int termLanguageId,
+            int descriptionLanguageId,
+            UserEntity user) {
+
+        DraftEntity draftEntity = draftService.findEntityById(draftId, user.getId());
+        if (draftEntity == null) {
+            throw new ForbiddenException("errors.draft.not.belong.user");
+        }
+        SetEntity set = new SetEntity(title, description, termLanguageId, descriptionLanguageId, user);
+
+        List<TermEntity> terms = draftEntity.getTerms().stream().map(term -> new TermEntity(term.getTerm(), term.getDescription(), set)).toList();
+        set.setTerms(terms);
+        SetEntity savedSet = setRepository.save(set);
+
+        draftService.delete(draftEntity);
+        return Mapper.setToDto(savedSet);
+    }
     @Transactional
     @Override
     public SetDto create(

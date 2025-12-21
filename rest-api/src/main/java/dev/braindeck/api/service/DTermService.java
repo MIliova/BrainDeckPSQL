@@ -4,7 +4,6 @@ import dev.braindeck.api.controller.payload.DTermPayload.DTermPayload;
 import dev.braindeck.api.dto.ImportTermDto;
 import dev.braindeck.api.dto.NewDTermDto;
 import dev.braindeck.api.dto.TermDto;
-import dev.braindeck.api.entity.DraftEntity;
 import dev.braindeck.api.entity.UserEntity;
 
 import java.util.List;
@@ -22,6 +21,6 @@ public interface DTermService {
 
     void deleteByDraftId(int draftId, int currentUserId);
 
-    List<TermDto> findById(int draftId, int currentUserId);
+    List<TermDto> findDtoByDraftId(int draftId);
 
 }

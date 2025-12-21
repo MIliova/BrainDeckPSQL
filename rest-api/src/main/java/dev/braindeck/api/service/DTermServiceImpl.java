@@ -25,7 +25,7 @@ public class DTermServiceImpl implements DTermService {
 
     @Override
     public NewDTermDto create(UserEntity user, int draftId, DTermPayload payload) {
-        DraftEntity draft = draftService.findEntityOrCreate(user, draftId);
+        DraftEntity draft = draftService.findEntityByIdOrCreate(user, draftId);
         DTermEntity entity = new DTermEntity(
                 null,
                 payload.term(),
@@ -37,7 +37,7 @@ public class DTermServiceImpl implements DTermService {
     }
     @Override
     public List<NewDTermDto> create(UserEntity user, int draftId, List<DTermPayload> payloads) {
-        DraftEntity draft = draftService.findEntityOrCreate(user, draftId);
+        DraftEntity draft = draftService.findEntityByIdOrCreate(user, draftId);
         List<DTermEntity> list = new ArrayList<>();
         for (DTermPayload p : payloads) {
             list.add(new DTermEntity(null, p.term(), p.description(), draft));
@@ -79,12 +79,22 @@ public class DTermServiceImpl implements DTermService {
     @Override
     @Transactional
     public void deleteByDraftId(int draftId, int currentUserId) {
+        List<DTermEntity> terms = draftTermRepository.findByDraftId(draftId)
+                .orElseThrow(() -> new NoSuchElementException("errors.term.not.found"));
+
+        checkOwnership(terms.get(0), draftId, currentUserId);
+
         draftTermRepository.deleteByDraftId(draftId);
     }
 
     @Override
-    public List<TermDto> findById(int draftId, int currentUserId) {
+    public List<TermDto> findDtoByDraftId(int draftId) {
         return Mapper.draftTermsToDto(this.draftTermRepository.findAllByDraftId(draftId));
+    }
+
+    @Override
+    public List<DTermEntity> findByDraftId(int draftId) {
+        return this.draftTermRepository.findAllByDraftId(draftId);
     }
 
     private void checkOwnership(DTermEntity term, int draftId, int userId) {

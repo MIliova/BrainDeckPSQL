@@ -33,12 +33,12 @@ public class MyDraftRestController {
         return ResponseEntity.ok(draft);
     }
 
-    @PostMapping
-    public ResponseEntity<NewDraftDto> create(@Valid @RequestBody DraftPayload payload) {
-        UserEntity user = userService.getCurrentUser();
-        NewDraftDto draft = draftService.create(payload, user);
-        return ResponseEntity.status(HttpStatus.CREATED).body(draft);
-    }
+//    @PostMapping
+//    public ResponseEntity<NewDraftDto> create(@Valid @RequestBody DraftPayload payload) {
+//        UserEntity user = userService.getCurrentUser();
+//        NewDraftDto draft = draftService.create(payload, user);
+//        return ResponseEntity.status(HttpStatus.CREATED).body(draft);
+//    }
 
     @PatchMapping("/{draftId:\\d+}")
     public ResponseEntity<Void> update(@PathVariable @Positive (message = "errors.draft.id") int draftId,
@@ -52,19 +52,12 @@ public class MyDraftRestController {
     }
 
     @DeleteMapping("/{draftId:\\d+}")
-    public ResponseEntity<Void> delete(
+    public ResponseEntity<DraftDto> delete(
             @PathVariable @Positive (message = "errors.draft.id") int draftId) {
         UserEntity user = userService.getCurrentUser();
-        draftService.delete(draftId, user.getId());
-        return ResponseEntity.noContent().build();
+        DraftDto draft = draftService.deleteAndCreate(draftId, user);
+        return ResponseEntity.ok(draft);
     }
-
-
-
-//    @GetMapping("/{draftId:\\d+}")
-//    public DraftSetDto getDraftById(@PathVariable int draftId) {
-//        return draftService.findByIdForUser(draftId);
-//    }
 
     @PostMapping("/{draftId:\\d+}/convert")
     public ResponseEntity<SetDto>  createFromDraft(
@@ -72,14 +65,14 @@ public class MyDraftRestController {
             @Valid @RequestBody NewSetPayload payload,
             UriComponentsBuilder uriBuilder) {
         UserEntity user = userService.getCurrentUser();
-        SetDto set = setService.create(
+
+        SetDto set = setService.createFromDraft(
+                draftId,
                 payload.title(),
                 payload.description(),
                 payload.termLanguageId(),
                 payload.descriptionLanguageId(),
-                user,
-                payload.terms());
-        draftService.delete(draftId, user.getId());
+                user);
         return ResponseEntity.created(
                 uriBuilder.replacePath("/api/sets/{setId}")
                         .build(Map.of("setId", set.id())))

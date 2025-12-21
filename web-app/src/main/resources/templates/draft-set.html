@@ -16,13 +16,16 @@
 
         <div class="container-left-right">
             <div><h1 data-th-text="#{messages.set.create_new}">Create a new set</h1></div>
-            <div class="blue-row"><button id="submitButton" class="blue-row-button" type="button" aria-label="[[#{messages.create}]]" onclick=""><span data-th-text="#{messages.create}">Create</span></button></div>
+            <div class="blue-row">
+                <button id="submitButton" class="blue-row-button" type="button" aria-label="[[#{messages.create}]]" onclick=""><span data-th-text="#{messages.create}">Create</span></button>
+                <button id="deleteDraftButton" class="blue-row-button" type="button" aria-label="[[#{messages.delete.draft}]]" onclick="">
+                    <span data-th-text="#{messages.create}">Create</span></button>
+            </div>
         </div>
 
 
         <div aria-hidden="true">
             <form method="post" id="set-form" data-th-action="@{/draft/{id}(id=${(payload != null ? payload.id() : draft.id())})}">
-
                 <div class="">
                     <div class="textarea-description"><span
                     th:if="${payload?.title() != null && payload?.title() !=''}"
@@ -64,6 +67,7 @@
 
 
                 <input type="hidden" id="field-id" name="id" value=""
+                       th:data-draft="true"
                        th:value="${payload != null ? payload.id() : draft?.id()}">
 
 

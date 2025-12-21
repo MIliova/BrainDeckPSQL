@@ -26,6 +26,22 @@ public class MySetsRestClientImpl implements MySetsRestClient {
     private final RestClient restClient;
 
     @Override
+    public Optional<SetDto> findMySetById(int setId) {
+        try {
+            return Optional.ofNullable(restClient.get()
+                    .uri("/api/users/me/set/{setId}", setId)
+                    .retrieve()
+                    .body(SetDto.class));
+        } catch (HttpClientErrorException.NotFound exception) {
+            ProblemDetail problemDetail =  exception.getResponseBodyAs(ProblemDetail.class);
+            if(problemDetail != null) {
+                throw new NoSuchElementException(String.valueOf(Objects.requireNonNull(problemDetail.getProperties()).get("errors")));
+            }
+            throw new ProblemDetailException("Problem detail is null");
+        }
+    }
+
+    @Override
     public SetDto create(String title, String description, Integer termLanguageId, Integer descriptionLanguageId,
                          List<NewTermPayload> terms) {
         try {
@@ -45,21 +61,7 @@ public class MySetsRestClientImpl implements MySetsRestClient {
         }
     }
 
-    @Override
-    public Optional<SetDto> findMySetById(int setId) {
-        try {
-            return Optional.ofNullable(restClient.get()
-                    .uri("/api/users/me/set/{setId}", setId)
-                    .retrieve()
-                    .body(SetDto.class));
-        } catch (HttpClientErrorException.NotFound exception) {
-            ProblemDetail problemDetail =  exception.getResponseBodyAs(ProblemDetail.class);
-            if(problemDetail != null) {
-                throw new NoSuchElementException(String.valueOf(Objects.requireNonNull(problemDetail.getProperties()).get("errors")));
-            }
-            throw new ProblemDetailException("Problem detail is null");
-        }
-    }
+
 
     @Override
     public void update(int setId, String title, String description, Integer termLanguageId, Integer descriptionLanguageId,

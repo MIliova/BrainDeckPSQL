@@ -16,13 +16,18 @@
 
         <div class="container-left-right">
             <div><h1 data-th-text="#{messages.set.create_new}">Create a new set</h1></div>
-            <div class="blue-row"><button id="submitButton" class="blue-row-button" type="button" aria-label="[[#{messages.create}]]" onclick=""><span data-th-text="#{messages.create}">Create</span></button></div>
+            <div class="blue-row">
+                <button id="submitButton" class="blue-row-button" type="button" aria-label="[[#{messages.create}]]" onclick=""><span data-th-text="#{messages.create}">Create</span></button>
+                <button id="deleteDraftButton" class="blue-row-button" type="button" aria-label="[[#{messages.delete.draft}]]"
+                        th:if="${draft != null && draft.id() != null}" onclick=""><span data-th-text="#{messages.delete.draft}">Delete draft</span></button>
+            </div>
         </div>
 
 
         <div aria-hidden="true">
-            <form method="post" id="set-form" th:object="${payload}" data-th-action="@{/create-set}">
-                <div class=""><div class="textarea-description"><span
+            <form method="post" id="set-form" th:object="${payload != null ? payload : draft}" data-th-action="@{/create-set}">
+                <div class="">
+                    <div class="textarea-description"><span
                     th:if="${payload?.title() != null && payload?.title() !=''}"
                     th:text="#{messages.set.create.t}"
                     th:data-message="#{messages.set.create.t}">&nbsp;</span><span

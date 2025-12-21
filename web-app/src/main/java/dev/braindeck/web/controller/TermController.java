@@ -23,12 +23,12 @@ public class TermController {
         return myTermsRestClient.create(setId, payload);
     }
 
-    @PostMapping("/batch")
-    public List<NewDTermDto> createBatch(
-            @PathVariable int draftId,
-            @RequestBody List<DTermPayload> terms) {
-        return myDTermsRestClient.create(draftId, terms);
-    }
+//    @PostMapping("/batch")
+//    public List<NewDTermDto> createBatch(
+//            @PathVariable int draftId,
+//            @RequestBody List<DTermPayload> terms) {
+//        return myDTermsRestClient.create(draftId, terms);
+//    }
 
     @PutMapping("/{termId:\\d+}")
     public void update(

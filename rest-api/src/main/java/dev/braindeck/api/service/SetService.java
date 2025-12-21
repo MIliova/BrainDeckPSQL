@@ -11,6 +11,13 @@ import java.util.List;
 
 public interface SetService {
 
+    SetDto createFromDraft(
+            int draftId,
+            String title,
+            String description,
+            int termLanguageId,
+            int descriptionLanguageId,
+            UserEntity user);
     SetDto create(String title, String description, int termLanguageId, int descriptionLanguageId, UserEntity user, List<NewTermPayload> terms);
 
     void update(int id, String title, String description, int termLanguageId, int descriptionLanguageId, List<UpdateTermPayload> terms, int currentUseId);
