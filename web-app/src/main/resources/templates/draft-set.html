@@ -25,7 +25,8 @@
 
 
         <div aria-hidden="true">
-            <form method="post" id="set-form" data-th-action="@{/draft/{id}(id=${(payload != null ? payload.id() : draft.id())})}">
+            <form method="post" id="set-form"
+                  data-th-action="@{/draft/{id}(id=${(payload != null ? payload.id() : draft.id())})}">
                 <div class="">
                     <div class="textarea-description"><span
                     th:if="${payload?.title() != null && payload?.title() !=''}"

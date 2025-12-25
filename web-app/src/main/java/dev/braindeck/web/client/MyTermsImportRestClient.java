@@ -6,6 +6,6 @@ import java.util.List;
 
 public interface MyTermsImportRestClient {
 
-    List<ImportTermDto> prepare(String text, String colSeparator, String rowSeparator, String colCustom, String rowCustom);
+    List<NewTermDto> prepare(String text, String colSeparator, String rowSeparator, String colCustom, String rowCustom);
 
 }

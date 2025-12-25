@@ -1,6 +1,6 @@
 package dev.braindeck.web.entity;
 
-public record ImportTermDto(
+public record NewTermDto(
         String term,
         String description
 ) {

@@ -8,6 +8,7 @@ import lombok.experimental.UtilityClass;
 import org.springframework.ui.Model;
 
 import java.util.*;
+import java.util.stream.Stream;
 
 @UtilityClass
 public class ControllersUtil {
@@ -16,12 +17,9 @@ public class ControllersUtil {
         getLanguages(languages, model, null, null);
     }
     public void getLanguages(LanguagesDto languages, Model model, Integer termLanguageId, Integer descriptionLanguageId) {
-        model.addAttribute("languages",
-                languages.getOrDefault(LanguageType.REST, Map.of()));
-        model.addAttribute("topLanguages",
-                languages.getOrDefault(LanguageType.TOP, Map.of()));
-        model.addAttribute("myLanguages",
-                languages.getOrDefault(LanguageType.MY, Map.of()));
+        model.addAttribute("languages", languages.rest());
+        model.addAttribute("topLanguages", languages.top());
+        model.addAttribute("myLanguages", languages.my());
         if (termLanguageId != null && descriptionLanguageId != null) {
             model.addAttribute(
                     "extra",
@@ -31,10 +29,10 @@ public class ControllersUtil {
         }
     }
     public String getLanguageName(
-            Map<LanguageType, Map<Integer, String>> languages,
+            LanguagesDto languages,
             Integer languageId
     ) {
-        return languages.values().stream()
+        return Stream.of(languages.top(), languages.rest(), languages.my())
                 .map(map -> map.get(languageId))
                 .filter(Objects::nonNull)
                 .findFirst()

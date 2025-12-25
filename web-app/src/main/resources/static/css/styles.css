@@ -137,9 +137,13 @@ hr {
     font-size: 90%;
     display: none;
 }
-.blue-row-err{
+.blue-row-err {
     border-bottom: 2px solid crimson;
     border-radius: 9px;
+}
+
+.is-invalid {
+    border: 1px solid crimson;
 }
 
 .container-left-right {

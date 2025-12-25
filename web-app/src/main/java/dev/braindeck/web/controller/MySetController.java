@@ -18,8 +18,10 @@ import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 
 @Controller
 @RequiredArgsConstructor
@@ -33,15 +35,24 @@ public class MySetController {
 
 
     @GetMapping("/edit")
-    public String edit(
+    public String get(
             @PathVariable int setId,
             Model model, Locale locale) {
-        SetDto setDto = mySetsRestClient.findMySetById(setId)
+        SetDto set = mySetsRestClient.findMySetById(setId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-        System.out.println(setDto);
-        model.addAttribute("set", setDto);
-
-        modelPreparationService.prepareModel(model, locale, messageSource.getMessage("messages.set.edit", null, locale));
+        System.out.println(set);
+        modelPreparationService.prepareModel(model,  Map.of(
+                "payload", new SetFormDto(
+                        set.id(),
+                        set.title(),
+                        set.description(),
+                        set.termLanguageId(),
+                        set.descriptionLanguageId(),
+                        set.terms()
+                ),
+                "actionUrl", "/set/" + setId + "/edit",
+                "pageTitle", messageSource.getMessage("messages.set.edit", null, locale)
+        ));
 
         return "edit-set";
     }
@@ -58,8 +69,10 @@ public class MySetController {
         System.out.println(payloadTerms);
 
         if (bindingResult.hasErrors()) {
-            model.addAttribute("payload", payload);
-            modelPreparationService.prepareModel(model, locale, messageSource.getMessage("messages.set.edit", null, locale));
+            modelPreparationService.prepareModel(model, Map.of(
+                    "actionUrl", "/set/" + setId + "/edit",
+                    "pageTitle", messageSource.getMessage("messages.set.edit", null, locale)
+            ));
             return "edit-set";
         }
 
@@ -73,13 +86,12 @@ public class MySetController {
             return "redirect:/set/" + setId;
         } catch (BadRequestException e) {
             List<FieldErrorDto> errorDtos = Util.problemDetailErrorToDtoList(e.getJsonObject());
-            model.addAttribute("errors", errorDtos);
-
-            model.addAttribute("payload", payload);
-            model.addAttribute("terms", terms);
-
-            modelPreparationService.prepareModel(model, locale, messageSource.getMessage("messages.set.edit", null, locale));
-
+            modelPreparationService.prepareModel(model, Map.of(
+                    "actionUrl", "/set/" + setId + "/edit",
+                    "errors", errorDtos,
+                    "terms", terms,
+                    "pageTitle", messageSource.getMessage("messages.set.edit", null, locale)
+            ));
             return "edit-set";
         }
     }
@@ -89,7 +101,7 @@ public class MySetController {
         mySetsRestClient.delete(setId);
         UserDto userDto = (UserDto) model.getAttribute("user");
         if (userDto == null) {
-            return "redirect:/"; // Или другая страница, например, главная
+            return "redirect:/";
         }
         return "redirect:/user/"+userDto.id()+"/sets";
     }

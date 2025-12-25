@@ -21,12 +21,12 @@ public class MyTermsImportRestClientImpl implements MyTermsImportRestClient {
 
     private final RestClient restClient;
 
-    private static final ParameterizedTypeReference<List<ImportTermDto>> TERMS_TYPE_REFERENCE =
+    private static final ParameterizedTypeReference<List<NewTermDto>> TERMS_TYPE_REFERENCE =
             new ParameterizedTypeReference<>() {
             };
 
     @Override
-    public List<ImportTermDto> prepare(String text, String colSeparator, String rowSeparator, String colCustom, String rowCustom){
+    public List<NewTermDto> prepare(String text, String colSeparator, String rowSeparator, String colCustom, String rowCustom){
 
         System.out.println(new ImportTermPayload(text,  colSeparator,  rowSeparator,  colCustom, rowCustom));
         System.out.println("colSeparator='"+colSeparator+"'");

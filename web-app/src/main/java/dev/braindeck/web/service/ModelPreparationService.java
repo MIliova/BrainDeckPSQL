@@ -14,6 +14,7 @@ import org.springframework.ui.Model;
 import java.util.Locale;
 import java.util.Map;
 
+
 @Service
 @RequiredArgsConstructor
 public class ModelPreparationService {
@@ -22,7 +23,7 @@ public class ModelPreparationService {
     private final MyLocale myLocale;
     private final UserRestClient userRestClient;
 
-    public void prepareModel(Model model, Locale locale, String title) {
+    public void prepareModel(Model model, Map<String, Object> modelContext) {
         UserDto user = userRestClient.get();
         model.addAttribute("user", user);
 
@@ -35,6 +36,6 @@ public class ModelPreparationService {
         LanguagesDto languagesList = languagesRestClient.findAllByTypes();
         ControllersUtil.getLanguages(languagesList, model);
 
-        model.addAttribute("pageTitle", title);
+        modelContext.forEach(model::addAttribute);
     }
 }

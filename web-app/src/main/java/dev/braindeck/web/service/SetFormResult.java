@@ -1,9 +1,7 @@
 package dev.braindeck.web.service;
 
-import lombok.RequiredArgsConstructor;
-
-import java.util.HashMap;
 import java.util.Map;
+
 
 public class SetFormResult {
 
@@ -35,5 +33,3 @@ public class SetFormResult {
         return modelAttributes;
     }
 }
-
-
