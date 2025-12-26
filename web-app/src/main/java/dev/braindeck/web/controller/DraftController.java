@@ -1,15 +1,10 @@
 package dev.braindeck.web.controller;
 
 import dev.braindeck.web.client.*;
-import dev.braindeck.web.controller.exception.BadRequestException;
-import dev.braindeck.web.controller.payload.DraftPayload;
 import dev.braindeck.web.controller.payload.NewSetPayload;
 import dev.braindeck.web.controller.payload.NewTermPayload;
 import dev.braindeck.web.entity.*;
-import dev.braindeck.web.service.ModelPreparationService;
-import dev.braindeck.web.service.TermParser;
-import dev.braindeck.web.utills.Util;
-import jakarta.validation.ConstraintViolationException;
+import dev.braindeck.web.service.*;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
@@ -19,8 +14,6 @@ import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.HashMap;
-import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
@@ -35,6 +28,7 @@ public class DraftController {
     private final ModelPreparationService modelPreparationService;
     private final TermParser termParser;
     private final MySetsRestClient mySetsRestClient;
+    private final SetFormService setFormService;
 
     @GetMapping
     public String get(Model model, Locale locale) {
@@ -52,7 +46,7 @@ public class DraftController {
                         draft.terms()
                 ),
                 "isDraft", true,
-                "actionUrl", "/draft",
+                "actionUrl", "/draft/" + draft.id(),
                 "pageTitle", messageSource.getMessage("messages.set.create.new", null, locale)
         ));
         return "new-set";
@@ -68,61 +62,28 @@ public class DraftController {
             Locale locale
     ) {
 
-        if (bindingResult.hasErrors()) {
+        TermsValidateResult<NewTermPayload> termsValidateResult  = setFormService.validate(payloadTerms, NewTermPayload.class);
+        if (bindingResult.hasErrors() || termsValidateResult.hasErrors()) {
+            model.addAllAttributes(termsValidateResult.getModelAttributes());
             modelPreparationService.prepareModel(model, Map.of(
                     "isDraft", true,
-                    "actionUrl", "/draft",
+                    "actionUrl", "/draft/" + draftId,
                     "pageTitle", messageSource.getMessage("messages.set.create.new", null, locale)
             ));
             return "new-set";
         }
 
-        TermParser.ParseResult parseResult;
-
-        try {
-            parseResult = termParser.parse(payloadTerms);
-        } catch (IllegalArgumentException e) {
-            modelPreparationService.prepareModel(model, Map.of(
-                    "isDraft", true,
-                    "actionUrl", "/draft",
-                    "errors", Map.of("general", e.getMessage()),
-                    "pageTitle", messageSource.getMessage("messages.set.create.new", null, locale)
-            ));
-            return "new-set";
+        SetFormResult result = setFormService.create(payload, termsValidateResult.getTerms(), null);
+        if (result.isRedirect()) {
+            return "redirect:" + result.getRedirectUrl();
         }
-
-        if (parseResult.hasErrors()) {
-            modelPreparationService.prepareModel(model, Map.of(
-                    "isDraft", true,
-                    "actionUrl", "/draft",
-                    "terms", parseResult.getTerms(),
-                    "termErrors", parseResult.getTermErrors(),
-                    "pageTitle", messageSource.getMessage("messages.set.create.new", null, locale)
-            ));
-            return "new-set";
-        }
-
-        List<NewTermPayload> terms = parseResult.getTerms();
-
-        try {
-            SetDto set = mySetsRestClient.create(
-                    payload.title(),
-                    payload.description(),
-                    payload.termLanguageId(),
-                    payload.descriptionLanguageId(),
-                    terms);
-            return "redirect:/set/" + set.id();
-        } catch(BadRequestException e) {
-            List<FieldErrorDto> errorDtos = Util.problemDetailErrorToDtoList(e.getJsonObject());
-            modelPreparationService.prepareModel(model, Map.of(
-                    "isDraft", true,
-                    "actionUrl", "/draft",
-                    "errors", errorDtos,
-                    "terms", parseResult.getTerms(),
-                    "pageTitle", messageSource.getMessage("messages.set.create.new", null, locale)
-            ));
-            return "new-set";
-        }
+        model.addAllAttributes(result.getModelAttributes());
+        modelPreparationService.prepareModel(model, Map.of(
+                "isDraft", true,
+                "actionUrl", "/draft/" + draftId,
+                "pageTitle", messageSource.getMessage("messages.set.create.new", null, locale)
+        ));
+        return "new-set";
     }
 
 }

@@ -9,6 +9,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Locale;
+import java.util.Map;
 
 @Controller
 @RequiredArgsConstructor
@@ -23,9 +24,11 @@ public class SetController {
                           Model model, Locale locale) {
         SetDto setDto = setsRestClient.findSetById(setId).orElse(null);
         System.out.println(setDto);
-        model.addAttribute("set", setDto);
 
-        modelPreparationService.prepareModel(model, locale, setDto != null ? setDto.title() :"");
+        modelPreparationService.prepareModel(model, Map.of(
+                "set", setDto,
+                "pageTitle", setDto != null ? setDto.title() :""
+        ));
 
         return "set";
     }

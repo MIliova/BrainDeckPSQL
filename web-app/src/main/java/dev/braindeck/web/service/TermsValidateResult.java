@@ -6,34 +6,34 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class TermsValidateResult {
+public class TermsValidateResult<T> {
 
     private final Map<String, Object> modelAttributes;
     private final Map<String, String> errors;
     private final Map<Integer, Map<String, String>> termErrors;
-    private final List<NewTermPayload> terms;
+    private final List<T> terms;
 
-    public static TermsValidateResult generalError(String message) {
-        return new TermsValidateResult(
+    public static <T> TermsValidateResult<T> generalError(String message) {
+        return new TermsValidateResult<>(
                 Map.of("general", message),
                 Map.of(),
                 List.of()
         );
     }
 
-    public static TermsValidateResult termErrors(
-            List<NewTermPayload> terms,
+    public static <T> TermsValidateResult<T> termErrors(
+            List<T> terms,
             Map<Integer, Map<String, String>> termErrors
     ) {
-        return new TermsValidateResult(
+        return new TermsValidateResult<>(
                 Map.of(),
                 termErrors,
                 terms
         );
     }
 
-    public static TermsValidateResult success(List<NewTermPayload> terms) {
-        return new TermsValidateResult(
+    public static <T> TermsValidateResult<T> success(List<T> terms) {
+        return new TermsValidateResult<>(
                 Map.of(),
                 Map.of(),
                 terms
@@ -43,7 +43,7 @@ public class TermsValidateResult {
     private TermsValidateResult(
             Map<String, String> errors,
             Map<Integer, Map<String, String>> termErrors,
-            List<NewTermPayload> terms
+            List<T> terms
     ) {
         this.errors = errors;
         this.termErrors = termErrors;
@@ -66,10 +66,12 @@ public class TermsValidateResult {
     public boolean hasErrors() {
         return !errors.isEmpty() || !termErrors.isEmpty();
     }
+
     public Map<String, Object> getModelAttributes() {
         return modelAttributes;
     }
-    public List<NewTermPayload> getTerms() {
+
+    public List<T> getTerms() {
         return terms;
     }
 

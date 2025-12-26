@@ -3,7 +3,6 @@ package dev.braindeck.web.service;
 import dev.braindeck.web.client.LanguagesRestClient;
 import dev.braindeck.web.client.UserRestClient;
 import dev.braindeck.web.controller.ControllersUtil;
-import dev.braindeck.web.domain.LanguageType;
 import dev.braindeck.web.entity.LanguagesDto;
 import dev.braindeck.web.entity.MyLocale;
 import dev.braindeck.web.entity.UserDto;

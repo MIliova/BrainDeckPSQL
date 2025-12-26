@@ -6,6 +6,8 @@ import dev.braindeck.web.controller.FieldErrorDto;
 import dev.braindeck.web.controller.exception.BadRequestException;
 import dev.braindeck.web.controller.payload.NewSetPayload;
 import dev.braindeck.web.controller.payload.NewTermPayload;
+import dev.braindeck.web.controller.payload.UpdateSetPayload;
+import dev.braindeck.web.controller.payload.UpdateTermPayload;
 import dev.braindeck.web.entity.SetDto;
 import dev.braindeck.web.utills.Util;
 import lombok.RequiredArgsConstructor;
@@ -15,12 +17,12 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
-public class SetCreationService {
+public class SetService {
 
     private final MySetsRestClient mySetsRestClient;
     private final MyDraftRestClient myDraftRestClient;
 
-    public SetCreationResult createSet(
+    public SetCreationResult create(
             NewSetPayload payload,
             List<NewTermPayload> terms,
             Integer draftId ){
@@ -36,7 +38,6 @@ public class SetCreationService {
                 );
                 return SetCreationResult.success(set);
             }
-
             SetDto set =  mySetsRestClient.create(
                     payload.title(),
                     payload.description(),
@@ -44,12 +45,33 @@ public class SetCreationService {
                     payload.descriptionLanguageId(),
                     terms
             );
+            return SetCreationResult.success(set);
         } catch (BadRequestException e) {
             List<FieldErrorDto> errors =
                     Util.problemDetailErrorToDtoList(e.getJsonObject());
             return SetCreationResult.error(errors);
         }
-
     }
-}
 
+    public SetUpdateResult update(
+            Integer setId,
+            UpdateSetPayload payload,
+            List<UpdateTermPayload> terms){
+        try {
+            mySetsRestClient.update(
+                    setId,
+                    payload.title(),
+                    payload.description(),
+                    payload.termLanguageId(),
+                    payload.descriptionLanguageId(),
+                    terms
+            );
+            return SetUpdateResult.empty();
+        } catch (BadRequestException e) {
+            List<FieldErrorDto> errors = Util.problemDetailErrorToDtoList(e.getJsonObject());
+            return SetUpdateResult.error(errors);
+        }
+    }
+
+
+}

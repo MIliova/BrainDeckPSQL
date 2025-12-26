@@ -16,9 +16,6 @@ public interface MySetsRestClient {
 
     void delete(int id);
 
-    SetDto createFromDraft(int draftId, String title, String description, Integer termLanguageId, Integer descriptionLanguageId,
-                           List<NewTermPayload> terms);
-
     Optional<SetDto> findMySetById(int id);
 
 }

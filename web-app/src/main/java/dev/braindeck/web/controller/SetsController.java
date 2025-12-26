@@ -2,6 +2,7 @@ package dev.braindeck.web.controller;
 
 import dev.braindeck.web.client.*;
 import dev.braindeck.web.entity.*;
+import dev.braindeck.web.service.ModelPreparationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.MessageSource;
 import org.springframework.stereotype.Controller;
@@ -10,6 +11,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 
 @Controller
 @RequiredArgsConstructor
@@ -17,6 +19,7 @@ public class SetsController {
 
     private final SetsRestClient setsRestClient;
     private final MessageSource messageSource;
+    private final ModelPreparationService modelPreparationService;
 
 
     @GetMapping("/user/{userId:\\d+}/sets")
@@ -27,8 +30,11 @@ public class SetsController {
         List<SetWithCountDto> sets = setsRestClient.findAllSets(userId);
         System.out.println(sets);
 
-        model.addAttribute("sets", sets);
-        model.addAttribute("pageTitle", messageSource.getMessage("messages.sets", null, locale));
+        modelPreparationService.prepareModel(model, Map.of(
+                "sets", sets,
+                "pageTitle", messageSource.getMessage("messages.sets", null, locale)
+        ));
+
         return "sets";
     }
 

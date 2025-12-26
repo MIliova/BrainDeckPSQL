@@ -3,6 +3,7 @@ package dev.braindeck.web.controller;
 import dev.braindeck.web.client.MyDraftRestClient;
 import dev.braindeck.web.client.MySetsRestClient;
 import dev.braindeck.web.controller.payload.NewSetPayload;
+import dev.braindeck.web.controller.payload.NewTermPayload;
 import dev.braindeck.web.entity.NewSetFormDto;
 import dev.braindeck.web.service.*;
 import jakarta.validation.Valid;
@@ -30,7 +31,7 @@ public class MyNewSetController {
     private final SetFormService setFormService;
 
     @GetMapping
-    public String create (Model model, Locale locale) {
+    public String create(Model model, Locale locale) {
         NewSetFormDto payload = new NewSetFormDto();
 
         modelPreparationService.prepareModel(model, Map.of(
@@ -50,7 +51,7 @@ public class MyNewSetController {
             Locale locale
     ) {
 
-        TermsValidateResult termsValidateResult  = setFormService.validate(payloadTerms);
+        TermsValidateResult<NewTermPayload> termsValidateResult  = setFormService.validate(payloadTerms, NewTermPayload.class);
         if (bindingResult.hasErrors() || termsValidateResult.hasErrors()) {
             model.addAllAttributes(termsValidateResult.getModelAttributes());
             modelPreparationService.prepareModel(model, Map.of(

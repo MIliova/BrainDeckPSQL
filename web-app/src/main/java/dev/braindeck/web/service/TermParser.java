@@ -1,13 +1,8 @@
 package dev.braindeck.web.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import dev.braindeck.web.controller.payload.NewTermPayload;
-import dev.braindeck.web.controller.payload.UpdateTermPayload;
 import jakarta.validation.ConstraintViolation;
-import jakarta.validation.ConstraintViolationException;
-import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import jakarta.validation.Validator;
 
@@ -28,12 +23,13 @@ public class TermParser {
         this.validator = validator;
     }
 
-
-    public ParseResult parse(String json) {
-        List<NewTermPayload> terms;
-
+    public <T> ParseResult<T> parse(String json, Class<T> termClass) {
+        List<T> terms;
         try {
-            terms = objectMapper.readValue(json, new TypeReference<List<NewTermPayload>>() {});
+            terms = objectMapper.readValue(
+                    json,
+                    objectMapper.getTypeFactory().constructCollectionType(List.class, termClass)
+            );
         } catch (JsonProcessingException e) {
             throw new IllegalArgumentException("Invalid JSON", e);
         }
@@ -45,8 +41,8 @@ public class TermParser {
         Map<Integer, Map<String, String>> termErrors = new HashMap<>();
 
         for (int i = 0; i < terms.size(); i++) {
-            NewTermPayload term = terms.get(i);
-            Set<ConstraintViolation<NewTermPayload>> violations = validator.validate(term);
+            T term = terms.get(i);
+            Set<ConstraintViolation<T>> violations = validator.validate(term);
 
             if (!violations.isEmpty()) {
                 Map<String, String> fieldErrors = violations.stream()
@@ -58,19 +54,19 @@ public class TermParser {
             }
         }
 
-        return new ParseResult(terms, termErrors);
+        return new ParseResult<>(terms, termErrors);
     }
 
-    public static class ParseResult {
-        private final List<NewTermPayload> terms;
+    public static class ParseResult<T> {
+        private final List<T> terms;
         private final Map<Integer, Map<String, String>> termErrors;
 
-        public ParseResult(List<NewTermPayload> terms, Map<Integer, Map<String, String>> termErrors) {
+        public ParseResult(List<T> terms, Map<Integer, Map<String, String>> termErrors) {
             this.terms = terms;
             this.termErrors = termErrors;
         }
 
-        public List<NewTermPayload> getTerms() {
+        public List<T> getTerms() {
             return terms;
         }
 
@@ -83,65 +79,3 @@ public class TermParser {
         }
     }
 }
-
-//public class TermParser {
-//
-//    private final ObjectMapper objectMapper;
-//    private final Validator validator;
-//
-//    public List<NewTermPayload> parse(String json) {
-//        final List<NewTermPayload> terms;
-//
-//        try {
-//            terms = objectMapper.readValue(
-//                    json,
-//                    new TypeReference<List<NewTermPayload>>() {}
-//            );
-//        } catch (JsonProcessingException e) {
-//            throw new IllegalArgumentException("Invalid terms JSON", e);
-//        }
-//
-//        if (terms.isEmpty()) {
-//            throw new IllegalArgumentException("terms must not be empty");
-//        }
-//
-//        Set<ConstraintViolation<NewTermPayload>> violations = terms.stream()
-//                .flatMap(term -> validator.validate(term).stream())
-//                .collect(Collectors.toSet());
-//
-//        if (!violations.isEmpty()) {
-//            throw new ConstraintViolationException(violations);
-//        }
-//
-//        return terms;
-//    }
-//
-//    public List<UpdateTermPayload> parseForUpdate(String json) {
-//        final List<UpdateTermPayload> terms;
-//
-//        try {
-//            terms = objectMapper.readValue(
-//                    json,
-//                    new TypeReference<List<UpdateTermPayload>>() {}
-//            );
-//        } catch (JsonProcessingException e) {
-//            throw new IllegalArgumentException("Invalid terms JSON", e);
-//        }
-//
-//        if (terms.isEmpty()) {
-//            throw new IllegalArgumentException("terms must not be empty");
-//        }
-//
-//        Set<ConstraintViolation<UpdateTermPayload>> violations = terms.stream()
-//                .flatMap(term -> validator.validate(term).stream())
-//                .collect(Collectors.toSet());
-//
-//        if (!violations.isEmpty()) {
-//            throw new ConstraintViolationException(violations);
-//        }
-//
-//        return terms;
-//    }
-//}
-
-

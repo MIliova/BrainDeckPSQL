@@ -2,14 +2,12 @@ package dev.braindeck.web.controller;
 
 import dev.braindeck.web.client.MyTermsRestClient;
 import dev.braindeck.web.controller.payload.DTermPayload;
-import dev.braindeck.web.entity.NewDTermDto;
 import dev.braindeck.web.entity.TermDto;
 import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
 
 @Controller
 @RequiredArgsConstructor

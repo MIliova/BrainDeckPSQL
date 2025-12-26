@@ -4,7 +4,6 @@ import dev.braindeck.web.controller.exception.BadRequestException;
 import dev.braindeck.web.controller.exception.ProblemDetailException;
 import dev.braindeck.web.controller.payload.*;
 import dev.braindeck.web.entity.DraftDto;
-import dev.braindeck.web.entity.NewDraftDto;
 import dev.braindeck.web.entity.SetDto;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -13,7 +12,6 @@ import org.springframework.http.ProblemDetail;
 
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestClient;
-import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestClientResponseException;
 
 import java.util.List;
@@ -42,57 +40,6 @@ public class MyDraftRestClientImpl implements MyDraftRestClient {
             throw new ProblemDetailException("Problem detail is null");
         }
     }
-
-//    @Override
-//    public NewDraftDto create(String title, String description, Integer termLanguageId, Integer descriptionLanguageId) {
-//        try {
-//            return restClient
-//                    .post()
-//                    .uri("/api/me/draft")
-//                    .contentType(MediaType.APPLICATION_JSON)
-//                    .body(new DraftPayload(title,  description,  termLanguageId,  descriptionLanguageId))
-//                    .retrieve()
-//                    .body(NewDraftDto.class);
-//        } catch (HttpClientErrorException.BadRequest e) {
-//            ProblemDetail problemDetail =  e.getResponseBodyAs(ProblemDetail.class);
-//            if(problemDetail != null) {
-//                throw new BadRequestException(String.valueOf(Objects.requireNonNull(problemDetail.getProperties()).get("errors")));
-//            }
-//            throw new ProblemDetailException("Problem detail is null");
-//        }
-//    }
-
-//    @Override
-//    public void update(int draftId, String title, String description, Integer termLanguageId, Integer descriptionLanguageId) {
-//        try {
-//            restClient
-//                    .patch()
-//                    .uri("/api/me/draft/{draftId}", draftId)
-//                    .contentType(MediaType.APPLICATION_JSON)
-//                    .body(new DraftPayload(title,  description,  termLanguageId,  descriptionLanguageId))
-//                    .retrieve()
-//                    .toBodilessEntity();
-//        } catch (HttpClientErrorException.BadRequest e) {
-//            ProblemDetail problemDetail =  e.getResponseBodyAs(ProblemDetail.class);
-//            if(problemDetail != null) {
-//                throw new BadRequestException(String.valueOf(Objects.requireNonNull(problemDetail.getProperties()).get("errors")));
-//            }
-//            throw new ProblemDetailException("Problem detail is null");
-//        }
-//    }
-
-//    @Override
-//    public void delete(int draftId) {
-//        try {
-//            restClient
-//                    .delete()
-//                    .uri("/api/me/draft/{draftId}", draftId)
-//                    .retrieve()
-//                    .toBodilessEntity();
-//        } catch (HttpClientErrorException.NotFound exception) {
-//            throw new NoSuchElementException(exception.getResponseBodyAsString());
-//        }
-//    }
 
     @Override
     public SetDto createFromDraft(

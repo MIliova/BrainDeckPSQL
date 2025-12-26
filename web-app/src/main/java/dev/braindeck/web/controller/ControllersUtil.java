@@ -1,7 +1,6 @@
 package dev.braindeck.web.controller;
 
 import dev.braindeck.web.controller.exception.LanguagesException;
-import dev.braindeck.web.domain.LanguageType;
 import dev.braindeck.web.entity.LanguagesDto;
 import dev.braindeck.web.entity.SetExtraDto;
 import lombok.experimental.UtilityClass;

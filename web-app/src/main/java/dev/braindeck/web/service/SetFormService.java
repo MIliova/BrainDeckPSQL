@@ -2,29 +2,23 @@ package dev.braindeck.web.service;
 
 import dev.braindeck.web.controller.payload.NewSetPayload;
 import dev.braindeck.web.controller.payload.NewTermPayload;
+import dev.braindeck.web.controller.payload.UpdateSetPayload;
+import dev.braindeck.web.controller.payload.UpdateTermPayload;
 import dev.braindeck.web.entity.SetDto;
 import lombok.RequiredArgsConstructor;
-import org.springframework.context.MessageSource;
 import org.springframework.stereotype.Service;
-import org.springframework.ui.Model;
-import org.springframework.validation.BindingResult;
 
 import java.util.List;
-import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
 public class SetFormService {
-    private final ModelPreparationService modelPreparationService;
     private final TermParser termParser;
-    private final MessageSource messageSource;
-    private final SetCreationService setCreationService;
+    private final SetService setService;
 
-    public TermsValidateResult validate(
-            String payloadTerms
-    ) {
+    public <T> TermsValidateResult<T> validate(String payloadTerms, Class<T> clazz) {
         try {
-            TermParser.ParseResult parseResult = termParser.parse(payloadTerms);
+            TermParser.ParseResult<T> parseResult = termParser.parse(payloadTerms, clazz);
             if (parseResult.hasErrors()) {
                 return TermsValidateResult.termErrors(
                         parseResult.getTerms(),
@@ -42,19 +36,37 @@ public class SetFormService {
             Integer draftId
     ) {
 
-        SetCreationResult creationResult =
-                setCreationService.createSet(payload, terms, draftId);
+        SetCreationResult result = setService.create(payload, terms, draftId);
 
-        if (creationResult.hasErrors()) {
-            return SetFormResult.error(Map.of(
-                    "errors", creationResult.getErrors(),
-                    "payload", payload,
-                    "terms", terms
-            ));
+        if (result.hasErrors()) {
+            return SetFormResult.error(
+                    result.getErrors(),
+                    payload,
+                    terms);
         }
 
-        SetDto set = creationResult.getSet();
+        SetDto set = result.getSet();
         return SetFormResult.redirect("/set/" + set.id());
+
+    }
+
+
+    public SetFormResult update(
+            Integer setId,
+            UpdateSetPayload payload,
+            List<UpdateTermPayload> terms
+    ) {
+
+        SetUpdateResult result = setService.update(setId, payload, terms);
+
+        if (result.hasErrors()) {
+            return SetFormResult.error(
+                    result.getErrors(),
+                    payload,
+                    terms);
+        }
+
+        return SetFormResult.redirect("/set/" + setId);
 
     }
 
