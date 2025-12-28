@@ -2,18 +2,18 @@ package dev.braindeck.web.service;
 
 import dev.braindeck.web.client.MyDraftRestClient;
 import dev.braindeck.web.client.MySetsRestClient;
-import dev.braindeck.web.controller.FieldErrorDto;
 import dev.braindeck.web.controller.exception.BadRequestException;
 import dev.braindeck.web.controller.payload.NewSetPayload;
 import dev.braindeck.web.controller.payload.NewTermPayload;
 import dev.braindeck.web.controller.payload.UpdateSetPayload;
 import dev.braindeck.web.controller.payload.UpdateTermPayload;
 import dev.braindeck.web.entity.SetDto;
-import dev.braindeck.web.utills.Util;
+import dev.braindeck.web.utills.ProblemDetailParser;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -47,8 +47,8 @@ public class SetService {
             );
             return SetCreationResult.success(set);
         } catch (BadRequestException e) {
-            List<FieldErrorDto> errors =
-                    Util.problemDetailErrorToDtoList(e.getJsonObject());
+//            List<FieldErrorDto> errors = Util.problemDetailErrorToDtoList(e.getJsonObject());
+            Map<String, String> errors = ProblemDetailParser.parse(e.getRestException());
             return SetCreationResult.error(errors);
         }
     }
@@ -68,7 +68,8 @@ public class SetService {
             );
             return SetUpdateResult.empty();
         } catch (BadRequestException e) {
-            List<FieldErrorDto> errors = Util.problemDetailErrorToDtoList(e.getJsonObject());
+//            List<FieldErrorDto> errors = Util.problemDetailErrorToDtoList(e.getJsonObject());
+            Map<String, String> errors = ProblemDetailParser.parse(e.getRestException());
             return SetUpdateResult.error(errors);
         }
     }

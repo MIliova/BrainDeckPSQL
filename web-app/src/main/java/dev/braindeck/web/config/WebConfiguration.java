@@ -16,7 +16,14 @@ public class WebConfiguration implements WebMvcConfigurer {
 
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
-        registry.addInterceptor(localeChangeInterseptor());
+        registry.addInterceptor(localeChangeInterceptor());
+    }
+
+    @Bean
+    public LocaleChangeInterceptor localeChangeInterceptor() {
+        var interceptor = new LocaleChangeInterceptor();
+        interceptor.setParamName("lang");
+        return interceptor;
     }
 
     @Bean
@@ -27,16 +34,8 @@ public class WebConfiguration implements WebMvcConfigurer {
     }
 
     @Bean
-    public LocaleChangeInterceptor localeChangeInterseptor() {
-        var interceptor = new LocaleChangeInterceptor();
-        interceptor.setParamName("lang");
-        return interceptor;
-    }
-
-    @Bean
     public MyLocale myLocale() {
         return new MyLocale();
     }
-
 
 }

@@ -23,20 +23,18 @@ import java.util.Map;
 public class DraftController {
 
     private final MyDraftRestClient myDraftRestClient;
-    private final LanguagesRestClient languagesRestClient;
     private final MessageSource messageSource;
     private final ModelPreparationService modelPreparationService;
-    private final TermParser termParser;
-    private final MySetsRestClient mySetsRestClient;
     private final SetFormService setFormService;
 
     @GetMapping
     public String get(Model model, Locale locale) {
-        DraftDto draft = myDraftRestClient.get().orElse(null);
+        model.addAttribute("currentView", "new-set");
+        DraftDto draft = myDraftRestClient.getOrCreate().orElse(null);
         if (draft == null) {
             return "redirect:/set";
         }
-        modelPreparationService.prepareModel(model, Map.of(
+        modelPreparationService.prepareModel(model, locale, Map.of(
                 "payload", new SetFormDto(
                         draft.id(),
                         draft.title(),
@@ -61,11 +59,11 @@ public class DraftController {
             Model model,
             Locale locale
     ) {
-
+        model.addAttribute("currentView", "new-set");
         TermsValidateResult<NewTermPayload> termsValidateResult  = setFormService.validate(payloadTerms, NewTermPayload.class);
         if (bindingResult.hasErrors() || termsValidateResult.hasErrors()) {
             model.addAllAttributes(termsValidateResult.getModelAttributes());
-            modelPreparationService.prepareModel(model, Map.of(
+            modelPreparationService.prepareModel(model, locale, Map.of(
                     "isDraft", true,
                     "actionUrl", "/draft/" + draftId,
                     "pageTitle", messageSource.getMessage("messages.set.create.new", null, locale)
@@ -78,7 +76,7 @@ public class DraftController {
             return "redirect:" + result.getRedirectUrl();
         }
         model.addAllAttributes(result.getModelAttributes());
-        modelPreparationService.prepareModel(model, Map.of(
+        modelPreparationService.prepareModel(model, locale, Map.of(
                 "isDraft", true,
                 "actionUrl", "/draft/" + draftId,
                 "pageTitle", messageSource.getMessage("messages.set.create.new", null, locale)

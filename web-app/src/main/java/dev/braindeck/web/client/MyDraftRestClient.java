@@ -9,7 +9,7 @@ import java.util.Optional;
 
 public interface MyDraftRestClient {
 
-    Optional<DraftDto> get();
+    Optional<DraftDto> getOrCreate();
 
     SetDto createFromDraft(int id, String title, String description, Integer termLanguageId, Integer descriptionLanguageId,
                            List<NewTermPayload> terms);

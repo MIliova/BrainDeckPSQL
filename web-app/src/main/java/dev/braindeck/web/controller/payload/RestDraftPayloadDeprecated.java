@@ -2,7 +2,7 @@ package dev.braindeck.web.controller.payload;
 
 import java.util.List;
 
-public record RestDraftPayload(
+public record RestDraftPayloadDeprecated(
 
         String title,
 

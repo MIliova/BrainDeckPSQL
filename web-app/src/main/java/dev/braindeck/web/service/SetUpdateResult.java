@@ -1,22 +1,20 @@
 package dev.braindeck.web.service;
 
-import dev.braindeck.web.controller.FieldErrorDto;
-
-import java.util.List;
+import java.util.Map;
 
 public class SetUpdateResult {
 
-    private final List<FieldErrorDto> errors;
+    private final Map<String, String> errors;
 
-    private SetUpdateResult(List<FieldErrorDto> errors) {
-        this.errors = errors == null ? List.of() : errors;
+    private SetUpdateResult(Map<String, String> errors) {
+        this.errors = errors;
     }
 
     public static SetUpdateResult empty() {
-        return new SetUpdateResult(List.of());
+        return new SetUpdateResult(null);
     }
 
-    public static SetUpdateResult error(List<FieldErrorDto> errors) {
+    public static SetUpdateResult error(Map<String, String> errors) {
         return new SetUpdateResult(errors);
     }
 
@@ -24,7 +22,7 @@ public class SetUpdateResult {
         return !errors.isEmpty();
     }
 
-    public List<FieldErrorDto> getErrors() {
+    public Map<String, String> getErrors() {
         return errors;
     }
 }

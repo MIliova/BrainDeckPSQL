@@ -8,7 +8,7 @@ import jakarta.validation.constraints.Size;
 
 import java.util.List;
 
-public record SetPayload(
+public record SetPayloadDeprecated(
 
         @NotBlank(message = "{error.set.title.not.blank}")
         @Size(min = 1, max = 256, message = "{error.set.title.size}")

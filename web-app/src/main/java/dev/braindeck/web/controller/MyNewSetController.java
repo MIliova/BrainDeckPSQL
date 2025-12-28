@@ -22,19 +22,16 @@ import java.util.Map;
 @RequestMapping("/set")
 public class MyNewSetController {
 
-    private final MySetsRestClient mySetsRestClient;
-    private final MyDraftRestClient myDraftRestClient;
-    private final TermParser termParser;
     private final MessageSource messageSource;
-
     private final ModelPreparationService modelPreparationService;
     private final SetFormService setFormService;
 
     @GetMapping
     public String create(Model model, Locale locale) {
-        NewSetFormDto payload = new NewSetFormDto();
+        model.addAttribute("currentView", "new-set");
 
-        modelPreparationService.prepareModel(model, Map.of(
+        NewSetFormDto payload = new NewSetFormDto();
+        modelPreparationService.prepareModel(model, locale, Map.of(
                 "actionUrl", "/set",
                 "payload", payload,
                 "pageTitle", messageSource.getMessage("messages.set.create.new", null, locale)
@@ -50,11 +47,12 @@ public class MyNewSetController {
             Model model,
             Locale locale
     ) {
+        model.addAttribute("currentView", "new-set");
 
         TermsValidateResult<NewTermPayload> termsValidateResult  = setFormService.validate(payloadTerms, NewTermPayload.class);
         if (bindingResult.hasErrors() || termsValidateResult.hasErrors()) {
             model.addAllAttributes(termsValidateResult.getModelAttributes());
-            modelPreparationService.prepareModel(model, Map.of(
+            modelPreparationService.prepareModel(model, locale, Map.of(
                     "actionUrl", "/set",
                     "pageTitle", messageSource.getMessage("messages.set.create.new", null, locale)
             ));
@@ -66,7 +64,7 @@ public class MyNewSetController {
             return "redirect:" + result.getRedirectUrl();
         }
         model.addAllAttributes(result.getModelAttributes());
-        modelPreparationService.prepareModel(model, Map.of(
+        modelPreparationService.prepareModel(model, locale, Map.of(
                 "actionUrl", "/set",
                 "pageTitle", messageSource.getMessage("messages.set.create.new", null, locale)
         ));

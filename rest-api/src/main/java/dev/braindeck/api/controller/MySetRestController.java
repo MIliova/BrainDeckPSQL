@@ -59,10 +59,10 @@ public class MySetRestController {
     }
 
     @GetMapping("/{setId:\\d+}")
-    public SetDto findMySet(
+    public ResponseEntity<SetDto> findMySet(
             @PathVariable @Positive int setId) {
         UserEntity user = userService.getCurrentUser();
-        return setService.findByIdForUser(setId, user.getId());
+        return ResponseEntity.ok(setService.findByIdForUser(setId, user.getId()));
     }
 
 }

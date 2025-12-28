@@ -24,7 +24,6 @@ import java.util.Map;
 public class MySetController {
 
     private final MySetsRestClient mySetsRestClient;
-    private final TermParser termParser;
     private final ModelPreparationService modelPreparationService;
     private final MessageSource messageSource;
     private final SetFormService setFormService;
@@ -33,10 +32,12 @@ public class MySetController {
     public String get(
             @PathVariable int setId,
             Model model, Locale locale) {
+        model.addAttribute("currentView", "edit-set");
+
         SetDto set = mySetsRestClient.findMySetById(setId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
         System.out.println(set);
-        modelPreparationService.prepareModel(model,  Map.of(
+        modelPreparationService.prepareModel(model,  locale, Map.of(
                 "payload", new SetFormDto(
                         set.id(),
                         set.title(),
@@ -60,13 +61,12 @@ public class MySetController {
             BindingResult bindingResult,
             Model model, Locale locale) {
 
-        System.out.println(payload);
-        System.out.println(payloadTerms);
+        model.addAttribute("currentView", "edit-set");
 
         TermsValidateResult<UpdateTermPayload> termsValidateResult  = setFormService.validate(payloadTerms, UpdateTermPayload.class);
         if (bindingResult.hasErrors() || termsValidateResult.hasErrors()) {
             model.addAllAttributes(termsValidateResult.getModelAttributes());
-            modelPreparationService.prepareModel(model, Map.of(
+            modelPreparationService.prepareModel(model, locale, Map.of(
                     "actionUrl", "/set/" + setId + "/edit",
                     "pageTitle", messageSource.getMessage("messages.set.edit", null, locale)
             ));
@@ -78,7 +78,7 @@ public class MySetController {
             return "redirect:" + result.getRedirectUrl();
         }
         model.addAllAttributes(result.getModelAttributes());
-        modelPreparationService.prepareModel(model, Map.of(
+        modelPreparationService.prepareModel(model, locale, Map.of(
                 "actionUrl", "/set/" + setId + "/edit",
                 "pageTitle", messageSource.getMessage("messages.set.edit", null, locale)
         ));
@@ -87,6 +87,8 @@ public class MySetController {
 
     @PostMapping("/delete")
     public String delete(@PathVariable int setId, Model model) {
+        model.addAttribute("currentView", "edit-set");
+
         mySetsRestClient.delete(setId);
         UserDto userDto = (UserDto) model.getAttribute("user");
         if (userDto == null) {

@@ -113,10 +113,15 @@
                 <div id="field-error" class="field-error"
                  th:attr="style=${errors} ? 'display:block;' : ''"
                  th:data-message="#{messages.set.create.j.yn}">
-                    <div th:if="${errors}" >
-                        <div style="display: block;"
-                             th:each="error:${errors}"
-                             th:text="${error.message}"></div>&nbsp;
+<!--                    <div th:if="${errors}" >-->
+<!--                        <div style="display: block;"-->
+<!--                             th:each="error:${errors}"-->
+<!--                             th:text="${error.message}"></div>&nbsp;-->
+<!--                    </div>-->
+                    <div th:if="${errors}">
+                        <div th:each="entry : ${errors}">
+                            <span th:text="${entry.key} + ': ' + ${entry.value}"></span>
+                        </div>
                     </div>
                 </div>
 

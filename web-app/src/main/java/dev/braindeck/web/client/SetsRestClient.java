@@ -7,7 +7,7 @@ import java.util.Optional;
 
 public interface SetsRestClient {
 
-    Optional<SetDto> findSetById(int setId);
+    SetDto findSetById(int setId);
 
     List<SetWithCountDto> findAllSets(int userId);
 

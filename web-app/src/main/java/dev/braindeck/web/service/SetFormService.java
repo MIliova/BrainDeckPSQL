@@ -35,7 +35,6 @@ public class SetFormService {
             List<NewTermPayload> terms,
             Integer draftId
     ) {
-
         SetCreationResult result = setService.create(payload, terms, draftId);
 
         if (result.hasErrors()) {
@@ -47,7 +46,6 @@ public class SetFormService {
 
         SetDto set = result.getSet();
         return SetFormResult.redirect("/set/" + set.id());
-
     }
 
 
@@ -56,7 +54,6 @@ public class SetFormService {
             UpdateSetPayload payload,
             List<UpdateTermPayload> terms
     ) {
-
         SetUpdateResult result = setService.update(setId, payload, terms);
 
         if (result.hasErrors()) {
@@ -67,7 +64,6 @@ public class SetFormService {
         }
 
         return SetFormResult.redirect("/set/" + setId);
-
     }
 
 }

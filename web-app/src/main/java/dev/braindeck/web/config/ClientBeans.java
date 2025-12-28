@@ -11,14 +11,6 @@ import org.springframework.web.filter.CommonsRequestLoggingFilter;
 public class ClientBeans {
 
     @Bean
-    public UserRestClientImpl userRestClient(@Value("${braindeck.api.uri}") String apiBaseUrl) {
-        return new UserRestClientImpl(RestClient
-                .builder()
-                .baseUrl(apiBaseUrl)
-                .build());
-    }
-
-    @Bean
     public LanguagesRestClientImpl languagesRestClient(@Value("${braindeck.api.uri}") String apiBaseUrl) {
         return new LanguagesRestClientImpl(RestClient
                 .builder()
@@ -29,14 +21,6 @@ public class ClientBeans {
     @Bean
     public MyDraftRestClientImpl myDraftRestClient(@Value("${braindeck.api.uri}") String apiBaseUrl) {
         return new MyDraftRestClientImpl(RestClient
-                .builder()
-                .baseUrl(apiBaseUrl)
-                .build());
-    }
-
-    @Bean
-    public MyDTermsRestClientImpl myDTermsRestClientImpl(@Value("${braindeck.api.uri}") String apiBaseUrl) {
-        return new MyDTermsRestClientImpl(RestClient
                 .builder()
                 .baseUrl(apiBaseUrl)
                 .build());
@@ -59,12 +43,20 @@ public class ClientBeans {
     }
 
     @Bean
-    public MyTermsRestClientImpl myTermsRestClientImpl(@Value("${braindeck.api.uri}") String apiBaseUrl) {
-        return new MyTermsRestClientImpl(RestClient
+    public UserRestClientImpl userRestClient(@Value("${braindeck.api.uri}") String apiBaseUrl) {
+        return new UserRestClientImpl(RestClient
                 .builder()
                 .baseUrl(apiBaseUrl)
                 .build());
     }
+
+//    @Bean
+//    public MyTermsRestClientImpl myTermsRestClientImpl(@Value("${braindeck.api.uri}") String apiBaseUrl) {
+//        return new MyTermsRestClientImpl(RestClient
+//                .builder()
+//                .baseUrl(apiBaseUrl)
+//                .build());
+//    }
 
     @Bean
     public CommonsRequestLoggingFilter logFilter() {

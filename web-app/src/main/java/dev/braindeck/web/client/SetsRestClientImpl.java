@@ -1,18 +1,14 @@
 package dev.braindeck.web.client;
 
-import dev.braindeck.web.controller.exception.ProblemDetailException;
 import dev.braindeck.web.entity.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.ParameterizedTypeReference;
-import org.springframework.http.ProblemDetail;
-import org.springframework.web.client.HttpClientErrorException;
+
 import org.springframework.web.client.RestClient;
 
 import java.util.List;
-import java.util.NoSuchElementException;
-import java.util.Objects;
-import java.util.Optional;
+
 
 @Slf4j
 @RequiredArgsConstructor
@@ -21,19 +17,11 @@ public class SetsRestClientImpl implements SetsRestClient {
     private final RestClient restClient;
 
     @Override
-    public Optional<SetDto> findSetById(int setId) {
-        try {
-            return Optional.ofNullable(restClient.get()
-                    .uri("/api/sets/{setId}", setId)
-                    .retrieve()
-                    .body(SetDto.class));
-        } catch (HttpClientErrorException.NotFound exception) {
-            ProblemDetail problemDetail =  exception.getResponseBodyAs(ProblemDetail.class);
-            if(problemDetail != null) {
-                throw new NoSuchElementException(String.valueOf(Objects.requireNonNull(problemDetail.getProperties()).get("errors")));
-            }
-            throw new ProblemDetailException("Problem detail is null");
-        }
+    public SetDto findSetById(int setId) {
+        return restClient.get()
+                .uri("/api/sets/{setId}", setId)
+                .retrieve()
+                .body(SetDto.class);
     }
 
     @Override
@@ -42,8 +30,7 @@ public class SetsRestClientImpl implements SetsRestClient {
                 .get()
                 .uri("/api/users/{userId}/sets", userId)
                 .retrieve()
-                .body(new ParameterizedTypeReference<List<SetWithCountDto>>() {
-                });
+                .body(new ParameterizedTypeReference<List<SetWithCountDto>>() {});
     }
 
 }

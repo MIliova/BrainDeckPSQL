@@ -1,6 +1,6 @@
 package dev.braindeck.web.entity;
 
-public record NewDraftDto(
+public record NewDraftDtoDeprecated(
         Integer id,
         String title,
         String description,

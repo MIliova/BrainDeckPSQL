@@ -1,16 +1,15 @@
 package dev.braindeck.web.service;
 
-import dev.braindeck.web.controller.FieldErrorDto;
 import dev.braindeck.web.entity.SetDto;
 
-import java.util.List;
+import java.util.Map;
 
 public class SetCreationResult {
 
     private final SetDto set;
-    private final List<FieldErrorDto> errors;
+    private final Map<String, String> errors;
 
-    private SetCreationResult(SetDto set, List<FieldErrorDto> errors) {
+    private SetCreationResult(SetDto set, Map<String, String> errors) {
         this.set = set;
         this.errors = errors;
     }
@@ -19,7 +18,7 @@ public class SetCreationResult {
         return new SetCreationResult(set, null);
     }
 
-    public static SetCreationResult error(List<FieldErrorDto> errors) {
+    public static SetCreationResult error(Map<String, String> errors) {
         return new SetCreationResult(null, errors);
     }
 
@@ -31,7 +30,7 @@ public class SetCreationResult {
         return set;
     }
 
-    public List<FieldErrorDto> getErrors() {
+    public Map<String, String> getErrors() {
         return errors;
     }
 }

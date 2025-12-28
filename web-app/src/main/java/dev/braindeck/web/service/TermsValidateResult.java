@@ -1,7 +1,5 @@
 package dev.braindeck.web.service;
 
-import dev.braindeck.web.controller.payload.NewTermPayload;
-
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;

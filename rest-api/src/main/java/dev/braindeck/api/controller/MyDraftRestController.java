@@ -3,14 +3,12 @@ package dev.braindeck.api.controller;
 import dev.braindeck.api.controller.payload.DraftPayload;
 import dev.braindeck.api.controller.payload.NewSetPayload;
 import dev.braindeck.api.dto.DraftDto;
-import dev.braindeck.api.dto.NewDraftDto;
 import dev.braindeck.api.dto.SetDto;
 import dev.braindeck.api.entity.UserEntity;
 import dev.braindeck.api.service.*;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.util.UriComponentsBuilder;
@@ -33,13 +31,6 @@ public class MyDraftRestController {
         return ResponseEntity.ok(draft);
     }
 
-//    @PostMapping
-//    public ResponseEntity<NewDraftDto> create(@Valid @RequestBody DraftPayload payload) {
-//        UserEntity user = userService.getCurrentUser();
-//        NewDraftDto draft = draftService.create(payload, user);
-//        return ResponseEntity.status(HttpStatus.CREATED).body(draft);
-//    }
-
     @PatchMapping("/{draftId:\\d+}")
     public ResponseEntity<Void> update(@PathVariable @Positive (message = "errors.draft.id") int draftId,
                                        @Valid @RequestBody DraftPayload payload) {
@@ -51,12 +42,16 @@ public class MyDraftRestController {
         return ResponseEntity.noContent().build();
     }
 
-    @DeleteMapping("/{draftId:\\d+}")
-    public ResponseEntity<DraftDto> delete(
-            @PathVariable @Positive (message = "errors.draft.id") int draftId) {
+    @PostMapping("/{draftId:\\d+}")
+    public ResponseEntity<DraftDto> deleteAndCreate(
+            @PathVariable @Positive (message = "errors.draft.id") int draftId,
+            UriComponentsBuilder uriBuilder) {
         UserEntity user = userService.getCurrentUser();
         DraftDto draft = draftService.deleteAndCreate(draftId, user);
-        return ResponseEntity.ok(draft);
+        return ResponseEntity.created(
+                uriBuilder.replacePath("/api/drafts/{draftId}")
+                        .build(Map.of("draftId", draft.id())))
+                .body(draft);
     }
 
     @PostMapping("/{draftId:\\d+}/convert")

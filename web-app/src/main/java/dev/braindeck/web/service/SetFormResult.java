@@ -1,6 +1,5 @@
 package dev.braindeck.web.service;
 
-import dev.braindeck.web.controller.FieldErrorDto;
 import dev.braindeck.web.controller.payload.NewSetPayload;
 import dev.braindeck.web.controller.payload.NewTermPayload;
 import dev.braindeck.web.controller.payload.UpdateSetPayload;
@@ -24,7 +23,7 @@ public class SetFormResult {
         return new SetFormResult(url, null);
     }
 
-    public static SetFormResult error(List<FieldErrorDto> errors,
+    public static SetFormResult error(Map<String, String> errors,
                                       NewSetPayload payload,
                                       List<NewTermPayload> terms) {
         return new SetFormResult(null, Map.of(
@@ -34,7 +33,7 @@ public class SetFormResult {
         ));
     }
 
-    public static SetFormResult error(List<FieldErrorDto> errors,
+    public static SetFormResult error(Map<String, String> errors,
                                       UpdateSetPayload payload,
                                       List<UpdateTermPayload> terms) {
         return new SetFormResult(null, Map.of(

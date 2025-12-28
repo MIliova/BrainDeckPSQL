@@ -1,7 +1,7 @@
 package dev.braindeck.web.entity;
 
 
-public record NewDTermDto(
+public record NewDTermDtoDeprecated(
         Integer draftId,
         Integer id,
         String term,

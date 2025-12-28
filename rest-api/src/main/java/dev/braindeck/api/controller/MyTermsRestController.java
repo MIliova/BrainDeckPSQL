@@ -11,8 +11,10 @@ import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.util.UriComponentsBuilder;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequiredArgsConstructor
@@ -23,19 +25,25 @@ public class MyTermsRestController {
     private final UserService userService;
 
     @PostMapping
-    public TermDto create(
+    public ResponseEntity<TermDto> create(
             @PathVariable @Positive(message = "errors.set.id") int setId,
-            @RequestBody @Valid DTermPayload term) {
+            @RequestBody @Valid DTermPayload term,
+            UriComponentsBuilder uriBuilder) {
         UserEntity user = userService.getCurrentUser();
-        return termService.create(user.getId(), setId, term);
+        return ResponseEntity.created(uriBuilder
+                        .replacePath("/api/me/sets/{setId}").build(Map.of("setId", setId)))
+                .body(termService.create(user.getId(), setId, term));
     }
 
     @PostMapping("/batch")
-    public List<TermDto> createBatch(
+    public ResponseEntity<List<TermDto>> createBatch(
             @PathVariable @Positive(message = "errors.set.id") int setId,
-            @RequestBody @Valid List<@Valid DTermPayload> terms) {
+            @RequestBody @Valid List<@Valid DTermPayload> terms,
+            UriComponentsBuilder uriBuilder) {
         UserEntity user = userService.getCurrentUser();
-        return termService.create(user.getId(), setId, terms);
+        return ResponseEntity.created(uriBuilder
+                        .replacePath("/api/me/sets/{setId}").build(Map.of("setId", setId)))
+                .body(termService.create(user.getId(), setId, terms));
     }
 
     @PutMapping("/{termId:\\d+}")

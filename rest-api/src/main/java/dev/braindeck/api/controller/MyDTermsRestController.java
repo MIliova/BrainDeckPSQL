@@ -9,10 +9,11 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.util.UriComponentsBuilder;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequiredArgsConstructor
@@ -23,19 +24,27 @@ public class MyDTermsRestController {
     private final UserService userService;
 
     @PostMapping
-    public NewDTermDto create(
+    public ResponseEntity<NewDTermDto> create(
             @PathVariable int draftId,
-            @RequestBody @Valid DTermPayload term) {
+            @RequestBody @Valid DTermPayload term,
+            UriComponentsBuilder uriBuilder) {
         UserEntity user = userService.getCurrentUser();
-        return draftTermService.create(user, draftId, term);
+        return ResponseEntity.created(
+                        uriBuilder.replacePath("/api/drafts/{draftId}")
+                                .build(Map.of("draftId", draftId)))
+                .body(draftTermService.create(user, draftId, term));
     }
 
     @PostMapping("/batch")
-    public List<NewDTermDto> createBatch(
+    public ResponseEntity<List<NewDTermDto>> createBatch(
             @PathVariable int draftId,
-            @RequestBody @Valid List<@Valid DTermPayload> terms) {
+            @RequestBody @Valid List<@Valid DTermPayload> terms,
+            UriComponentsBuilder uriBuilder) {
         UserEntity user = userService.getCurrentUser();
-        return draftTermService.create(user, draftId, terms);
+        return ResponseEntity.created(
+                        uriBuilder.replacePath("/api/drafts/{draftId}")
+                                .build(Map.of("draftId", draftId)))
+                .body(draftTermService.create(user, draftId, terms));
     }
 
     @PutMapping("/{termId:\\d+}")

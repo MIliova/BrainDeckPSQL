@@ -2,7 +2,7 @@ package dev.braindeck.web.controller.payload;
 
 import jakarta.validation.constraints.Size;
 
-public record DraftPayload(
+public record DraftPayloadDeprecated(
 
         @Size(max = 256, message = "{error.set.title.size}")
         String title,

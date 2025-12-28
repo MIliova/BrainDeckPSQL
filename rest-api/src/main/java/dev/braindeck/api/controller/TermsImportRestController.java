@@ -5,6 +5,7 @@ import dev.braindeck.api.dto.ImportTermDto;
 import dev.braindeck.api.service.DTermService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -17,9 +18,9 @@ public class TermsImportRestController {
     private final DTermService draftTermService;
 
     @PostMapping("/preview")
-    public List<ImportTermDto> prepare(
+    public ResponseEntity<List<ImportTermDto>> prepare(
             @RequestBody @Valid TermsImportPayload payload) {
-        return draftTermService.prepareImport(
-                payload.text(), payload.colSeparator(), payload.rowSeparator(), payload.colCustom(), payload.rowCustom());
+        return ResponseEntity.ok(draftTermService.prepareImport(
+                payload.text(), payload.colSeparator(), payload.rowSeparator(), payload.colCustom(), payload.rowCustom()));
     }
 }
