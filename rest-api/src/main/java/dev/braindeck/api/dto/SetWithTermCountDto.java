@@ -6,8 +6,6 @@ public record SetWithTermCountDto(
         Integer id,
         String title,
         String description,
-        Integer termLanguageId,
-        Integer descriptionLanguageId,
         Instant updatedAt,
         Long termCount
 ) {

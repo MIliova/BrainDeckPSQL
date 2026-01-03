@@ -19,8 +19,8 @@ public interface DTermService {
 
     void delete(int termId, int draftId, int currentUserId);
 
-    void deleteByDraftId(int draftId, int currentUserId);
-
-    List<TermDto> findDtoByDraftId(int draftId);
+//    void deleteByDraftId(int draftId, int currentUserId);
+//
+//    List<TermDto> findDtoByDraftId(int draftId);
 
 }

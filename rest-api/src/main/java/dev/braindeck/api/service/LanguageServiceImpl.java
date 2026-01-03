@@ -1,7 +1,7 @@
 package dev.braindeck.api.service;
 
 import dev.braindeck.api.domain.LanguageType;
-import dev.braindeck.api.dto.LanguagesDto;
+import dev.braindeck.api.dto.LanguagesDtoDeprecated;
 import dev.braindeck.api.entity.LanguageEntity;
 import dev.braindeck.api.repository.LanguagesRepository;
 import lombok.RequiredArgsConstructor;
@@ -18,7 +18,7 @@ public class LanguageServiceImpl implements LanguageService {
     private final LanguagesRepository languagesRepository;
 
     @Override
-    public LanguagesDto findAllByType() {
+    public LanguagesDtoDeprecated findAllByType() {
         Map<LanguageType, Map<Integer, String>> result = new EnumMap<>(LanguageType.class);
         result.put(LanguageType.MY, new HashMap<>());
         result.put(LanguageType.TOP, new HashMap<>());
@@ -29,7 +29,7 @@ public class LanguageServiceImpl implements LanguageService {
             result.get(type).put(language.getId(), language.getName());
         }
 
-        return new LanguagesDto(
+        return new LanguagesDtoDeprecated(
                 result.get(LanguageType.TOP),
                 result.get(LanguageType.REST),
                 result.get(LanguageType.MY)

@@ -39,7 +39,7 @@ public class MySetRestController {
 
     @PatchMapping("/{setId:\\d+}")
     public ResponseEntity<Void> update(
-            @PathVariable @Positive int setId,
+            @PathVariable("setId") @Positive int setId,
             @Valid @RequestBody UpdateSetPayload payload) {
         UserEntity user = userService.getCurrentUser();
         setService.update(
@@ -52,7 +52,7 @@ public class MySetRestController {
 
     @DeleteMapping("/{setId:\\d+}")
     public ResponseEntity<Void> delete(
-            @PathVariable @Positive int setId) {
+            @PathVariable("setId") @Positive int setId) {
         UserEntity user = userService.getCurrentUser();
         setService.delete(setId, user.getId());
         return ResponseEntity.noContent().build();
@@ -60,7 +60,7 @@ public class MySetRestController {
 
     @GetMapping("/{setId:\\d+}")
     public ResponseEntity<SetDto> findMySet(
-            @PathVariable @Positive int setId) {
+            @PathVariable("setId") @Positive int setId) {
         UserEntity user = userService.getCurrentUser();
         return ResponseEntity.ok(setService.findByIdForUser(setId, user.getId()));
     }

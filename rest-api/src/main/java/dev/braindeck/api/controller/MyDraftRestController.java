@@ -32,7 +32,7 @@ public class MyDraftRestController {
     }
 
     @PatchMapping("/{draftId:\\d+}")
-    public ResponseEntity<Void> update(@PathVariable @Positive (message = "errors.draft.id") int draftId,
+    public ResponseEntity<Void> update(@PathVariable("draftId") @Positive (message = "errors.draft.id") int draftId,
                                        @Valid @RequestBody DraftPayload payload) {
         UserEntity user = userService.getCurrentUser();
         draftService.update(draftId,
@@ -44,7 +44,7 @@ public class MyDraftRestController {
 
     @PostMapping("/{draftId:\\d+}")
     public ResponseEntity<DraftDto> deleteAndCreate(
-            @PathVariable @Positive (message = "errors.draft.id") int draftId,
+            @PathVariable("draftId") @Positive (message = "errors.draft.id") int draftId,
             UriComponentsBuilder uriBuilder) {
         UserEntity user = userService.getCurrentUser();
         DraftDto draft = draftService.deleteAndCreate(draftId, user);
@@ -56,7 +56,7 @@ public class MyDraftRestController {
 
     @PostMapping("/{draftId:\\d+}/convert")
     public ResponseEntity<SetDto>  createFromDraft(
-            @PathVariable @Positive (message = "errors.draft.id") int draftId,
+            @PathVariable("draftId") @Positive (message = "errors.draft.id") int draftId,
             @Valid @RequestBody NewSetPayload payload,
             UriComponentsBuilder uriBuilder) {
         UserEntity user = userService.getCurrentUser();

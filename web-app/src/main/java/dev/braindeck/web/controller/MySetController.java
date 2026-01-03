@@ -30,7 +30,7 @@ public class MySetController {
 
     @GetMapping("/edit")
     public String get(
-            @PathVariable int setId,
+            @PathVariable("setId") int setId,
             Model model, Locale locale) {
         model.addAttribute("currentView", "edit-set");
 
@@ -55,7 +55,7 @@ public class MySetController {
 
     @PostMapping("/edit")
     public String update(
-            @PathVariable int setId,
+            @PathVariable("setId") int setId,
             @RequestParam("terms") String payloadTerms,
             @Valid @ModelAttribute UpdateSetPayload payload,
             BindingResult bindingResult,
@@ -86,7 +86,7 @@ public class MySetController {
     }
 
     @PostMapping("/delete")
-    public String delete(@PathVariable int setId, Model model) {
+    public String delete(@PathVariable("setId") int setId, Model model) {
         model.addAttribute("currentView", "edit-set");
 
         mySetsRestClient.delete(setId);

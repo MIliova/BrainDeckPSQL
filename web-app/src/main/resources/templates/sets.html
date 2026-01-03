@@ -16,7 +16,15 @@
                 <div id="field-error" class="field-error"> </div>
                 <div class="blue-row blue-row-margin" th:each="set: ${sets}">
                     <div class="blue-row-sets">
-                        <div class="pre-term-title-sets"><span th:text="|${set.termCount} #{messages.set.terms}|">103 Terms</span>&nbsp;&nbsp;|&nbsp;&nbsp; <img class="circle_image" src="/images/avatar.jpg" th:alt="${set.user().name()}" /><span th:text="${user.name()}">MArina_iliova</span></div>
+                        <div class="pre-term-title-sets">
+                            <span th:text="|${set.termCount} #{messages.set.terms}|"></span>
+                            &nbsp;&nbsp;|&nbsp;&nbsp;
+                            <img class="circle_image" src="/images/avatar.jpg" th:alt="${set.userName}" />
+                            <a th:href="@{/users/{userId}/sets}" th:text="${set.userName}">Unknown User</a>
+                            &nbsp;&nbsp;|&nbsp;&nbsp;
+                            <span th:text="|${set.updatedAt}|"></span>
+
+                        </div>
                         <div><h2><a class="term-title-sets" th:href="@{/set/{setId}(setId=${set.id})}" th:text="${set.title}"></a></h2></div>
                         <div class="term-description-sets" th:text="${set.description}"></div>
                     </div>

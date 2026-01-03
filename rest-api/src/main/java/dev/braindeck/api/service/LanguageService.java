@@ -1,11 +1,11 @@
 package dev.braindeck.api.service;
 
-import dev.braindeck.api.dto.LanguagesDto;
+import dev.braindeck.api.dto.LanguagesDtoDeprecated;
 import org.springframework.stereotype.Service;
 
 @Service
 public interface LanguageService {
 
-    LanguagesDto findAllByType();
+    LanguagesDtoDeprecated findAllByType();
 
 }

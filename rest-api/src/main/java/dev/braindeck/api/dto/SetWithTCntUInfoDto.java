@@ -1,9 +1,8 @@
-package dev.braindeck.web.entity;
-
+package dev.braindeck.api.dto;
 
 import java.time.Instant;
 
-public record SetWithCountDto(
+public record SetWithTCntUInfoDto(
         Integer id,
         String title,
         String description,
@@ -13,6 +12,4 @@ public record SetWithCountDto(
         String userName
 ) {
 }
-
-
 

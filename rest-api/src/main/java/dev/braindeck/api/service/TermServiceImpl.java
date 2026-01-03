@@ -5,6 +5,7 @@ import dev.braindeck.api.controller.payload.DTermPayload.DTermPayload;
 import dev.braindeck.api.controller.payload.UpdateTermPayload;
 import dev.braindeck.api.entity.*;
 import dev.braindeck.api.dto.TermDto;
+import dev.braindeck.api.repository.SetRepository;
 import dev.braindeck.api.repository.TermRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -18,7 +19,7 @@ import java.util.NoSuchElementException;
 public class TermServiceImpl implements TermService {
 
     private final TermRepository termRepository;
-    private final SetService setService;
+    private final SetRepository setRepository;
 
     @Override
     public TermDto create(
@@ -27,7 +28,8 @@ public class TermServiceImpl implements TermService {
             DTermPayload payload
     ) {
 
-        SetEntity set = setService.findEntityById(setId, userId);
+        SetEntity set = setRepository.findBySetIdAndUserId(setId, userId)
+                .orElseThrow(() -> new ForbiddenException("errors.set.not.belong.user"));
 
         TermEntity entity = new TermEntity(
                 payload.term(),
@@ -43,7 +45,8 @@ public class TermServiceImpl implements TermService {
             int setId,
             List<DTermPayload> payloads) {
 
-        SetEntity set = setService.findEntityById(setId, userId);
+        SetEntity set = setRepository.findBySetIdAndUserId(setId, userId)
+                .orElseThrow(() -> new ForbiddenException("errors.set.not.belong.user"));
 
         return Mapper.termsToDto(termRepository.saveAll(
                 payloads.stream()
@@ -92,9 +95,6 @@ public class TermServiceImpl implements TermService {
     public List<TermDto> findAllBySet(SetEntity setEntity) {
         return Mapper.termsToDto(termRepository.findAllBySet(setEntity));
     }
-
-
-
 
 //    @Override
 //    public void deleteAllBySetId(int setId) {

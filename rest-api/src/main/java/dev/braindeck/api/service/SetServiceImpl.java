@@ -4,7 +4,7 @@ import dev.braindeck.api.controller.exception.ForbiddenException;
 import dev.braindeck.api.controller.payload.NewTermPayload;
 import dev.braindeck.api.controller.payload.UpdateTermPayload;
 import dev.braindeck.api.dto.SetDto;
-import dev.braindeck.api.dto.SetWithTermCountDto;
+import dev.braindeck.api.dto.SetWithTCntUInfoDto;
 import dev.braindeck.api.dto.TermDto;
 import dev.braindeck.api.entity.*;
 import dev.braindeck.api.repository.SetRepository;
@@ -12,6 +12,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -22,7 +24,8 @@ public class SetServiceImpl implements SetService {
     private final SetRepository setRepository;
     private final TermService termService;
     private final DraftService draftService;
-    private final DTermService dTermService;
+    private final UserService userService;
+
 
     @Transactional
     @Override
@@ -47,6 +50,7 @@ public class SetServiceImpl implements SetService {
         draftService.delete(draftEntity);
         return Mapper.setToDto(savedSet);
     }
+
     @Transactional
     @Override
     public SetDto create(
@@ -140,8 +144,27 @@ public class SetServiceImpl implements SetService {
 
     @Transactional
     @Override
-    public List<SetWithTermCountDto> findAllByUserId(int userId) {
-        return setRepository.findAllByUser(userId);
+    public List<SetWithTCntUInfoDto> findAllByUserId(int userId) {
+
+        UserEntity user = userService.findById(userId);
+        return setRepository.findAllByUser(userId)
+                .stream()
+                .map(set -> {
+                    String updatedAtLocal = set.updatedAt()
+                            .atZone(ZoneId.systemDefault())
+                            .format(DateTimeFormatter.ofPattern("dd.MM.yyyy"));
+
+                    return new SetWithTCntUInfoDto(
+                            set.id(),
+                            set.title(),
+                            set.description(),
+                            updatedAtLocal,
+                            set.termCount(),
+                            userId,
+                            user.getName()
+                    );
+                })
+                .toList();
     }
 
     @Transactional(readOnly = true)

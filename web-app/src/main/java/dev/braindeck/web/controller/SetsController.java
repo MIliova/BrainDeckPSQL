@@ -25,9 +25,11 @@ public class SetsController {
     public String find(
             @PathVariable("userId") int userId,
             Model model, Locale locale) {
-        model.addAttribute("currentView", "setы");
+        model.addAttribute("currentView", "sets");
 
         List<SetWithCountDto> sets = setsRestClient.findAllSets(userId);
+        System.out.println(sets);
+
         modelPreparationService.prepareModel(model, locale, Map.of(
                 "sets", sets,
                 "pageTitle", messageSource.getMessage("messages.sets", null, locale)

@@ -26,7 +26,7 @@ public class MyTermsRestController {
 
     @PostMapping
     public ResponseEntity<TermDto> create(
-            @PathVariable @Positive(message = "errors.set.id") int setId,
+            @PathVariable("setId") @Positive(message = "errors.set.id") int setId,
             @RequestBody @Valid DTermPayload term,
             UriComponentsBuilder uriBuilder) {
         UserEntity user = userService.getCurrentUser();
@@ -37,7 +37,7 @@ public class MyTermsRestController {
 
     @PostMapping("/batch")
     public ResponseEntity<List<TermDto>> createBatch(
-            @PathVariable @Positive(message = "errors.set.id") int setId,
+            @PathVariable("setId") @Positive(message = "errors.set.id") int setId,
             @RequestBody @Valid List<@Valid DTermPayload> terms,
             UriComponentsBuilder uriBuilder) {
         UserEntity user = userService.getCurrentUser();
@@ -48,8 +48,8 @@ public class MyTermsRestController {
 
     @PutMapping("/{termId:\\d+}")
     public ResponseEntity<Void> update(
-            @PathVariable @Positive int setId,
-            @PathVariable @Positive int termId,
+            @PathVariable("setId") @Positive int setId,
+            @PathVariable("termId") @Positive int termId,
             @RequestBody @Valid UpdateTermPayload payload) {
         UserEntity user = userService.getCurrentUser();
         termService.update(termId, setId, user.getId(), payload);
@@ -58,8 +58,8 @@ public class MyTermsRestController {
 
     @DeleteMapping("/{termId:\\d+}")
     public ResponseEntity<Void> delete(
-            @PathVariable @Positive int setId,
-            @PathVariable @Positive int termId) {
+            @PathVariable("setId") @Positive int setId,
+            @PathVariable("termId") @Positive int termId) {
         UserEntity user = userService.getCurrentUser();
         termService.delete(termId, setId, user.getId());
         return ResponseEntity.noContent().build();

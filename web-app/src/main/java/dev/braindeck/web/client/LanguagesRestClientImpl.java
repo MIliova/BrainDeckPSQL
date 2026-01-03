@@ -9,6 +9,10 @@ public class LanguagesRestClientImpl implements LanguagesRestClient {
 
     private final RestClient restClient;
 
+//    public LanguagesRestClientImpl() {
+//        this.restClient = RestClient.create("http://localhost:8080");
+//    }
+
     @Override
     public LanguagesDto findAllByTypes(){
         return restClient

@@ -76,26 +76,26 @@ public class DTermServiceImpl implements DTermService {
         draftTermRepository.delete(term);
     }
 
-    @Override
-    @Transactional
-    public void deleteByDraftId(int draftId, int currentUserId) {
-        List<DTermEntity> terms = draftTermRepository.findByDraftId(draftId)
-                .orElseThrow(() -> new NoSuchElementException("errors.term.not.found"));
-
-        checkOwnership(terms.get(0), draftId, currentUserId);
-
-        draftTermRepository.deleteByDraftId(draftId);
-    }
-
-    @Override
-    public List<TermDto> findDtoByDraftId(int draftId) {
-        return Mapper.draftTermsToDto(this.draftTermRepository.findAllByDraftId(draftId));
-    }
-
-    @Override
-    public List<DTermEntity> findByDraftId(int draftId) {
-        return this.draftTermRepository.findAllByDraftId(draftId);
-    }
+//    @Override
+//    @Transactional
+//    public void deleteByDraftId(int draftId, int currentUserId) {
+//        List<DTermEntity> terms = draftTermRepository.findByDraftId(draftId)
+//                .orElseThrow(() -> new NoSuchElementException("errors.term.not.found"));
+//
+//        checkOwnership(terms.get(0), draftId, currentUserId);
+//
+//        draftTermRepository.deleteByDraftId(draftId);
+//    }
+//
+//    @Override
+//    public List<TermDto> findDtoByDraftId(int draftId) {
+//        return Mapper.draftTermsToDto(this.draftTermRepository.findAllByDraftId(draftId));
+//    }
+//
+//    @Override
+//    public List<DTermEntity> findByDraftId(int draftId) {
+//        return this.draftTermRepository.findAllByDraftId(draftId);
+//    }
 
     private void checkOwnership(DTermEntity term, int draftId, int userId) {
         if (!term.getDraft().getId().equals(draftId)) {

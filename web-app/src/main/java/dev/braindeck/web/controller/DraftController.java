@@ -52,7 +52,7 @@ public class DraftController {
 
     @PostMapping("/{draftId:\\d+}")
     public String create(
-            @PathVariable @Positive(message = "errors.draft.id") int draftId,
+            @PathVariable("draftId") @Positive(message = "errors.draft.id") int draftId,
             @RequestParam("terms") String payloadTerms,
             @Valid @ModelAttribute("payload") NewSetPayload payload,
             BindingResult bindingResult,

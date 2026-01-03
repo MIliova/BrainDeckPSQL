@@ -3,9 +3,8 @@ package dev.braindeck.api.service;
 import dev.braindeck.api.controller.payload.NewTermPayload;
 import dev.braindeck.api.controller.payload.UpdateTermPayload;
 import dev.braindeck.api.dto.SetDto;
-import dev.braindeck.api.dto.SetWithTermCountDto;
+import dev.braindeck.api.dto.SetWithTCntUInfoDto;
 import dev.braindeck.api.entity.*;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -30,7 +29,7 @@ public interface SetService {
 
     SetEntity findEntityById(int id, int currentUserId);
 
-    List<SetWithTermCountDto> findAllByUserId(int userId);
+    List<SetWithTCntUInfoDto> findAllByUserId(int userId);
 
 }
 

@@ -8,14 +8,20 @@
         <artifactId>parent-project</artifactId>
         <version>0.0.1-SNAPSHOT</version>
     </parent>
+<!--    <parent>-->
+<!--        <groupId>org.springframework.boot</groupId>-->
+<!--        <artifactId>spring-boot-starter-parent</artifactId>-->
+<!--        <version>3.4.1</version>-->
+<!--        <relativePath/> &lt;!&ndash; optional &ndash;&gt;-->
+<!--    </parent>-->
 
     <artifactId>web-app</artifactId>
     <packaging>jar</packaging>
     <name>Web</name>
 
     <properties>
-        <maven.compiler.source>23</maven.compiler.source>
-        <maven.compiler.target>23</maven.compiler.target>
+        <maven.compiler.source>21</maven.compiler.source>
+        <maven.compiler.target>21</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
     <dependencies>
@@ -43,6 +49,10 @@
         <dependency>
             <groupId>jakarta.validation</groupId>
             <artifactId>jakarta.validation-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-validation</artifactId>
         </dependency>
 
     </dependencies>

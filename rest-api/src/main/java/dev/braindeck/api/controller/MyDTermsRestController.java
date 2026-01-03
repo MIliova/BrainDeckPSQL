@@ -25,7 +25,7 @@ public class MyDTermsRestController {
 
     @PostMapping
     public ResponseEntity<NewDTermDto> create(
-            @PathVariable int draftId,
+            @PathVariable("draftId") int draftId,
             @RequestBody @Valid DTermPayload term,
             UriComponentsBuilder uriBuilder) {
         UserEntity user = userService.getCurrentUser();
@@ -37,7 +37,7 @@ public class MyDTermsRestController {
 
     @PostMapping("/batch")
     public ResponseEntity<List<NewDTermDto>> createBatch(
-            @PathVariable int draftId,
+            @PathVariable("draftId") int draftId,
             @RequestBody @Valid List<@Valid DTermPayload> terms,
             UriComponentsBuilder uriBuilder) {
         UserEntity user = userService.getCurrentUser();
@@ -49,8 +49,8 @@ public class MyDTermsRestController {
 
     @PutMapping("/{termId:\\d+}")
     public ResponseEntity<Void> update(
-            @PathVariable @Positive (message = "errors.draft.id") int draftId,
-            @PathVariable @Positive (message = "errors.term.id") int termId,
+            @PathVariable("draftId") @Positive (message = "errors.draft.id") int draftId,
+            @PathVariable("termId") @Positive (message = "errors.term.id") int termId,
             @RequestBody @Valid DTermPayload payload) {
         UserEntity user = userService.getCurrentUser();
         draftTermService.update(termId, draftId, user.getId(), payload);
@@ -59,8 +59,8 @@ public class MyDTermsRestController {
 
     @DeleteMapping("/{termId:\\d+}")
     public ResponseEntity<Void> delete(
-            @PathVariable @Positive (message = "errors.draft.id") int draftId,
-            @PathVariable @Positive (message = "errors.term.id") int termId) {
+            @PathVariable("draftId") @Positive (message = "errors.draft.id") int draftId,
+            @PathVariable("termId") @Positive (message = "errors.term.id") int termId) {
         UserEntity user = userService.getCurrentUser();
         draftTermService.delete(termId, draftId, user.getId());
         return ResponseEntity.noContent().build();
