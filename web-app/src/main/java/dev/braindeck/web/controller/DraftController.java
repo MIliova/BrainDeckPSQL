@@ -2,6 +2,7 @@ package dev.braindeck.web.controller;
 
 import dev.braindeck.web.client.*;
 import dev.braindeck.web.controller.payload.NewSetPayload;
+import dev.braindeck.web.controller.payload.NewSetPayloadC;
 import dev.braindeck.web.controller.payload.NewTermPayload;
 import dev.braindeck.web.entity.*;
 import dev.braindeck.web.service.*;
@@ -54,7 +55,7 @@ public class DraftController {
     public String create(
             @PathVariable("draftId") @Positive(message = "errors.draft.id") int draftId,
             @RequestParam("terms") String payloadTerms,
-            @Valid @ModelAttribute("payload") NewSetPayload payload,
+            @Valid @ModelAttribute("payload") NewSetPayloadC payload,
             BindingResult bindingResult,
             Model model,
             Locale locale

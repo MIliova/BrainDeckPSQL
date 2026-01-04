@@ -30,7 +30,8 @@ public class SetController {
 
         modelPreparationService.prepareModel(model, locale, Map.of(
                 "set", setDto,
-                "pageTitle", setDto.title(), null, locale)
+                "pageTitle", setDto.title()
+                )
         );
 
         return "set";

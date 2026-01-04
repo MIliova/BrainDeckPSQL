@@ -460,7 +460,7 @@ class Errors {
 }
 
 class SetForm {
-    constructor({ termIsEmpty } = {}, {autosaved} = {}, submitType = "", test = true) {
+    constructor({ termIsEmpty } = {}, {autosaved} = {}, submitType = "", test = false) {
         this.minTermsCnt = 3;
         this.termIsEmpty = termIsEmpty || (() => false);
         this.autosaved = autosaved || (() => false);
@@ -499,30 +499,78 @@ class SetForm {
                 }
             });
     }
-    checkField(fieldId, errorClass = "blue-row-err") {
+    errorMark(field, add = true) {
+        const wrapper = field.closest('[data-error-class]');
+        if (!wrapper) return;
+        if (add) {
+            wrapper.classList.add(wrapper.dataset.errorClass);
+        } else {
+            wrapper.classList.remove(wrapper.dataset.errorClass);
+        }
+    }
+    errorShow(field, txt) {
+        if (!field.dataset.errorId)
+            return;
+        const errorField = document.getElementById(field.dataset.errorId);
+        if (!errorField)
+            return;
+        errorField.style.display = "block";
+        errorField.innerHTML = txt;
+    }
+    errorHide(field) {
+        if (!field.dataset.errorId)
+            return;
+        const errorField = document.getElementById(field.dataset.errorId);
+        if (!errorField)
+            return;
+        errorField.style.display = "none";
+        errorField.innerHTML = "";
+    }
+    checkField(fieldId) {
         const field = document.getElementById(fieldId);
+
         if (field.value.trim() === "") {
-            field.parentElement.parentElement.classList.add(errorClass);
+            this.errorMark(field);
+            this.errorShow(field, field.dataset.message);
             return field.dataset.message;
         } else {
-            field.parentElement.parentElement.classList.remove(errorClass);
+            this.errorMark(field, false);
+            this.errorHide(field);
             return null;
         }
     }
-    checkLanguage(fieldId, fieldId2, errorClass = "language-button-err") {
+    checkLanguage(fieldId, fieldId2) {
         const field = document.getElementById(fieldId);
+
         if (field.value.trim() === "") {
-            document.getElementById(fieldId2).classList.add(errorClass);
+            this.errorMark(document.getElementById(fieldId2));
+            this.errorShow(field, field.dataset.message);
             return field.dataset.message;
         } else {
-            document.getElementById(fieldId2).classList.remove(errorClass);
+            this.errorMark(document.getElementById(fieldId2), false);
+            this.errorHide(field);
             return null;
 
         }
     }
+    errorTermsShow(field, i, txt) {
+        const errorField = document.getElementById("error-term-" + i);
+        if (!errorField)
+            return;
+        errorField.style.display = "block";
+        errorField.innerHTML = txt;
+
+    }
+    errorTermsHide(field, i) {
+        const errorField = document.getElementById("error-term-" + i);
+        if (!errorField)
+            return;
+        errorField.style.display = "block";
+        errorField.innerHTML = "";
+
+    }
     validate(){
         const errors = [];
-        const errorClass = "blue-row-err";
         ["field-title", "field-description"].forEach(id => {
             const err = this.checkField(id);
             if (err) errors.push(err);
@@ -537,12 +585,13 @@ class SetForm {
             const termEmpty = !this.termsObjs[i].t.textContent.trim() || this.termIsEmpty(this.termsObjs[i].t);
             const descEmpty = !this.termsObjs[i].d.textContent.trim() || this.termIsEmpty(this.termsObjs[i].d);
 
-            if (termEmpty && descEmpty) {
-                this.termsObjs[i].t.parentElement.parentElement.parentElement.classList.add(errorClass);
+            if (termEmpty) {
+                this.errorMark(this.termsObjs[i].t);
+                this.errorTermsShow(this.termsObjs[i].t, i, document.getElementById('field-terms').dataset.message);
                 errors.push(document.getElementById('field-terms').dataset.message); //errors.push("add at least three terms");
-                break;
             } else {
-                this.termsObjs[i].t.parentElement.parentElement.parentElement.classList.remove(errorClass);
+                this.errorMark(this.termsObjs[i].t, false);
+                this.errorTermsHide(this.termsObjs[i].t, i);
             }
         }
 
@@ -625,14 +674,15 @@ class SetForm {
         let term = '';
         let description = '';
 
-
-        for (let i = 0; i < (this.autosaved ? this.minTermsCnt : this.termsObjs.length); i++) {
+        for (let i = 0; i < (this.autosaved() ? this.minTermsCnt : this.termsObjs.length); i++) {
             term = '';
+
             if (!this.termIsEmpty(this.termsObjs[i].t)) {
                 term = Array.from(this.termsObjs[i].t.querySelectorAll("p"))
                     .map(p => p.textContent)
                     .join("\n").trim();
             }
+
             description = '';
             if (!this.termIsEmpty(this.termsObjs[i].d)) {
                 description = Array.from(this.termsObjs[i].d.querySelectorAll("p"))
@@ -642,14 +692,16 @@ class SetForm {
             if (term !== "" || description !== "") {
                 termsDto.push({
                     term: term,
-                    description: description
+                    description: description,
+                    id: this.termsObjs[i].id
                 });
                 if (this.termsObjs[i].id) {
-                    termsDto[termsDto.length - 1].id = this.termsObjs[i].id;
+                    // termsDto[termsDto.length - 1].id = this.termsObjs[i].id;
                     termsDto[termsDto.length - 1].setId = setId;
                 }
             }
         }
+
         return termsDto;
     }
     deleteTerms(){
@@ -1335,7 +1387,8 @@ const overlay = new Overlay(() => termsImport.onHide(), () => termsImport.onShow
 const textNormalization = new TextNormalization();
 const termButton = new TermButton();
 document.addEventListener('DOMContentLoaded', function () {
-    termController.init(document.getElementById('terms-description-area'),
+    termController.init(
+        document.getElementById('terms-description-area'),
         {
         addToForm: (term, descr, id) => setForm.add(term, descr, id),
         addToPlaceholder: (el, type) => divplaceholder.add(el, type),

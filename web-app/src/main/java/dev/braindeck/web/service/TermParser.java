@@ -45,10 +45,13 @@ public class TermParser {
             Set<ConstraintViolation<T>> violations = validator.validate(term);
 
             if (!violations.isEmpty()) {
+                System.out.println(violations);
+
                 Map<String, String> fieldErrors = violations.stream()
                         .collect(Collectors.toMap(
                                 v -> v.getPropertyPath().toString(),
-                                ConstraintViolation::getMessage
+                                ConstraintViolation::getMessage,
+                                (existing, replacement) -> existing + "; " + replacement
                         ));
                 termErrors.put(i, fieldErrors);
             }

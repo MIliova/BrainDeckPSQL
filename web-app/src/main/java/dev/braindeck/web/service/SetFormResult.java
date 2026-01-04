@@ -1,9 +1,6 @@
 package dev.braindeck.web.service;
 
-import dev.braindeck.web.controller.payload.NewSetPayload;
-import dev.braindeck.web.controller.payload.NewTermPayload;
-import dev.braindeck.web.controller.payload.UpdateSetPayload;
-import dev.braindeck.web.controller.payload.UpdateTermPayload;
+import dev.braindeck.web.controller.payload.*;
 
 import java.util.List;
 import java.util.Map;
@@ -24,7 +21,7 @@ public class SetFormResult {
     }
 
     public static SetFormResult error(Map<String, String> errors,
-                                      NewSetPayload payload,
+                                      NewSetPayloadC payload,
                                       List<NewTermPayload> terms) {
         return new SetFormResult(null, Map.of(
                 "errors", errors,

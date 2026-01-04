@@ -3,10 +3,7 @@ package dev.braindeck.web.service;
 import dev.braindeck.web.client.MyDraftRestClient;
 import dev.braindeck.web.client.MySetsRestClient;
 import dev.braindeck.web.controller.exception.BadRequestException;
-import dev.braindeck.web.controller.payload.NewSetPayload;
-import dev.braindeck.web.controller.payload.NewTermPayload;
-import dev.braindeck.web.controller.payload.UpdateSetPayload;
-import dev.braindeck.web.controller.payload.UpdateTermPayload;
+import dev.braindeck.web.controller.payload.*;
 import dev.braindeck.web.entity.SetDto;
 import dev.braindeck.web.utills.ProblemDetailParser;
 import lombok.RequiredArgsConstructor;
@@ -23,26 +20,27 @@ public class SetService {
     private final MyDraftRestClient myDraftRestClient;
 
     public SetCreationResult create(
-            NewSetPayload payload,
+            NewSetPayloadC payload,
             List<NewTermPayload> terms,
             Integer draftId ){
+
         try {
             if (draftId != null) {
                 SetDto set =  myDraftRestClient.createFromDraft(
                         draftId,
-                        payload.title(),
-                        payload.description(),
-                        payload.termLanguageId(),
-                        payload.descriptionLanguageId(),
+                        payload.getTitle(),
+                        payload.getDescription(),
+                        payload.getTermLanguageId(),
+                        payload.getDescriptionLanguageId(),
                         terms
                 );
                 return SetCreationResult.success(set);
             }
             SetDto set =  mySetsRestClient.create(
-                    payload.title(),
-                    payload.description(),
-                    payload.termLanguageId(),
-                    payload.descriptionLanguageId(),
+                    payload.getTitle(),
+                    payload.getDescription(),
+                    payload.getTermLanguageId(),
+                    payload.getDescriptionLanguageId(),
                     terms
             );
             return SetCreationResult.success(set);

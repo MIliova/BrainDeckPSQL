@@ -36,7 +36,6 @@ public class MySetController {
 
         SetDto set = mySetsRestClient.findMySetById(setId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-        System.out.println(set);
         modelPreparationService.prepareModel(model,  locale, Map.of(
                 "payload", new SetFormDto(
                         set.id(),

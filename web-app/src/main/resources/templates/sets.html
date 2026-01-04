@@ -20,12 +20,17 @@
                             <span th:text="|${set.termCount} #{messages.set.terms}|"></span>
                             &nbsp;&nbsp;|&nbsp;&nbsp;
                             <img class="circle_image" src="/images/avatar.jpg" th:alt="${set.userName}" />
-                            <a th:href="@{/users/{userId}/sets}" th:text="${set.userName}">Unknown User</a>
+                            <a th:href="@{/user/{userId}/sets(userId=${set.userId})}" th:text="${set.userName}">Unknown User</a>
                             &nbsp;&nbsp;|&nbsp;&nbsp;
                             <span th:text="|${set.updatedAt}|"></span>
 
                         </div>
-                        <div><h2><a class="term-title-sets" th:href="@{/set/{setId}(setId=${set.id})}" th:text="${set.title}"></a></h2></div>
+                        <div><h2><a class="term-title-sets"
+                                    th:href="@{/user/{userId}/set/{setId}(
+                                    userId=${set.userId},
+                                    setId=${set.id}
+                                    )}"
+                                    th:text="${set.title}"></a></h2></div>
                         <div class="term-description-sets" th:text="${set.description}"></div>
                     </div>
                 </div>

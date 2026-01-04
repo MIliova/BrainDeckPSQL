@@ -11,11 +11,11 @@
 <div class="main">
     <div class="main-left">&nbsp;</div>
     <div class="main-center">
-        <div th:insert="~{fragment::header-menu}"></div>
+        <div th:insert="~{fragments/fragment::header-menu}"></div>
 
 
         <div class="container-left-right">
-            <div><h1 data-th-text="#{messages.set.create_new}">Create a new set</h1></div>
+            <div><h1 data-th-text="#{messages.set.create.new}">Create a new set</h1></div>
             <div class="blue-row">
                 <button id="submitButton" class="blue-row-button" type="button" aria-label="[[#{messages.create}]]" onclick=""><span data-th-text="#{messages.create}">Create</span></button>
                 <button id="deleteDraftButton" class="blue-row-button" type="button" aria-label="[[#{messages.delete.draft}]]"
@@ -28,17 +28,19 @@
             <form method="post" id="set-form"
                   th:action="${actionUrl}"
                   th:object="${payload}"
-                  th:data-is-draft="${isDraft}"
-            >
-                <div class="">
+                  th:data-is-draft="${isDraft}">
+
+
+                <div th:data-error-class="blue-row-err"
+                     th:classappend="${#fields.hasErrors('title')} ? 'blue-row-err'">
                     <div class="textarea-description">
                         <span
-                                th:if="${payload?.title() != null && payload?.title() != ''}"
+                                th:if="${payload?.title != null && payload?.title != ''}"
                                 th:text="#{messages.set.create.t}"
                                 th:data-message="#{messages.set.create.t}">&nbsp
                         </span>
                         <span
-                                th:if="${payload?.title() != null && payload?.title() != ''}"
+                                th:if="${payload?.title != null && payload?.title != ''}"
                                 th:data-message="#{messages.set.create.t}">&nbsp
                         </span>
                         <input type="text"
@@ -47,23 +49,30 @@
                                th:placeholder="#{messages.set.create.et}"
                                th:aria-label="#{messages.set.create.t}"
                                th:data-message="#{messages.set.create.j.et}"
-                               th:classappend="${#fields.hasErrors('title')} ? 'is-invalid'"
-                        >
+                               th:data-error-id="error-title">
                     </div>
-                    <div class="field-error"
-                         th:if="${#fields.hasErrors('title')}"
-                         th:errors="*{title}">
-                    </div>
-                </div><br>
-                <div class="">
+                </div>
+                <div class="field-error"
+                     th:id="error-title"
+                     th:classappend="${#fields.hasErrors('title')} ? '' : 'display-none'">
+                    <span th:if="${#fields.hasErrors('title')}" th:errors="*{title}"></span>
+                </div>
+                <br>
+
+
+
+
+
+                <div th:data-error-class="blue-row-err"
+                     th:classappend="${#fields.hasErrors('description')} ? 'blue-row-err'">
                     <div class="textarea-description">
                         <span
-                                th:if="${payload?.description() != null && payload?.description() != ''}"
+                                th:if="${payload?.description != null && payload?.description != ''}"
                                 th:text="#{messages.set.create.d}"
                                 th:data-message="#{messages.set.create.d}">&nbsp;
                         </span>
                         <span
-                                th:if="${payload?.description() != null && payload?.description() != ''}"
+                                th:if="${payload?.description != null && payload?.description != ''}"
                                 th:data-message="#{messages.set.create.d}">&nbsp;
                         </span>
                         <textarea
@@ -72,28 +81,28 @@
                                   th:placeholder="#{messages.set.create.ed}"
                                   th:aria-label="#{messages.set.create.d}"
                                   th:data-message="#{messages.set.create.j.ad}"
-                                  th:classappend="${#fields.hasErrors('description')} ? 'is-invalid'"
+                                  th:data-error-id="error-description"
                         ></textarea>
                     </div>
-                    <div class="field-error"
-                         th:if="${#fields.hasErrors('description')}"
-                         th:errors="*{description}">
-                    </div>
+                </div>
+                <div class="field-error"
+                     th:id="error-description"
+                     th:classappend="${#fields.hasErrors('description')} ? '' : 'display-none'">
+                    <span th:if="${#fields.hasErrors('description')}" th:errors="*{description}"></span>
                 </div>
                 <input type="hidden"
                        th:id="field-term-language"
                        th:field="*{termLanguageId}"
-                       th:data-message="#{messages.set.create.j.atl}">
-
+                       th:data-message="#{messages.set.create.j.atl}"
+                       th:data-error-id="error-term-language-id">
                 <input type="hidden"
                        th:id="field-description-language"
                        th:field="*{descriptionLanguageId}"
-                       th:data-message="#{messages.set.create.j.adl}">
-
+                       th:data-message="#{messages.set.create.j.adl}"
+                       th:data-error-id="error-description-language-id">
                 <input type="hidden" name="terms" value=""
                        th:id="field-terms"
                        th:data-message="#{messages.set.create.j.ats}">
-
                 <input type="hidden"
                        th:if="*{id} != null"
                        th:field="*{id}"
@@ -110,14 +119,9 @@
 
 
 
-                <div id="field-error" class="field-error"
+                <div id="field-error" class="field-error display-none"
                  th:attr="style=${errors} ? 'display:block;' : ''"
                  th:data-message="#{messages.set.create.j.yn}">
-<!--                    <div th:if="${errors}" >-->
-<!--                        <div style="display: block;"-->
-<!--                             th:each="error:${errors}"-->
-<!--                             th:text="${error.message}"></div>&nbsp;-->
-<!--                    </div>-->
                     <div th:if="${errors}">
                         <div th:each="entry : ${errors}">
                             <span th:text="${entry.key} + ': ' + ${entry.value}"></span>
@@ -133,92 +137,44 @@
                      th:data-description-placeholder="#{messages.set.create.description_placeholder}"
                      th:data-term-text="#{messages.set.create.te}"
                      th:data-descr-text="#{messages.set.create.de}"
-                     th:data-language-text="#{messages.set.create.cl}">
+                     th:data-language-text="#{messages.set.create.cl}"
+                     th:with="lastIndex=${terms != null and #lists.size(terms) > 0 and terms[0] != null ? #lists.size(terms) : 0}">
+
+
+
 
                     <div class="blue-row-margin"
-                         th:if="${
-                         terms != null and #lists.size(terms) > 0 and terms[0] != null
-                         ||
-                         payload.terms != null and #lists.size(payload.terms) > 0 and payload.terms[0] != null
-                         }"
-                         th:each="term, iter : ${terms != null ? terms : payload.terms}"
-                        >
-                        <div class="">
-                            <div class="container-left-right blue-row" >
-                                <div class="term-block">
-                                    <div class="term-input"
-                                         th:id="'term'+${iter.index}"
-                                         th:data-id="${term.id}"
-                                         th:data-base-placeholder="#{messages.set.create.placeholder} "
-                                         th:data-placeholder="#{messages.set.create.term_placeholder}"
-                                         data-placeholder-class="term-placeholder"
-                                         contenteditable="true"><p
-                                            th:text="${term?.term}"><br></p></div><hr>
-                                    <div class="container-left-right">
-                                        <span class="term"
-                                              th:text="#{messages.set.create.te}">TERM</span>
-                                        <span
-                                                th:if="${iter.index==0}"><span data-language="term" id="language-button-term" class="language-button"
-                                                                 th:text="#{messages.set.create.cl}" >CHOOSE LANGUAGE</span></span>
-                                    </div>
-                                    <div class="field-error" th:id="'error-term-'+${iter.index}"></div>
-                                </div>
-                                <div class="term-block">
-                                    <div class="term-input"
-                                         th:id="'description'+${iter.index}"
-                                         th:data-base-placeholder="#{messages.set.create.placeholder} "
-                                         th:data-placeholder="#{messages.set.create.description_placeholder}"
-                                         data-placeholder-class="description-placeholder"
-                                         contenteditable="true"><p
-                                            th:text="${term?.description}"><br></p></div><hr>
-                                    <div class="container-left-right">
-                                        <span class="term"
-                                              th:text="#{messages.set.create.de}">DESCRIPTION</span>
-                                        <span th:if="${iter.index==0}"><span data-language="description" id="language-button-description"  class="language-button"
-                                                                 th:text="#{messages.set.create.cl}">CHOOSE LANGUAGE</span></span>
-                                    </div>
-                                    <div class="field-error" th:id="'error-description-'+${iter.index}"></div>
-                                </div>
-                            </div>
+                         th:if="${terms != null and #lists.size(terms) > 0 and terms[0] != null}"
+                         th:each="term, iter : ${terms}">
+                        <div th:data-error-class="blue-row-err"
+                             th:classappend="${
+                                            termErrors != null
+                                            && termErrors.containsKey(iter.index)
+                                            && termErrors[iter.index].containsKey('term')
+                                            || iter.index==0
+                                            && #fields.hasErrors('termLanguageId')
+                                            || termErrors != null
+                                            && termErrors.containsKey(iter.index)
+                                            && termErrors[iter.index].containsKey('description')
+                                            || iter.index==0
+                                            && #fields.hasErrors('descriptionLanguageId')
+                                         } ? 'blue-row-err'">
+                            <div th:replace="fragments/term-block :: termBlock(${term}, ${iter.index}, ${termErrors})"></div>
                         </div>
                     </div>
 
+
+
+
                     <div class="blue-row-margin"
-                         th:each="i :
-                         ${terms != null and #lists.size(terms) > 0 and terms[0] != null ? #numbers.sequence(#lists.size(terms), #lists.size(terms) + 2) : #numbers.sequence(0, 2)}">
-                        <div class="" >
-                            <div class="container-left-right blue-row" >
-                                <div class="term-block">
-                                    <div class="term-input term-placeholder" th:id="'term'+${i}"
-                                        th:data-base-placeholder="#{messages.set.create.placeholder} "
-                                        th:data-placeholder="#{messages.set.create.term_placeholder}"
-                                        data-placeholder-class="term-placeholder"
-                                        contenteditable="true"></div><hr>
-                                    <div class="container-left-right">
-                                        <span class="term" th:text="#{messages.set.create.te}">TERM</span>
-                                        <span th:if="${i==0}"><span data-language="term" id="language-button-term" class="language-button"
-                                                        th:text="#{messages.set.create.cl}" >CHOOSE LANGUAGE</span></span>
-                                    </div>
-                                </div>
-                                <div class="term-block">
-                                    <div class="term-input description-placeholder" th:id="'description'+${i}"
-                                        th:data-base-placeholder="#{messages.set.create.placeholder} "
-                                        th:data-placeholder="#{messages.set.create.description_placeholder}"
-                                        data-placeholder-class="description-placeholder"
-                                        contenteditable="true"><br></div><hr>
-                                    <div class="container-left-right">
-                                        <span class="term" th:text="#{messages.set.create.de}">DESCRIPTION</span>
-                                        <span th:if="${i==0}"><span data-language="description" id="language-button-description"  class="language-button"
-                                                                th:text="#{messages.set.create.cl}">CHOOSE LANGUAGE</span></span>
-                                    </div>
-                                </div>
-                            </div>
+                         th:each="i : ${#numbers.sequence(lastIndex, lastIndex + (2 - lastIndex > 0 ? 2 - lastIndex : 0))}">
+                        <div th:data-error-class="blue-row-err">
+                            <div th:replace="fragments/term-block :: termBlock(${null}, ${i}, ${null})"></div>
                         </div>
                     </div>
                 </div>
             </form>
         </div>
-
 
         <div class="container-center" style="margin: 40px 0">
             <div class="blue-row" id="add_term_button" style="display: none;"><button class="blue-row-button" type="button" aria-label="Add" ><span th:data="messages.set.edit.add">Add term</span></button></div>
@@ -230,7 +186,7 @@
 </div>
 
 
-<div th:insert="~{fragment::language-menu}"></div>
+<div th:insert="~{fragments/fragment::language-menu}"></div>
 
 
 <div class="textarea-import overlay" id="overlay">
@@ -246,12 +202,12 @@
         </div>
 
 
-        <div id="field-import-error" class="field-error"></div>
+        <div id="field-import-error" class="field-error display-none"></div>
 
 
         <form>
         <textarea  id="field-import" name="import"
-               th:text="${payload?.description()}"
+               th:text="${payload?.description}"
                th:placeholder="#{messages.set.create.import.div.placeholder}"
                th:aria-label="#{messages.set.create.import}"
                ></textarea>

@@ -1,0 +1,69 @@
+<div th:fragment="termBlock(term, index, termErrs)">
+    <div class="container-left-right-top blue-row"
+        th:with="termErrors=${termErrs != null ? termErrs.get(index) : null}">
+        <div class="term-block">
+            <div class="term-input"
+                 th:classappend="${term == null || term?.term == ''} ? 'term-placeholder'"
+                 th:id="'term'+${index}"
+                 th:data-id="${term?.id }"
+                 th:data-base-placeholder="#{messages.set.create.placeholder} "
+                 th:data-placeholder="#{messages.set.create.term_placeholder}"
+                 data-placeholder-class="term-placeholder"
+                 contenteditable="true"><p
+                    th:if="${term != null}"
+                    th:text="${term?.term}"><br></p></div><hr>
+            <div class="container-left-right">
+                <span class="term" th:text="#{messages.set.create.te}">TERM</span>
+                <span th:if="${index == 0}"><span data-language="term"
+                                                     id="language-button-term"
+                                                     class="language-button"
+                                                     th:data-error-class="language-button-err"
+                                                     th:text="#{messages.set.create.cl}" >CHOOSE LANGUAGE</span></span>
+            </div>
+            <div class="field-error right"
+                 th:id="error-term-language-id"
+                 th:attr="style=${#fields.hasErrors('termLanguageId') ? '' : 'display:none;'}"
+                 th:if="${index == 0}"><span style="display:block;"
+                                             th:if="${#fields.hasErrors('termLanguageId')}"
+                                             th:errors="*{termLanguageId}"></span>
+            </div>
+            <div class="field-error"
+                 th:id="'error-term-' + ${index}"
+                 th:text="${termErrors != null && termErrors.containsKey('term') ? termErrors['term'] : ''}"
+                 th:classappend="${termErrors != null && termErrors.containsKey('term')} ? '' : 'display-none'"
+            >
+            </div>
+        </div>
+        <div class="term-block">
+            <div class="term-input"
+                 th:id="'description'+${index}"
+                 th:classappend="${term == null || term?.description == ''} ? 'description-placeholder'"
+                 th:data-base-placeholder="#{messages.set.create.placeholder} "
+                 th:data-placeholder="#{messages.set.create.description_placeholder}"
+                 data-placeholder-class="description-placeholder"
+                 contenteditable="true"><p
+                    th:if="${term != null}"
+                    th:text="${term?.description}"><br></p></div><hr>
+            <div class="container-left-right">
+                <span class="term" th:text="#{messages.set.create.de}">DESCRIPTION</span>
+                <span th:if="${index == 0}"><span data-language="description"
+                                                     id="language-button-description"
+                                                     class="language-button"
+                                                     th:data-error-class="language-button-err"
+                                                     th:text="#{messages.set.create.cl}">CHOOSE LANGUAGE</span></span>
+            </div>
+            <div class="field-error right"
+                 th:id="error-description-language-id"
+                 th:attr="style=${#fields.hasErrors('descriptionLanguageId') ? '' : 'display:none;'}"
+                 th:if="${index == 0}"><span style="display:block;"
+                                             th:if="${#fields.hasErrors('descriptionLanguageId')}"
+                                             th:errors="*{descriptionLanguageId}"></span>
+            </div>
+            <div class="field-error"
+                 th:id="'error-description-'+${index}"
+                 th:classappend="${termErrors != null and termErrors.containsKey('description')} ? '' : 'display-none'"
+                 th:text="${termErrors != null and termErrors.containsKey('description') ? termErrors['description'] : ''}">
+            </div>
+        </div>
+    </div>
+</div>

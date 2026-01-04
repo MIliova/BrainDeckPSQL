@@ -1,9 +1,6 @@
 package dev.braindeck.web.service;
 
-import dev.braindeck.web.controller.payload.NewSetPayload;
-import dev.braindeck.web.controller.payload.NewTermPayload;
-import dev.braindeck.web.controller.payload.UpdateSetPayload;
-import dev.braindeck.web.controller.payload.UpdateTermPayload;
+import dev.braindeck.web.controller.payload.*;
 import dev.braindeck.web.entity.SetDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -31,7 +28,7 @@ public class SetFormService {
     }
 
     public SetFormResult create(
-            NewSetPayload payload,
+            NewSetPayloadC payload,
             List<NewTermPayload> terms,
             Integer draftId
     ) {

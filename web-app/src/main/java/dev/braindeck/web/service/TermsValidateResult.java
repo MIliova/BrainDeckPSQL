@@ -13,7 +13,7 @@ public class TermsValidateResult<T> {
 
     public static <T> TermsValidateResult<T> generalError(String message) {
         return new TermsValidateResult<>(
-                Map.of("general", message),
+                Map.of("terms", message),
                 Map.of(),
                 List.of()
         );

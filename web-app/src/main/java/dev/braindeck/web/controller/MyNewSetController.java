@@ -1,10 +1,8 @@
 package dev.braindeck.web.controller;
 
-import dev.braindeck.web.client.MyDraftRestClient;
-import dev.braindeck.web.client.MySetsRestClient;
 import dev.braindeck.web.controller.payload.NewSetPayload;
+import dev.braindeck.web.controller.payload.NewSetPayloadC;
 import dev.braindeck.web.controller.payload.NewTermPayload;
-import dev.braindeck.web.entity.NewSetFormDto;
 import dev.braindeck.web.service.*;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -30,7 +28,8 @@ public class MyNewSetController {
     public String create(Model model, Locale locale) {
         model.addAttribute("currentView", "new-set");
 
-        NewSetFormDto payload = new NewSetFormDto();
+//        NewSetFormDto payload = new NewSetFormDto();
+        NewSetPayloadC payload = new NewSetPayloadC();
         modelPreparationService.prepareModel(model, locale, Map.of(
                 "actionUrl", "/set",
                 "payload", payload,
@@ -42,15 +41,24 @@ public class MyNewSetController {
     @PostMapping
     public String create(
             @RequestParam("terms") String payloadTerms,
-            @Valid @ModelAttribute("payload") NewSetPayload payload,
+            @Valid @ModelAttribute("payload") NewSetPayloadC payload,
             BindingResult bindingResult,
             Model model,
             Locale locale
     ) {
+
         model.addAttribute("currentView", "new-set");
+
+        System.out.println(payload);
+        System.out.println(payloadTerms);
 
         TermsValidateResult<NewTermPayload> termsValidateResult  = setFormService.validate(payloadTerms, NewTermPayload.class);
         if (bindingResult.hasErrors() || termsValidateResult.hasErrors()) {
+            System.out.println(bindingResult);
+
+            System.out.println(termsValidateResult.getModelAttributes());
+
+
             model.addAllAttributes(termsValidateResult.getModelAttributes());
             modelPreparationService.prepareModel(model, locale, Map.of(
                     "actionUrl", "/set",
@@ -63,6 +71,7 @@ public class MyNewSetController {
         if (result.isRedirect()) {
             return "redirect:" + result.getRedirectUrl();
         }
+
         model.addAllAttributes(result.getModelAttributes());
         modelPreparationService.prepareModel(model, locale, Map.of(
                 "actionUrl", "/set",

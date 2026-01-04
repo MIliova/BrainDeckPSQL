@@ -135,7 +135,18 @@ hr {
     margin: 20px 0;
     text-transform: uppercase;
     font-size: 90%;
+}
+.field-error.display-none {
     display: none;
+}
+.field-error.right {
+    border: 1px solid crimson;
+    font-size: 80%;
+    margin: 5px 0;
+    padding: 10px;
+    text-align: right;
+    display: flex;
+    justify-content: flex-end;
 }
 .blue-row-err {
     border-bottom: 2px solid crimson;
@@ -150,6 +161,11 @@ hr {
     display: flex;
     justify-content: space-between; /* Прижимает элементы к разным сторонам */
     align-items: center; /* Вертикальное выравнивание (по центру, если нужно) */
+}
+.container-left-right-top {
+    display: flex;
+    justify-content: space-between; /* Прижимает элементы к разным сторонам */
+    align-items: flex-start;
 }
 
 .container-center {
@@ -256,6 +272,10 @@ select {
     font-size: 70%;
     display: flex;
     align-items: center;
+}
+.pre-term-title-sets a {
+    color: white;
+    text-decoration: none;
 }
 .circle_image {
     width: 16px;
