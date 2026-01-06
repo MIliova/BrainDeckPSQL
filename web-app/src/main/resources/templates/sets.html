@@ -10,29 +10,25 @@
     <div class="main">
         <div class="main-left">&nbsp;</div>
         <div class="main-center">
-            <div th:insert="~{fragment::header-menu}"></div>
+            <div th:insert="~{fragments/fragment::header-menu}"></div>
             <div><h1 th:text="#{messages.sets}">My Library</h1></div>
             <div>
-                <div id="field-error" class="field-error"> </div>
-                <div class="blue-row blue-row-margin" th:each="set: ${sets}">
-                    <div class="blue-row-sets">
-                        <div class="pre-term-title-sets">
-                            <span th:text="|${set.termCount} #{messages.set.terms}|"></span>
-                            &nbsp;&nbsp;|&nbsp;&nbsp;
-                            <img class="circle_image" src="/images/avatar.jpg" th:alt="${set.userName}" />
-                            <a th:href="@{/user/{userId}/sets(userId=${set.userId})}" th:text="${set.userName}">Unknown User</a>
-                            &nbsp;&nbsp;|&nbsp;&nbsp;
-                            <span th:text="|${set.updatedAt}|"></span>
-
-                        </div>
-                        <div><h2><a class="term-title-sets"
-                                    th:href="@{/user/{userId}/set/{setId}(
-                                    userId=${set.userId},
-                                    setId=${set.id}
-                                    )}"
-                                    th:text="${set.title}"></a></h2></div>
-                        <div class="term-description-sets" th:text="${set.description}"></div>
+                <div id="field-error" class="field-error display-none"> </div>
+                <div class="blue-row blue-row-margin blue-row-sets" th:each="set: ${sets}">
+                    <div class="set-pre-title">
+                        <span th:text="|${set.termCount} #{messages.set.terms}|"></span>
+                        &nbsp;&nbsp;|&nbsp;&nbsp;
+                        <img class="circle_image" src="/images/avatar.jpg" th:alt="${set.userName}" />
+                        <a th:href="@{/user/{userId}/sets(userId=${set.userId})}" th:text="${set.userName}">Unknown User</a>
+                        &nbsp;&nbsp;|&nbsp;&nbsp;
+                        <span th:text="|${set.updatedAt}|"></span>
                     </div>
+                    <div><h2><a th:href="@{/user/{userId}/set/{setId}(
+                           userId=${set.userId},
+                           setId=${set.id}
+                           )}"
+                                th:text="${set.title}"></a></h2></div>
+                    <div th:text="${set.description}"></div>
                 </div>
             </div>
         </div>

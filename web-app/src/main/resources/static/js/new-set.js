@@ -118,6 +118,9 @@ class EditableDiv {
             this.removeExtraBreaks(el);
             this.autoResizeDiv(el);
         });
+        el.addEventListener('blur', () => {
+            this.keepTopOnBlur(el);
+        });
     }
     // reset(){
     //     this.els = [];
@@ -133,7 +136,9 @@ class EditableDiv {
     //         this.initEl(el);
     //     });
     // }
-
+    keepTopOnBlur (el) {
+        el.scrollTop = 0;
+    }
     ensureParagraphStructure(el) {
         // Если div пуст — создаем <p><br>
         if (el.children.length === 0) {
@@ -155,8 +160,9 @@ class EditableDiv {
 
     insertParagraphAfterCurrent(el) {
         const selection = window.getSelection();
-        const range = selection.getRangeAt(0);
+        if (!selection.rangeCount) return null;
 
+        const range = selection.getRangeAt(0);
         let currentP = this.getCurrentParagraph(el);
 
         // Если <p> нет — создаём и ставим курсор
@@ -177,26 +183,37 @@ class EditableDiv {
         const newP = document.createElement('p');
         newP.innerHTML = '<br>';
 
-        const startNode = range.startContainer;
-        const startOffset = range.startOffset;
-
         // Внутри форматированных тегов → клонируем структуру
-        const afterFragment = range.cloneContents();
-        const beforeFragment = currentP.cloneNode(true);
+        let afterFragment = null;
+        let startNode = null;
+        if (range.collapsed) {
+            const afterRange = range.cloneRange();
+            afterRange.setEndAfter(currentP);
+            afterFragment = afterRange.cloneContents();
+            startNode = range.startContainer;
+        } else {
+            const afterRange = range.cloneRange();
+            afterRange.setStart(range.endContainer, range.endOffset);
+            afterRange.setEndAfter(currentP);
+            afterFragment = afterRange.cloneContents();
+            range.deleteContents();
+            startNode = range.endContainer;
+        }
+        console.log(afterFragment.textContent);
 
-        // Удаляем хвост после курсора из currentP
+        //Удаляем хвост после курсора из currentP
         const walker = document.createTreeWalker(currentP, NodeFilter.SHOW_TEXT, null);
         let textNode;
         while (textNode = walker.nextNode()) {
             if (textNode === startNode) {
-                textNode.textContent = textNode.textContent.slice(0, startOffset);
+                textNode.textContent = textNode.textContent.slice(0, range.startOffset);
                 this.trimEmptyNodes(currentP);
                 break;
             }
         }
 
         // Заполняем новый <p>
-        if (afterFragment.textContent.trim() !== '') {
+        if (afterFragment && afterFragment.textContent.trim() !== '') {
             newP.innerHTML = '';
             newP.appendChild(afterFragment);
         }
@@ -504,6 +521,7 @@ class SetForm {
         if (!wrapper) return;
         if (add) {
             wrapper.classList.add(wrapper.dataset.errorClass);
+            console.log('AFTER ADD:', wrapper.className);
         } else {
             wrapper.classList.remove(wrapper.dataset.errorClass);
         }
@@ -550,22 +568,21 @@ class SetForm {
             this.errorMark(document.getElementById(fieldId2), false);
             this.errorHide(field);
             return null;
-
         }
     }
-    errorTermsShow(field, i, txt) {
-        const errorField = document.getElementById("error-term-" + i);
+    errorTermsShow(type, i, txt) {
+        const errorField = document.getElementById("error-" + type + "-" + i);
         if (!errorField)
             return;
         errorField.style.display = "block";
         errorField.innerHTML = txt;
 
     }
-    errorTermsHide(field, i) {
-        const errorField = document.getElementById("error-term-" + i);
+    errorTermsHide(type, i) {
+        const errorField = document.getElementById("error-" + type + "-" + i);
         if (!errorField)
             return;
-        errorField.style.display = "block";
+        errorField.style.display = "none";
         errorField.innerHTML = "";
 
     }
@@ -580,23 +597,41 @@ class SetForm {
             if (err) errors.push(err);
         });
 
-
+        let goodTermsCnt = 0;
+        for (let i = 0; i < this.termsObjs.length; i++) {
+            const termEmpty = !this.termsObjs[i].t.textContent.trim() || this.termIsEmpty(this.termsObjs[i].t);
+            if (!termEmpty)
+                goodTermsCnt++;
+        }
         for (let i = 0; i < this.termsObjs.length; i++) {
             const termEmpty = !this.termsObjs[i].t.textContent.trim() || this.termIsEmpty(this.termsObjs[i].t);
             const descEmpty = !this.termsObjs[i].d.textContent.trim() || this.termIsEmpty(this.termsObjs[i].d);
 
-            if (termEmpty) {
+            let isError = false;
+            if (termEmpty && (!descEmpty || i < 3 && goodTermsCnt < 3)) {
+                isError = true;
+                if (!descEmpty) {
+                    this.errorTermsShow("term", i, document.getElementById('field-terms').dataset.messageNotBlankTerm);
+                } else {
+                    this.errorTermsShow("term", i, document.getElementById('field-terms').dataset.messageMinThreeTerms);
+                }
                 this.errorMark(this.termsObjs[i].t);
-                this.errorTermsShow(this.termsObjs[i].t, i, document.getElementById('field-terms').dataset.message);
-                errors.push(document.getElementById('field-terms').dataset.message); //errors.push("add at least three terms");
+                errors.push(document.getElementById('field-terms').dataset.messageMinThreeTerms); //errors.push("add at least three terms");
             } else {
                 this.errorMark(this.termsObjs[i].t, false);
-                this.errorTermsHide(this.termsObjs[i].t, i);
+                this.errorTermsHide("term", i);
+            }
+            if (!descEmpty && this.termsObjs[i].d.textContent.trim().length > 950) {
+                this.errorMark(this.termsObjs[i].t);
+                this.errorTermsShow("description", i, document.getElementById('field-terms').dataset.messageDescriptionUp);
+            } else if (!isError) {
+                this.errorMark(this.termsObjs[i].t, false);
+                this.errorTermsHide("description", i);
             }
         }
 
         if (errors.length > 0) {
-            this.showErrors(errors.join(", "));
+            //this.showErrors(errors.join(", "));
             if (this.test !== true) {
                 return false;
             }
@@ -745,11 +780,13 @@ class Overlay {
 
 class TermRow {
     constructor(
-        { onTextNormalization } = {},
+        index,
+        {onTextNormalization} = {},
         obj = null,
         first = false,
         data) {
-        this.obj = obj ?? { term: "", description: "", id: null };
+        this.index = index;
+        this.obj = obj ?? {term: "", description: "", id: null};
         this.first = !!first;
 
         this.data = data ?? {};
@@ -758,28 +795,34 @@ class TermRow {
 
         this.buildRow();
     }
+
     getElement() {
         return this.root;
     }
+
     createWrapBloc(field, label, error) {
         const div = document.createElement('div');
-        div.className='term-block';
+        div.className = 'term-block';
         div.appendChild(field);
         div.appendChild(document.createElement('hr'));
         div.appendChild(label);
         div.appendChild(error);
         return div;
     }
+
     createField(placeholderClass, placeholder, type, text) {
         const div = document.createElement('div');
         div.className = `term-input ${placeholderClass}`;
+        div.id = type + this.index;
+
         div.setAttribute('data-base-placeholder', this.data.dataBasePlaceholder);
         div.setAttribute('data-placeholder', placeholder);
-        div.setAttribute('data-placeholder-class',`${type}-placeholder`);
-        div.contentEditable='true';
+        div.setAttribute('data-placeholder-class', `${type}-placeholder`);
+        div.contentEditable = 'true';
         div.innerHTML = this.onTextNormalization(text);
         return div;
     }
+
     createLabel(labelText, first, type) {
         const div = document.createElement('div');
         const span = document.createElement("span");
@@ -798,20 +841,23 @@ class TermRow {
         }
         return div;
     }
-    createError () {
+
+    createError(type) {
         const div = document.createElement('div');
-        div.className = "field-error";
+        div.className = "field-error display-none";
+        div.id = 'error-' + type + '-'+ this.index;
         return div;
     }
+
     buildRow() {
         const term = this.createField('term-placeholder', this.data.dataTermPlaceholder, "term", this.obj.term);
         const termLabel = this.createLabel(this.data.dataTermText, this.first, "term");
-        const termError = this.createError();
+        const termError = this.createError("term");
         const termBlock = this.createWrapBloc(term, termLabel, termError);
 
         const descr = this.createField('description-placeholder', this.data.dataDescriptionPlaceholder, "description", this.obj.description);
         const descrLabel = this.createLabel(this.data.dataDescrText, this.first, "description");
-        const descrError = this.createError();
+        const descrError = this.createError("description");
         const descrBlock = this.createWrapBloc(descr, descrLabel, descrError);
 
         let containerLeftRightBlueRow = document.createElement('div');
@@ -820,6 +866,7 @@ class TermRow {
         containerLeftRightBlueRow.appendChild(descrBlock);
 
         let div = document.createElement('div');
+        div.setAttribute('data-error-class', 'blue-row-err');
         div.appendChild(containerLeftRightBlueRow);
 
         let divBlueRowMargin = document.createElement('div');
@@ -848,24 +895,32 @@ class TermRow {
 }
 
 class TermController {
-    init(container, services, {onTextNormalization } = {}) {
+    init(container, services, {onTextNormalization} = {}) {
         this.services = services;
         this.container = container;
         this.onTextNormalization = onTextNormalization;
         this.container.addEventListener("row-created", e => {
-            const { term, descr, id } = e.detail;
+            const {term, descr, id} = e.detail;
             this.services.addToForm(term, descr, id);
             this.services.addToEditable(term);
             this.services.addToEditable(descr);
             this.services.addToPlaceholder(term, "term");
             this.services.addToPlaceholder(descr, "description");
         });
+        this.lastIndex = 0;
     }
     getTermContainer() {
         return this.container;
     }
+    setTermIndex(index) {
+        this.lastIndex = index;
+    }
+    getTermIndex() {
+        return ++this.lastIndex;
+    }
     addTerm(obj = null, first = false) {
         const row = new TermRow(
+            this.getTermIndex(),
             {onTextNormalization: this.onTextNormalization},
             obj,
             first,
@@ -1427,11 +1482,12 @@ document.addEventListener('DOMContentLoaded', function () {
         textNormalization.add(descr);
         autoSave.add(term, descr, term.getAttribute("data-id"));
         setForm.add(term, descr, term.getAttribute("data-id"));
-
         i++;
         term = document.getElementById('term'+i);
         descr = document.getElementById('description'+i);
     }
+    termController.setTermIndex(--i);
+
     // divplaceholder.add(document.getElementById("overlay"), 'overlay', overlay.onfocus);
 
     //divplaceholder.init();

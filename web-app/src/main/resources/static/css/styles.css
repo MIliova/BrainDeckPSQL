@@ -41,7 +41,6 @@ body {
 }
 .textarea-description textarea{
     height: 150px;
-
 }
 .textarea-description span{
     font-size: 70%;
@@ -180,12 +179,17 @@ hr {
     color: white;
     padding: 7px;
 }
-
-
+.blue-row.margin-left {
+    margin-left: 10px;
+}
 .blue-row-margin {
     margin-top: 15px;
     margin-bottom: 15px;
 }
+/*.blue-row-margin {*/
+/*    margin-top: 15px;*/
+/*    margin-bottom: 15px;*/
+/*}*/
 
 
 .blue-row img {
@@ -253,27 +257,39 @@ select {
     margin-right: 10px;
     vertical-align: bottom;
 }
-
-
-
-.blue-row-sets {
-    margin-left:10px;
-}
 .blue-row-set {
-    display: flex;
-    padding: 20px       ;
+    /*display: flex;*/
+    /*padding: 20px;*/
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: flex-start;
+}
+.blue-row-set div{
+    padding: 20px;
+    font-size: 100%;
+    line-height: 1.6;
+    font-weight: 600;
+}
+.separator {
+    color: #072748;
+    font-size: 200% !important;
+}
+.blue-row-sets {
+    /*margin-left:10px;*/
+    padding: 17px 0px 17px 17px;
 }
 .blue-row-sets h2 {
-    margin-top: 5px;
-    margin-bottom: 1px;
+    margin-top: 7px;
+    margin-bottom: 7px;
     font-size: 110%;
+    font-weight: 600;
 }
-.pre-term-title-sets {
+.set-pre-title {
     font-size: 70%;
     display: flex;
     align-items: center;
 }
-.pre-term-title-sets a {
+.set-pre-title a {
     color: white;
     text-decoration: none;
 }
@@ -286,19 +302,11 @@ select {
     margin-right: 10px;
 
 }
-.term-title-sets {
 
-}
-.term-description-sets {
-    font-size: 100%;
-    color: white;
-    /*#072748;*/
-}
-
-.term-description-set {
+.set-description {
     color: #3B6B8A;
     margin-top: 10px;
- }
+}
 
 .term-placeholder:empty::before {
      content: attr(data-placeholder);

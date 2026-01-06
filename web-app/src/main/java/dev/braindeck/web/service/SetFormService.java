@@ -12,6 +12,7 @@ import java.util.List;
 public class SetFormService {
     private final TermParser termParser;
     private final SetService setService;
+    private final UserService userService;
 
     public <T> TermsValidateResult<T> validate(String payloadTerms, Class<T> clazz) {
         try {
@@ -42,7 +43,7 @@ public class SetFormService {
         }
 
         SetDto set = result.getSet();
-        return SetFormResult.redirect("/set/" + set.id());
+        return SetFormResult.redirect("/user/" + userService.getCurrentUser().id()  + "/set/" + set.id());
     }
 
 
@@ -60,7 +61,7 @@ public class SetFormService {
                     terms);
         }
 
-        return SetFormResult.redirect("/set/" + setId);
+        return SetFormResult.redirect("/user/" + userService.getCurrentUser().id() + "/set/" + setId);
     }
 
 }

@@ -102,7 +102,10 @@
                        th:data-error-id="error-description-language-id">
                 <input type="hidden" name="terms" value=""
                        th:id="field-terms"
-                       th:data-message="#{messages.set.create.j.ats}">
+                       th:data-message-min-three-terms="#{messages.set.create.j.ats}"
+                       th:data-message-not-blank-term="#{error.set.term.not.blank}"
+                       th:data-message-description-up="#{error.set.term.description.size}">
+
                 <input type="hidden"
                        th:if="*{id} != null"
                        th:field="*{id}"
@@ -162,7 +165,6 @@
                             <div th:replace="fragments/term-block :: termBlock(${term}, ${iter.index}, ${termErrors})"></div>
                         </div>
                     </div>
-
 
 
 
