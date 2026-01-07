@@ -8,14 +8,14 @@ import java.util.Optional;
 
 public interface MySetsRestClient {
 
-    SetDto create(String title, String description, Integer termLanguageId, Integer descriptionLanguageId,
-                  List<NewTermPayload> terms);
+    SetCreatedDto create(String title, String description, Integer termLanguageId, Integer descriptionLanguageId,
+                      List<NewTermPayload> terms);
 
     void update(int id,
                 String title, String description, Integer termLanguageId, Integer descriptionLanguageId, List<UpdateTermPayload> terms);
 
     void delete(int id);
 
-    Optional<SetDto> findMySetById(int id);
+    Optional<SetFullDto> findMySetById(int id);
 
 }

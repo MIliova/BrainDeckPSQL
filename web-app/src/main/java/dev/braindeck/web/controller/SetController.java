@@ -26,7 +26,7 @@ public class SetController {
                           Model model, Locale locale) {
         model.addAttribute("currentView", "set");
 
-        SetDto setDto = setsRestClient.findSetById(setId);
+        SetShortDto setDto = setsRestClient.findSetById(setId);
 
         modelPreparationService.prepareModel(model, locale, Map.of(
                 "set", setDto,

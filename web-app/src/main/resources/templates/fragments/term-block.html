@@ -1,8 +1,8 @@
 <div th:fragment="termBlock(term, index, termErrs)">
-    <div class="container-left-right-top blue-row"
+    <div data-term-row class="container-left-right-top blue-row"
         th:with="termErrors=${termErrs != null ? termErrs.get(index) : null}">
         <div class="term-block">
-            <div class="term-input"
+            <div data-term="true" class="term-input"
                  th:classappend="${term == null || term?.term == ''} ? 'term-placeholder'"
                  th:id="'term'+${index}"
                  th:data-id="${term?.id }"
@@ -35,7 +35,7 @@
             </div>
         </div>
         <div class="term-block">
-            <div class="term-input"
+            <div data-term="true" class="term-input"
                  th:id="'description'+${index}"
                  th:classappend="${term == null || term?.description == ''} ? 'description-placeholder'"
                  th:data-base-placeholder="#{messages.set.create.placeholder} "

@@ -1,7 +1,7 @@
 package dev.braindeck.web.service;
 
 import dev.braindeck.web.controller.payload.*;
-import dev.braindeck.web.entity.SetDto;
+import dev.braindeck.web.entity.SetCreatedDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -42,7 +42,7 @@ public class SetFormService {
                     terms);
         }
 
-        SetDto set = result.getSet();
+        SetCreatedDto set = result.getSet();
         return SetFormResult.redirect("/user/" + userService.getCurrentUser().id()  + "/set/" + set.id());
     }
 

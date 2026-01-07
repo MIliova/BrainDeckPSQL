@@ -4,10 +4,8 @@ import dev.braindeck.api.controller.exception.ForbiddenException;
 import dev.braindeck.api.controller.payload.DTermPayload.DTermPayload;
 import dev.braindeck.api.dto.ImportTermDto;
 import dev.braindeck.api.dto.NewDTermDto;
-import dev.braindeck.api.dto.TermDto;
 import dev.braindeck.api.entity.DraftEntity;
 import dev.braindeck.api.entity.DTermEntity;
-import dev.braindeck.api.entity.UserEntity;
 import dev.braindeck.api.repository.DraftTermRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -24,8 +22,8 @@ public class DTermServiceImpl implements DTermService {
     private static final int TERM_MAX_LENGTH = 950;
 
     @Override
-    public NewDTermDto create(UserEntity user, int draftId, DTermPayload payload) {
-        DraftEntity draft = draftService.findEntityByIdOrCreate(user, draftId);
+    public NewDTermDto create(int userId, int draftId, DTermPayload payload) {
+        DraftEntity draft = draftService.findOrCreateDraftEntityById(userId, draftId);
         DTermEntity entity = new DTermEntity(
                 null,
                 payload.term(),
@@ -36,8 +34,8 @@ public class DTermServiceImpl implements DTermService {
         return Mapper.newDTermToDto(entity);
     }
     @Override
-    public List<NewDTermDto> create(UserEntity user, int draftId, List<DTermPayload> payloads) {
-        DraftEntity draft = draftService.findEntityByIdOrCreate(user, draftId);
+    public List<NewDTermDto> create(int userId, int draftId, List<DTermPayload> payloads) {
+        DraftEntity draft = draftService.findOrCreateDraftEntityById(userId, draftId);
         List<DTermEntity> list = new ArrayList<>();
         for (DTermPayload p : payloads) {
             list.add(new DTermEntity(null, p.term(), p.description(), draft));
@@ -75,27 +73,6 @@ public class DTermServiceImpl implements DTermService {
 
         draftTermRepository.delete(term);
     }
-
-//    @Override
-//    @Transactional
-//    public void deleteByDraftId(int draftId, int currentUserId) {
-//        List<DTermEntity> terms = draftTermRepository.findByDraftId(draftId)
-//                .orElseThrow(() -> new NoSuchElementException("errors.term.not.found"));
-//
-//        checkOwnership(terms.get(0), draftId, currentUserId);
-//
-//        draftTermRepository.deleteByDraftId(draftId);
-//    }
-//
-//    @Override
-//    public List<TermDto> findDtoByDraftId(int draftId) {
-//        return Mapper.draftTermsToDto(this.draftTermRepository.findAllByDraftId(draftId));
-//    }
-//
-//    @Override
-//    public List<DTermEntity> findByDraftId(int draftId) {
-//        return this.draftTermRepository.findAllByDraftId(draftId);
-//    }
 
     private void checkOwnership(DTermEntity term, int draftId, int userId) {
         if (!term.getDraft().getId().equals(draftId)) {
@@ -135,43 +112,6 @@ public class DTermServiceImpl implements DTermService {
         }
         return list;
     }
-
-//    @Override
-//    public List<ImportTermDto> prepareImport(
-//            String text,
-//            String colSeparator, String rowSeparator,
-//            String colCustom, String rowCustom) {
-//        String rS = switch (rowSeparator) {
-//            case "newline" -> "\n";
-//            case "semicolon" -> ";";
-//            default -> rowCustom;
-//        };
-//
-//        String cS = switch (colSeparator) {
-//            case "tab" -> "\t";
-//            case "comma" -> ",";
-//            default -> colCustom;
-//        };
-//
-//        List<ImportTermDto> list = new ArrayList<>();
-//        String [] rows = text.split(rS);
-//        for (String row : rows) {
-//            List<String> cols = new ArrayList<>(Arrays.asList(row.split(cS,2)));
-//            String first = cols.getFirst();
-//            while (first.length() > 950) {
-//                list.add(new ImportTermDto(first.substring(0,950), ""));
-//                first = first.substring(950);
-//            }
-//            String last = (cols.size() > 1 ? cols.getLast(): "");
-//            while (last.length() > 950) {
-//                list.add(new ImportTermDto(first, last.substring(0,950)));
-//                last = last.substring(950);
-//                first = "";
-//            }
-//            list.add(new ImportTermDto(first, last));
-//        }
-//        return list;
-//    }
 
 }
 

@@ -26,8 +26,12 @@ public class MyDraftRestController {
 
     @GetMapping
     public ResponseEntity<DraftDto> get() {
+        System.out.println("getDraftS");
+
         UserEntity user = userService.getCurrentUser();
-        DraftDto draft = draftService.findFirstByUserIdOrCreate(user);
+        DraftDto draft = draftService.getDraftDto(user.getId());
+        System.out.println("getDraftE");
+
         return ResponseEntity.ok(draft);
     }
 

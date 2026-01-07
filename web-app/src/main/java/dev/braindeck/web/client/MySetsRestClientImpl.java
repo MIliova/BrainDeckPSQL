@@ -20,23 +20,23 @@ public class MySetsRestClientImpl implements MySetsRestClient {
     private final RestClient restClient;
 
     @Override
-    public Optional<SetDto> findMySetById(int setId) {
+    public Optional<SetFullDto> findMySetById(int setId) {
         return Optional.ofNullable(restClient.get()
                 .uri("/api/users/me/set/{setId}", setId)
                 .retrieve()
-                .body(SetDto.class));
+                .body(SetFullDto.class));
     }
 
     @Override
-    public SetDto create(String title, String description, Integer termLanguageId, Integer descriptionLanguageId,
-                         List<NewTermPayload> terms) {
+    public SetCreatedDto create(String title, String description, Integer termLanguageId, Integer descriptionLanguageId,
+                             List<NewTermPayload> terms) {
         return restClient
                 .post()
                 .uri("/api/users/me/set")
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(new RestSetPayload(title, description, termLanguageId, descriptionLanguageId, terms))
                 .retrieve()
-                .body(SetDto.class);
+                .body(SetCreatedDto.class);
     }
 
     @Override

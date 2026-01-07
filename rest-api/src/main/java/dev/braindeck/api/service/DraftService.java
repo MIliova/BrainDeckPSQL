@@ -16,11 +16,11 @@ public interface DraftService {
 
     DraftDto deleteAndCreate(int draftId, UserEntity user);
 
-    DraftDto findFirstByUserIdOrCreate(UserEntity userId);
+    DraftDto getDraftDto(int userId);
 
-    DraftEntity findFirstEntityByUserIdOrCreate(UserEntity user);
+    DraftEntity findOrCreateDraftEntity(int userId);
 
-    DraftEntity findEntityByIdOrCreate(UserEntity user, int draftId);
+    DraftEntity findOrCreateDraftEntityById(int userId, int draftId);
 
     DraftEntity findEntityById(int id, int currentUserId);
 

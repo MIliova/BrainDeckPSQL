@@ -4,7 +4,9 @@ import dev.braindeck.web.client.MyDraftRestClient;
 import dev.braindeck.web.client.MySetsRestClient;
 import dev.braindeck.web.controller.exception.BadRequestException;
 import dev.braindeck.web.controller.payload.*;
+import dev.braindeck.web.entity.SetCreatedDto;
 import dev.braindeck.web.entity.SetDto;
+import dev.braindeck.web.entity.SetFullDto;
 import dev.braindeck.web.utills.ProblemDetailParser;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -26,7 +28,7 @@ public class SetService {
 
         try {
             if (draftId != null) {
-                SetDto set =  myDraftRestClient.createFromDraft(
+                SetCreatedDto set =  myDraftRestClient.createFromDraft(
                         draftId,
                         payload.getTitle(),
                         payload.getDescription(),
@@ -36,7 +38,7 @@ public class SetService {
                 );
                 return SetCreationResult.success(set);
             }
-            SetDto set =  mySetsRestClient.create(
+            SetCreatedDto set =  mySetsRestClient.create(
                     payload.getTitle(),
                     payload.getDescription(),
                     payload.getTermLanguageId(),

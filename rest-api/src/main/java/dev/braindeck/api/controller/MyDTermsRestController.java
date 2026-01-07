@@ -32,7 +32,7 @@ public class MyDTermsRestController {
         return ResponseEntity.created(
                         uriBuilder.replacePath("/api/drafts/{draftId}")
                                 .build(Map.of("draftId", draftId)))
-                .body(draftTermService.create(user, draftId, term));
+                .body(draftTermService.create(user.getId(), draftId, term));
     }
 
     @PostMapping("/batch")
@@ -44,10 +44,10 @@ public class MyDTermsRestController {
         return ResponseEntity.created(
                         uriBuilder.replacePath("/api/drafts/{draftId}")
                                 .build(Map.of("draftId", draftId)))
-                .body(draftTermService.create(user, draftId, terms));
+                .body(draftTermService.create(user.getId(), draftId, terms));
     }
 
-    @PutMapping("/{termId:\\d+}")
+    @PatchMapping("/{termId:\\d+}")
     public ResponseEntity<Void> update(
             @PathVariable("draftId") @Positive (message = "errors.draft.id") int draftId,
             @PathVariable("termId") @Positive (message = "errors.term.id") int termId,

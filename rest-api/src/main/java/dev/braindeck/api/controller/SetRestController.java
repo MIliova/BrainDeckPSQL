@@ -1,6 +1,6 @@
 package dev.braindeck.api.controller;
 
-import dev.braindeck.api.dto.SetDto;
+import dev.braindeck.api.dto.SetShortDto;
 import dev.braindeck.api.dto.SetWithTCntUInfoDto;
 import dev.braindeck.api.service.SetService;
 import jakarta.validation.constraints.Positive;
@@ -26,7 +26,7 @@ public class SetRestController {
     }
 
     @GetMapping("/sets/{setId:\\d+}")
-    public ResponseEntity<SetDto> findSet(
+    public ResponseEntity<SetShortDto> findSet(
             @PathVariable("setId") @Positive int setId) {
         return ResponseEntity.ok(setService.findById(setId));
     }

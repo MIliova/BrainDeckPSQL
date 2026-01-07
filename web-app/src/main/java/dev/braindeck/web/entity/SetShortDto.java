@@ -2,14 +2,12 @@ package dev.braindeck.web.entity;
 
 import java.util.List;
 
-public record SetDto(
+public record SetShortDto(
         Integer id,
         String title,
         String description,
-        Integer termLanguageId,
-        Integer descriptionLanguageId,
         Integer userId,
+        String userName,
         List<TermDto> terms
 ) {
-
 }

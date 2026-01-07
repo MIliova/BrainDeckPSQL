@@ -1,6 +1,7 @@
 package dev.braindeck.web.controller;
 
 import dev.braindeck.web.client.MySetsRestClient;
+import dev.braindeck.web.controller.payload.DraftPayload;
 import dev.braindeck.web.controller.payload.UpdateSetPayload;
 import dev.braindeck.web.controller.payload.UpdateTermPayload;
 import dev.braindeck.web.entity.*;
@@ -34,17 +35,17 @@ public class MySetController {
             Model model, Locale locale) {
         model.addAttribute("currentView", "edit-set");
 
-        SetDto set = mySetsRestClient.findMySetById(setId)
+        SetFullDto set = mySetsRestClient.findMySetById(setId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
         modelPreparationService.prepareModel(model,  locale, Map.of(
-                "payload", new SetFormDto(
+                "payload", new DraftPayload(
                         set.id(),
                         set.title(),
                         set.description(),
                         set.termLanguageId(),
-                        set.descriptionLanguageId(),
-                        set.terms()
-                ),
+                        set.descriptionLanguageId()
+                        ),
+                "terms", set.terms(),
                 "actionUrl", "/set/" + setId + "/edit",
                 "pageTitle", messageSource.getMessage("messages.set.edit", null, locale)
         ));

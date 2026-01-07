@@ -22,4 +22,6 @@ public interface TermService {
 
     List<TermDto> findAllBySet(SetEntity set);
 
+    List<TermDto> findAllBySetId(int setId);
+
 }

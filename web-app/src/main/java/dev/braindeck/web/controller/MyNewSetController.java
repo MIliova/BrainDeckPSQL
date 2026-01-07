@@ -1,6 +1,5 @@
 package dev.braindeck.web.controller;
 
-import dev.braindeck.web.controller.payload.NewSetPayload;
 import dev.braindeck.web.controller.payload.NewSetPayloadC;
 import dev.braindeck.web.controller.payload.NewTermPayload;
 import dev.braindeck.web.service.*;
@@ -28,7 +27,6 @@ public class MyNewSetController {
     public String create(Model model, Locale locale) {
         model.addAttribute("currentView", "new-set");
 
-//        NewSetFormDto payload = new NewSetFormDto();
         NewSetPayloadC payload = new NewSetPayloadC();
         modelPreparationService.prepareModel(model, locale, Map.of(
                 "actionUrl", "/set",

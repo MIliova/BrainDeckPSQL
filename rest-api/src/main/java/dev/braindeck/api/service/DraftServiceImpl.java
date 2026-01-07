@@ -2,11 +2,13 @@ package dev.braindeck.api.service;
 
 import dev.braindeck.api.controller.exception.ForbiddenException;
 import dev.braindeck.api.dto.DraftDto;
+import dev.braindeck.api.dto.TermDto;
 import dev.braindeck.api.entity.DraftEntity;
 import dev.braindeck.api.entity.NewDraftEntity;
 
 import dev.braindeck.api.entity.UserEntity;
 import dev.braindeck.api.repository.DraftRepository;
+import dev.braindeck.api.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
@@ -20,33 +22,43 @@ import java.util.Optional;
 public class DraftServiceImpl implements DraftService {
 
     private final DraftRepository draftRepository;
+    private final UserRepository userRepository;
 
-    @Override
     @Transactional
-    public DraftDto findFirstByUserIdOrCreate(UserEntity user) {
-        return Mapper.DraftSetToDto(this.findFirstEntityByUserIdOrCreate(user));
+    public DraftDto getDraftDto(int userId) {
+        DraftEntity draft = findOrCreateDraftEntity(userId);
+        return Mapper.DraftEntityToDraftDto(draft);
     }
 
     @Override
     @Transactional
-    public DraftEntity findFirstEntityByUserIdOrCreate(UserEntity user) {
-        return draftRepository.findFirstByUserId(user.getId())
+    public DraftEntity findOrCreateDraftEntity(int userId) {
+        return draftRepository.findFirstByUserIdOrderByCreatedAtDesc(userId)
                 .orElseGet(() -> {
                     try {
-                        return draftRepository.save(new NewDraftEntity(user));
+                        UserEntity user = userRepository.getReferenceById(userId);
+                        DraftEntity draft = new DraftEntity();
+                        draft.setUser(user);
+                        return draftRepository.save(draft);
                     } catch (DataIntegrityViolationException e) {
-                        return draftRepository.findFirstByUserId(user.getId())
-                                .orElseThrow(() -> new IllegalStateException("Не удалось создать или найти драфт", e));
+                        return draftRepository.findFirstByUserIdOrderByCreatedAtDesc(userId)
+                                .orElseThrow(() -> new IllegalStateException(
+                                        "Не удалось создать или найти драфт", e));
                     }
                 });
     }
 
+
+
+
+
+
     @Transactional
     @Override
-    public DraftEntity findEntityByIdOrCreate(UserEntity user, int draftId) {
+    public DraftEntity findOrCreateDraftEntityById(int userId, int draftId) {
         return Optional.ofNullable(draftId > 0 ? draftRepository.findById(draftId).orElse(null) : null)
-                .filter(draft -> draft.getUser().getId().equals(user.getId()))
-                .orElseGet(() -> this.findFirstEntityByUserIdOrCreate(user));
+                .filter(draft -> draft.getUser().getId().equals(userId))
+                .orElseGet(() -> this.findOrCreateDraftEntity(userId));
     }
 
     @Transactional(readOnly = true)

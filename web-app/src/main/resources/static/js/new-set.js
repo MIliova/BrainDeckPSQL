@@ -199,7 +199,6 @@ class EditableDiv {
             range.deleteContents();
             startNode = range.endContainer;
         }
-        console.log(afterFragment.textContent);
 
         //Удаляем хвост после курсора из currentP
         const walker = document.createTreeWalker(currentP, NodeFilter.SHOW_TEXT, null);
@@ -521,7 +520,6 @@ class SetForm {
         if (!wrapper) return;
         if (add) {
             wrapper.classList.add(wrapper.dataset.errorClass);
-            console.log('AFTER ADD:', wrapper.className);
         } else {
             wrapper.classList.remove(wrapper.dataset.errorClass);
         }
@@ -813,6 +811,7 @@ class TermRow {
     createField(placeholderClass, placeholder, type, text) {
         const div = document.createElement('div');
         div.className = `term-input ${placeholderClass}`;
+        div.dataset.term = 'true';
         div.id = type + this.index;
 
         div.setAttribute('data-base-placeholder', this.data.dataBasePlaceholder);
@@ -861,7 +860,8 @@ class TermRow {
         const descrBlock = this.createWrapBloc(descr, descrLabel, descrError);
 
         let containerLeftRightBlueRow = document.createElement('div');
-        containerLeftRightBlueRow.className = 'container-left-right blue-row';
+        containerLeftRightBlueRow.className = 'container-left-right-top blue-row';
+        containerLeftRightBlueRow.dataset.termRow = '';
         containerLeftRightBlueRow.appendChild(termBlock);
         containerLeftRightBlueRow.appendChild(descrBlock);
 
@@ -874,7 +874,8 @@ class TermRow {
         divBlueRowMargin.appendChild(div);
 
         this.term = term;
-        term.setAttribute("data-id", this.obj.id);
+        if (this.obj.id)
+            term.setAttribute("data-id", this.obj.id);
         term.errorEl = termError;
         descr.errorEl = descrError;
         // term.setAttribute("id", this.obj.id);//?????
@@ -970,7 +971,7 @@ class TermsImport {
         this.rowTemplate = document.createElement('template');
         this.rowTemplate.innerHTML = `
 <div class="blue-row-margin">
-    <div class="container-left-right blue-row">
+    <div class="container-left-right-top blue-row">
         <div class="numberH"><span></span></div>
         <div class="number"></div>
         <div class="term-block">
@@ -1171,13 +1172,16 @@ class AutoSave {
         }
         const handleTermEvent = (event) => {
             const el = event.target;
-            if (!el.classList.contains('term-input')) return;
-            const termRow = el.closest('.container-left-right.blue-row');
+            if (!el.closest('[data-term]')) return;
+
+            const termRow = el.closest('[data-term-row]')
             if (!termRow) return;
-            const termInps = termRow.querySelectorAll('.term-input');
+
+            const termInps = termRow.querySelectorAll('[data-term]');
             const termEl = termInps[0];
             const descriptionEl = termInps[1];
-            if (!termEl || !descriptionEl) return;
+            if (!termEl && !descriptionEl) return;
+
             this.saveTerm(termEl, descriptionEl);
         };
 
@@ -1273,22 +1277,24 @@ class AutoSave {
 
         request
             .then(data => {
-                console.log('Ответ:', data);
-                if (!data) return;
-                if (data.errors) {
+                if (data && data.errors) {
                     this.showFieldError(term, data.errors.term || '');
                     this.showFieldError(description, data.errors.description || '')
                     return;
-                }
-                if (!id && data.id) {
-                    term.setAttribute('data-id', data.id);
                 }
 
                 term.dataset.last = (termTextHash);
                 description.dataset.last = (descriptionTextHash);
 
+                if (!data) return;
+
+                if (!id && data.id) {
+                    term.setAttribute('data-id', data.id);
+                }
+
             })
             .catch(err => {
+                this.turnOff();
                 console.error('Ошибка saveTerm:', err);
             });
     }
@@ -1365,6 +1371,7 @@ class AutoSave {
                 return data;
             })
             .catch(error => {
+                this.turnOff();
                 console.error('Ошибка createTerms:', error);
                 return null;
             });

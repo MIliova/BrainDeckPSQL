@@ -8,7 +8,6 @@ public record DraftDto(
         String description,
         Integer termLanguageId,
         Integer descriptionLanguageId,
-        UserDto user,
         List<TermDto> terms
 ) {
 }

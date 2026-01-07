@@ -32,7 +32,7 @@ public class DraftEntity {
     @Column(name="description_language_id", nullable = false, unique = false)
     private Integer descriptionLanguageId;
 
-    @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name="user_id", updatable = false, nullable = false)
     private UserEntity user;
 
@@ -41,6 +41,11 @@ public class DraftEntity {
 
     @Column (name="created_at", nullable = false)
     private Instant createdAt;
+
+    @PrePersist
+    public void prePersist() {
+        createdAt = Instant.now();
+    }
 
     public DraftEntity(String title, String description, Integer termLanguageId, Integer descriptionLanguageId, UserEntity user) {
         this.title = title;
@@ -51,10 +56,5 @@ public class DraftEntity {
     }
 
 
-
-    @PrePersist
-    public void prePersist() {
-        createdAt = Instant.now();
-    }
 
 }

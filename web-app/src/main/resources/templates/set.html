@@ -29,9 +29,9 @@
                 </div>
                 <div class="set-pre-title">
                     <span th:text="|${set.terms.size()} #{messages.set.terms}|">? Terms</span>&nbsp;&nbsp;|&nbsp;&nbsp;
-                    <img class="circle_image" src="/images/avatar.jpg" th:alt="${set.user().name()}" />
-                    <a th:href="@{/user/{userId}/sets(userId=${user.id()})}"
-                       th:text="${user.name()}">Unknown User</a>
+                    <img class="circle_image" src="/images/avatar.jpg" th:alt="${set.userName}" />
+                    <a th:href="@{/user/{userId}/sets(userId=${set.userId})}"
+                       th:text="${set.userName}">Unknown User</a>
                 </div>
                 <div class="set-description" th:text="${set.description}"></div>
 

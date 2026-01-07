@@ -16,10 +16,14 @@
 
         <div class="container-left-right">
             <div><h1 data-th-text="#{messages.set.create.new}">Create a new set</h1></div>
-            <div class="blue-row">
-                <button id="submitButton" class="blue-row-button" type="button" aria-label="[[#{messages.create}]]" onclick=""><span data-th-text="#{messages.create}">Create</span></button>
-                <button id="deleteDraftButton" class="blue-row-button" type="button" aria-label="[[#{messages.delete.draft}]]"
-                        th:if="${isDraft}" onclick=""><span data-th-text="#{messages.delete.draft}">Delete draft</span></button>
+            <div style="display: flex">
+                <div class="blue-row margin-left">
+                    <button id="submitButton" class="blue-row-button" type="button" th:aria-label="#{messages.create}" onclick=""><span data-th-text="#{messages.create}">Create</span></button>
+                </div>
+                <div class="blue-row margin-left">
+                    <button id="deleteDraftButton" class="blue-row-button" type="button" th:aria-label="#{messages.delete.draft}"
+                            th:if="${isDraft}" onclick=""><span data-th-text="#{messages.delete.draft}">Delete draft</span></button>
+                </div>
             </div>
         </div>
 
@@ -162,7 +166,7 @@
                                             || iter.index==0
                                             && #fields.hasErrors('descriptionLanguageId')
                                          } ? 'blue-row-err'">
-                            <div th:replace="fragments/term-block :: termBlock(${term}, ${iter.index}, ${termErrors})"></div>
+                            <div th:replace="~{fragments/term-block :: termBlock(${term}, ${iter.index}, ${termErrors})}"></div>
                         </div>
                     </div>
 
@@ -171,7 +175,7 @@
                     <div class="blue-row-margin"
                          th:each="i : ${#numbers.sequence(lastIndex, lastIndex + (2 - lastIndex > 0 ? 2 - lastIndex : 0))}">
                         <div th:data-error-class="blue-row-err">
-                            <div th:replace="fragments/term-block :: termBlock(${null}, ${i}, ${null})"></div>
+                            <div th:replace="~{fragments/term-block :: termBlock(${null}, ${i}, ${null})}"></div>
                         </div>
                     </div>
                 </div>
@@ -179,7 +183,7 @@
         </div>
 
         <div class="container-center" style="margin: 40px 0">
-            <div class="blue-row" id="add_term_button" style="display: none;"><button class="blue-row-button" type="button" aria-label="Add" ><span th:data="messages.set.edit.add">Add term</span></button></div>
+            <div class="blue-row" id="add_term_button" style="display: none;"><button class="blue-row-button" type="button" aria-label="Add" ><span th:data="#{messages.set.edit.add}">Add term</span></button></div>
         </div>
 
 
@@ -216,7 +220,7 @@
         <div style="display: flex">
             <div style="text-align: left; margin-right: 20px">
                 <h3 style="text-align: left" th:text="#{messages.set.create.import.colSeparator}"></h3>
-                <div aria-label="[[#{messages.set.create.import.colSeparator}]]" style="display: block">
+                <div th:aria-label="#{messages.set.create.import.colSeparator}" style="display: block">
                     <div><label for="import-radio-tab">
                         <input id="import-radio-tab" type="radio" name="col-separator" value="tab" checked=""><span>Tab</span></label></div>
                     <div><label for="import-radio-comma">
@@ -230,7 +234,7 @@
 
             <div style="text-align: left">
                 <h3 th:text="#{messages.set.create.import.rowSeparator}"></h3>
-                <div aria-label="[[[[#{messages.set.create.import.colSeparator}]]]]" style="display: block">
+                <div th:aria-label="#{messages.set.create.import.colSeparator}" style="display: block">
                     <div><label for="import-radio-newline">
                         <input id="import-radio-newline" type="radio" name="row-separator" value="newline" checked=""><span>New line</span></label></div>
                     <div><label for="import-radio-semicolon">

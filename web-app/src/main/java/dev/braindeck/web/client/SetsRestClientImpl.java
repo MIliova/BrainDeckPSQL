@@ -17,11 +17,11 @@ public class SetsRestClientImpl implements SetsRestClient {
     private final RestClient restClient;
 
     @Override
-    public SetDto findSetById(int setId) {
+    public SetShortDto findSetById(int setId) {
         return restClient.get()
                 .uri("/api/sets/{setId}", setId)
                 .retrieve()
-                .body(SetDto.class);
+                .body(SetShortDto.class);
     }
 
     @Override

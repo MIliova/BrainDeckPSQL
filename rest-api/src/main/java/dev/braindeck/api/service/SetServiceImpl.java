@@ -3,11 +3,11 @@ package dev.braindeck.api.service;
 import dev.braindeck.api.controller.exception.ForbiddenException;
 import dev.braindeck.api.controller.payload.NewTermPayload;
 import dev.braindeck.api.controller.payload.UpdateTermPayload;
-import dev.braindeck.api.dto.SetDto;
-import dev.braindeck.api.dto.SetWithTCntUInfoDto;
-import dev.braindeck.api.dto.TermDto;
+import dev.braindeck.api.dto.*;
+
 import dev.braindeck.api.entity.*;
 import dev.braindeck.api.repository.SetRepository;
+import dev.braindeck.api.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -24,7 +24,7 @@ public class SetServiceImpl implements SetService {
     private final SetRepository setRepository;
     private final TermService termService;
     private final DraftService draftService;
-    private final UserService userService;
+    private final UserRepository userRepository;
 
 
     @Transactional
@@ -53,16 +53,29 @@ public class SetServiceImpl implements SetService {
 
     @Transactional
     @Override
-    public SetDto create(
-            String title, String description,
-            int termLanguageId, int descriptionLanguageId,
-            UserEntity user, List<NewTermPayload> listTerms) {
-        SetEntity set = new SetEntity(title, description, termLanguageId, descriptionLanguageId, user);
+    public SetCreatedDto create(
+            String title,
+            String description,
+            int termLanguageId,
+            int descriptionLanguageId,
+            int userId,
+            List<NewTermPayload> listTerms) {
+
+        UserEntity userRef = userRepository.getReferenceById(userId);
+
+        SetEntity set = new SetEntity(title, description, termLanguageId, descriptionLanguageId, userRef);
+
         List<TermEntity> terms = listTerms.stream()
                 .map(payload -> new TermEntity(payload.getTerm(), payload.getDescription(), set))
                 .toList();
+
         set.setTerms(terms);
-        return Mapper.setToDto(setRepository.save(set));
+
+        SetEntity saved = setRepository.save(set);
+        return new SetCreatedDto(
+                saved.getId(),
+                saved.getUser().getId()
+        );
     }
 
     @Transactional
@@ -145,8 +158,6 @@ public class SetServiceImpl implements SetService {
     @Transactional
     @Override
     public List<SetWithTCntUInfoDto> findAllByUserId(int userId) {
-
-        UserEntity user = userService.findById(userId);
         return setRepository.findAllByUser(userId)
                 .stream()
                 .map(set -> {
@@ -160,8 +171,8 @@ public class SetServiceImpl implements SetService {
                             set.description(),
                             updatedAtLocal,
                             set.termCount(),
-                            userId,
-                            user.getName()
+                            set.userId(),
+                            set.userName()
                     );
                 })
                 .toList();
@@ -169,11 +180,18 @@ public class SetServiceImpl implements SetService {
 
     @Transactional(readOnly = true)
     @Override
-    public SetDto findById(int id) {
-        SetEntity setEntity = setRepository.findById(id)
+    public SetShortDto findById(int id) {
+        SetShortDto setDto = setRepository.findDtoById(id)
                 .orElseThrow(()-> new NoSuchElementException("errors.set.not.found"));
-        List<TermDto> terms = termService.findAllBySet(setEntity);
-        return Mapper.setToDto(setEntity, terms);
+        List<TermDto> terms = termService.findAllBySetId(id);
+        return new SetShortDto(
+                setDto.id(),
+                setDto.title(),
+                setDto.description(),
+                setDto.userId(),
+                setDto.userName(),
+                terms
+        );
     }
 
 }

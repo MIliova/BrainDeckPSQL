@@ -2,7 +2,9 @@ package dev.braindeck.web.client;
 
 import dev.braindeck.web.controller.payload.*;
 import dev.braindeck.web.entity.DraftDto;
+import dev.braindeck.web.entity.SetCreatedDto;
 import dev.braindeck.web.entity.SetDto;
+import dev.braindeck.web.entity.SetFullDto;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
@@ -26,7 +28,7 @@ public class MyDraftRestClientImpl implements MyDraftRestClient {
     }
 
     @Override
-    public SetDto createFromDraft(
+    public SetCreatedDto createFromDraft(
             int draftId,
             String title,
             String description,
@@ -39,7 +41,7 @@ public class MyDraftRestClientImpl implements MyDraftRestClient {
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(new RestSetPayload(title,  description,  termLanguageId,  descriptionLanguageId, terms))
                 .retrieve()
-                .body(SetDto.class);
+                .body(SetCreatedDto.class);
     }
 
 }

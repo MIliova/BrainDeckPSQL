@@ -1,19 +1,16 @@
-package dev.braindeck.web.entity;
+package dev.braindeck.web.controller.payload;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.List;
-
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class SetFormDto {
+public class DraftPayload {
     private Integer id;
     private String title;
     private String description;
     private Integer termLanguageId;
     private Integer descriptionLanguageId;
-    private List<TermDto> terms;
 }

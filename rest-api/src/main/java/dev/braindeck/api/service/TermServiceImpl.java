@@ -96,6 +96,12 @@ public class TermServiceImpl implements TermService {
         return Mapper.termsToDto(termRepository.findAllBySet(setEntity));
     }
 
+    @Override
+    public List<TermDto> findAllBySetId(int setId) {
+        return Mapper.termsToDto(termRepository.findAllBySetId(setId));
+    }
+
+
 //    @Override
 //    public void deleteAllBySetId(int setId) {
 //        termRepository.deleteBySetId(setId);

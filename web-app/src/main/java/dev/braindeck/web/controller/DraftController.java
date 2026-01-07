@@ -1,7 +1,7 @@
 package dev.braindeck.web.controller;
 
 import dev.braindeck.web.client.*;
-import dev.braindeck.web.controller.payload.NewSetPayload;
+import dev.braindeck.web.controller.payload.DraftPayload;
 import dev.braindeck.web.controller.payload.NewSetPayloadC;
 import dev.braindeck.web.controller.payload.NewTermPayload;
 import dev.braindeck.web.entity.*;
@@ -36,14 +36,14 @@ public class DraftController {
             return "redirect:/set";
         }
         modelPreparationService.prepareModel(model, locale, Map.of(
-                "payload", new SetFormDto(
+                "payload", new DraftPayload(
                         draft.id(),
                         draft.title(),
                         draft.description(),
                         draft.termLanguageId(),
-                        draft.descriptionLanguageId(),
-                        draft.terms()
+                        draft.descriptionLanguageId()
                 ),
+                "terms", draft.terms(),
                 "isDraft", true,
                 "actionUrl", "/draft/" + draft.id(),
                 "pageTitle", messageSource.getMessage("messages.set.create.new", null, locale)

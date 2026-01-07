@@ -17,5 +17,8 @@ public interface TermRepository extends JpaRepository<TermEntity, Integer> {
     void deleteBySetId(@Param("setId") Integer setId);
 
     List<TermEntity> findAllBySet(SetEntity setEntity);
+
+    List<TermEntity> findAllBySetId(int setId);
+
 }
 

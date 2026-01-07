@@ -15,6 +15,7 @@ public class MyUserController {
 
     @GetMapping
     public ResponseEntity<UserDto> get() {
+        System.out.println("getCurrentUser");
         return ResponseEntity.ok(userService.getCurrent());
     }
 

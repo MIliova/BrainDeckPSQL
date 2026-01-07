@@ -24,17 +24,20 @@ public class MySetRestController {
     private final SetService setService;
 
     @PostMapping
-    public ResponseEntity<SetDto> create(
+    public ResponseEntity<SetCreatedDto> create(
             @Valid @RequestBody NewSetPayload payload,
             UriComponentsBuilder uriBuilder) {
         UserEntity user = userService.getCurrentUser();
-        SetDto set = setService.create(
-                payload.title(), payload.description(),
-                payload.termLanguageId(), payload.descriptionLanguageId(),
-                user, payload.terms());
+        SetCreatedDto saved = setService.create(
+                payload.title(),
+                payload.description(),
+                payload.termLanguageId(),
+                payload.descriptionLanguageId(),
+                user.getId(),
+                payload.terms());
         return ResponseEntity.created(uriBuilder
-                        .replacePath("/api/users/me/set/{setId}").build(Map.of("setId", set.id())))
-                        .body(set);
+                        .replacePath("/api/users/me/set/{setId}").build(Map.of("setId", saved.id())))
+                        .body(saved);
     }
 
     @PatchMapping("/{setId:\\d+}")

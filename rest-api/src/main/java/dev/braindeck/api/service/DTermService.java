@@ -11,9 +11,9 @@ import java.util.List;
 public interface DTermService {
     List<ImportTermDto> prepareImport(String text, String colSeparator, String rowSeparator, String colCustom, String rowCustom);
 
-    NewDTermDto create(UserEntity user, int draftId, DTermPayload term);
+    NewDTermDto create(int userId, int draftId, DTermPayload term);
 
-    List<NewDTermDto> create(UserEntity user, int draftId, List<DTermPayload> terms);
+    List<NewDTermDto> create(int userId, int draftId, List<DTermPayload> terms);
 
     void update(int termId, int draftId, int currentUserId, DTermPayload payload);
 
