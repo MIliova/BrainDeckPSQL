@@ -27,6 +27,8 @@ public class MySetRestController {
     public ResponseEntity<SetCreatedDto> create(
             @Valid @RequestBody NewSetPayload payload,
             UriComponentsBuilder uriBuilder) {
+
+        System.out.println("create");
         UserEntity user = userService.getCurrentUser();
         SetCreatedDto saved = setService.create(
                 payload.title(),

@@ -9,7 +9,8 @@
                  th:data-base-placeholder="#{messages.set.create.placeholder} "
                  th:data-placeholder="#{messages.set.create.term_placeholder}"
                  data-placeholder-class="term-placeholder"
-                 contenteditable="true"><p
+                 contenteditable="true"
+                 th:data-error-id="'error-term-' + ${index}"><p
                     th:if="${term != null}"
                     th:text="${term?.term}"><br></p></div><hr>
             <div class="container-left-right">
@@ -41,7 +42,8 @@
                  th:data-base-placeholder="#{messages.set.create.placeholder} "
                  th:data-placeholder="#{messages.set.create.description_placeholder}"
                  data-placeholder-class="description-placeholder"
-                 contenteditable="true"><p
+                 contenteditable="true"
+                 th:data-error-id="'error-description-' + ${index}"><p
                     th:if="${term != null}"
                     th:text="${term?.description}"><br></p></div><hr>
             <div class="container-left-right">

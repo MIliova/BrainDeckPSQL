@@ -18,7 +18,8 @@ public interface SetService {
             String description,
             int termLanguageId,
             int descriptionLanguageId,
-            UserEntity user);
+            int userId);
+
     SetCreatedDto create(String title, String description, int termLanguageId, int descriptionLanguageId,
                          int userId, List<NewTermPayload> terms);
 

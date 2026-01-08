@@ -28,6 +28,14 @@ public class MyDraftRestClientImpl implements MyDraftRestClient {
     }
 
     @Override
+    public Optional<DraftDto> get(int draftId) {
+        return Optional.ofNullable(restClient.get()
+                .uri("/api/me/draft/{draftId}", draftId)
+                .retrieve()
+                .body(DraftDto.class));
+    }
+
+    @Override
     public SetCreatedDto createFromDraft(
             int draftId,
             String title,

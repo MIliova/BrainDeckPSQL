@@ -34,10 +34,13 @@
                 th:aria-label="#{messages.set.create.t}"
                 th:data-message="#{messages.set.create.j.et}"
         ></div></div><br>
-        <div class=""><div class="textarea-description"><span
+        <div class="">
+          <div class="textarea-description">
+            <span
                   th:if="${(payload?.description() != null && payload?.description() !='')||(set?.description != null && set?.description !='')}"
                   th:text="#{messages.set.create.d}"
-                  th:data-message="#{messages.set.create.d}">&nbsp;</span><span
+                  th:data-message="#{messages.set.create.d}">&nbsp;</span>
+            <span
                   th:if="${(payload?.description() == null || payload?.description() =='') && (set?.description == null || set?.description =='')}"
                   th:data-message="#{messages.set.create.d}">&nbsp;</span>
           <textarea

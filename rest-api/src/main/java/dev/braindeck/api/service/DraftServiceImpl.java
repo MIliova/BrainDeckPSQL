@@ -2,7 +2,6 @@ package dev.braindeck.api.service;
 
 import dev.braindeck.api.controller.exception.ForbiddenException;
 import dev.braindeck.api.dto.DraftDto;
-import dev.braindeck.api.dto.TermDto;
 import dev.braindeck.api.entity.DraftEntity;
 import dev.braindeck.api.entity.NewDraftEntity;
 
@@ -48,6 +47,21 @@ public class DraftServiceImpl implements DraftService {
                 });
     }
 
+    @Transactional
+    public DraftDto getDraftDtoById(int userId, int draftId) {
+        DraftEntity draft = findDraftEntityById(userId, draftId);
+        return Mapper.DraftEntityToDraftDto(draft);
+    }
+
+    @Transactional(readOnly = true)
+    @Override
+    public DraftEntity findDraftEntityById(int userId, int draftId) {
+        DraftEntity draftEntity = draftRepository.findById(draftId)
+                .orElseThrow(()-> new NoSuchElementException("errors.draft.not.found"));
+
+        checkOwner(draftEntity, userId);
+        return draftEntity;
+    }
 
 
 
@@ -61,21 +75,12 @@ public class DraftServiceImpl implements DraftService {
                 .orElseGet(() -> this.findOrCreateDraftEntity(userId));
     }
 
-    @Transactional(readOnly = true)
-    @Override
-    public DraftEntity findEntityById(int id, int currentUserId) {
-        DraftEntity draftEntity = draftRepository.findById(id)
-                .orElseThrow(()-> new NoSuchElementException("errors.draft.not.found"));
 
-        checkOwner(draftEntity, currentUserId);
-
-        return draftEntity;
-    }
 
     @Override
     @Transactional
     public void update (int id, String title, String description, int termLanguageId, int descriptionLanguageId, int currentUserId) {
-        DraftEntity draftEntity = this.findEntityById(id, currentUserId);
+        DraftEntity draftEntity = this.findDraftEntityById(currentUserId, id);
 
         draftEntity.setTitle(title);
         draftEntity.setDescription(description);
@@ -89,13 +94,12 @@ public class DraftServiceImpl implements DraftService {
     @Transactional
     public void delete(DraftEntity draftEntity) {
         draftRepository.delete(draftEntity);
-//        draftTermService.deleteByDraftId(id, currentUserId);
     }
 
     @Override
     @Transactional
     public DraftDto deleteAndCreate(int draftId, UserEntity user) {
-        DraftEntity draftEntity = this.findEntityById(draftId, user.getId());
+        DraftEntity draftEntity = this.findDraftEntityById(user.getId(), draftId);
         draftRepository.delete(draftEntity);
         DraftEntity draft =  draftRepository.save(new NewDraftEntity(user));
         return Mapper.DraftSetToDto(draft);

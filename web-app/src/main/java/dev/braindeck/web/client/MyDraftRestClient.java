@@ -16,4 +16,6 @@ public interface MyDraftRestClient {
     SetCreatedDto createFromDraft(int id, String title, String description, Integer termLanguageId, Integer descriptionLanguageId,
                                   List<NewTermPayload> terms);
 
+    Optional<DraftDto> get(int id);
+
 }

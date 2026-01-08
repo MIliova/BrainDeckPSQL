@@ -18,11 +18,13 @@ public interface DraftService {
 
     DraftDto getDraftDto(int userId);
 
+    DraftDto getDraftDtoById(int userId, int draftId);
+
     DraftEntity findOrCreateDraftEntity(int userId);
 
     DraftEntity findOrCreateDraftEntityById(int userId, int draftId);
 
-    DraftEntity findEntityById(int id, int currentUserId);
+    DraftEntity findDraftEntityById(int userId, int draftId);
 
 
 

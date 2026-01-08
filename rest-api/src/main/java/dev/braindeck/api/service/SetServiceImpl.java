@@ -35,19 +35,27 @@ public class SetServiceImpl implements SetService {
             String description,
             int termLanguageId,
             int descriptionLanguageId,
-            UserEntity user) {
+            int userId) {
 
-        DraftEntity draftEntity = draftService.findEntityById(draftId, user.getId());
+        DraftEntity draftEntity = draftService.findDraftEntityById(userId, draftId);
         if (draftEntity == null) {
             throw new ForbiddenException("errors.draft.not.belong.user");
         }
+
+        System.out.println(draftEntity);
+
+        UserEntity user = userRepository.getReferenceById(userId);
         SetEntity set = new SetEntity(title, description, termLanguageId, descriptionLanguageId, user);
 
         List<TermEntity> terms = draftEntity.getTerms().stream().map(term -> new TermEntity(term.getTerm(), term.getDescription(), set)).toList();
         set.setTerms(terms);
+
+        System.out.println(set);
+
         SetEntity savedSet = setRepository.save(set);
 
         draftService.delete(draftEntity);
+
         return Mapper.setToDto(savedSet);
     }
 

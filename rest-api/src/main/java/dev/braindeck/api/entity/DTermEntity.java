@@ -16,10 +16,10 @@ public class DTermEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    @Column(name="term", length=950, nullable = false, unique = false)
+    @Column(name="term", length=950)
     private String term;
 
-    @Column(name="description", length=950, nullable = true, unique = false)
+    @Column(name="description", length=950)
     private String description;
 
     @ManyToOne

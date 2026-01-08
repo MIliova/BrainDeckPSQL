@@ -51,6 +51,31 @@ public class DraftController {
         return "new-set";
     }
 
+    @GetMapping("/{draftId:\\d+}")
+    public String getById(
+            @PathVariable("draftId") @Positive(message = "errors.draft.id") int draftId,
+            Model model, Locale locale) {
+        model.addAttribute("currentView", "new-set");
+        DraftDto draft = myDraftRestClient.get(draftId).orElse(null);
+        if (draft == null) {
+            return "redirect:/set";
+        }
+        modelPreparationService.prepareModel(model, locale, Map.of(
+                "payload", new DraftPayload(
+                        draft.id(),
+                        draft.title(),
+                        draft.description(),
+                        draft.termLanguageId(),
+                        draft.descriptionLanguageId()
+                ),
+                "terms", draft.terms(),
+                "isDraft", true,
+                "actionUrl", "/draft/" + draft.id(),
+                "pageTitle", messageSource.getMessage("messages.set.create.new", null, locale)
+        ));
+        return "new-set";
+    }
+
     @PostMapping("/{draftId:\\d+}")
     public String create(
             @PathVariable("draftId") @Positive(message = "errors.draft.id") int draftId,
@@ -72,7 +97,7 @@ public class DraftController {
             return "new-set";
         }
 
-        SetFormResult result = setFormService.create(payload, termsValidateResult.getTerms(), null);
+        SetFormResult result = setFormService.create(payload, termsValidateResult.getTerms(), draftId);
         if (result.isRedirect()) {
             return "redirect:" + result.getRedirectUrl();
         }

@@ -396,6 +396,7 @@ class LanguageMenu {
         const type = this.owner.type;
 
         this.inputs[type].value = id;
+        this.inputs[type].dispatchEvent(new Event("change", { bubbles: true }));
 
         this.buttons.forEach(ob => {
             if (ob.type === type) {
@@ -484,6 +485,7 @@ class SetForm {
         this.test = test;
         this.inited = false;
         this.termsObjs = [];
+        this.form = document.getElementById('set-form');
     }
     add(term, description, id) {
         this.termsObjs.push({t:term, d:description, id:id});
@@ -509,7 +511,7 @@ class SetForm {
 
                         document.getElementById("field-terms").value = JSON.stringify(termsDto);
 
-                        document.getElementById('set-form').submit();
+                        this.form.submit();
 
                         break
                 }
@@ -876,8 +878,12 @@ class TermRow {
         this.term = term;
         if (this.obj.id)
             term.setAttribute("data-id", this.obj.id);
-        term.errorEl = termError;
-        descr.errorEl = descrError;
+        // term.errorEl = termError;
+        // descr.errorEl = descrError;
+
+        term.dataset.errorId = termError.id;
+        descr.dataset.errorId = descrError.id;
+
         // term.setAttribute("id", this.obj.id);//?????
         // termError.setAttribute("id", "error-term-" + this.obj.id);//????
         // descrError.setAttribute("id", "error-description-" + this.obj.id);//?????
@@ -1157,7 +1163,7 @@ class AutoSave {
         this.wait = 800;
         this.on = null;
     }
-    init(termContainer, s_d_Id, draft = false, errorField, deleteDraftButton){
+    init(form, s_d_Id, draft = false, errorField, deleteDraftButton){
         if (Number(s_d_Id) < 1)
             return;
 
@@ -1170,71 +1176,42 @@ class AutoSave {
                 this.deleteDraft();
             });
         }
-        const handleTermEvent = (event) => {
+        const handleFormEvent = (event) => {
             const el = event.target;
-            if (!el.closest('[data-term]')) return;
 
-            const termRow = el.closest('[data-term-row]')
-            if (!termRow) return;
-
-            const termInps = termRow.querySelectorAll('[data-term]');
-            const termEl = termInps[0];
-            const descriptionEl = termInps[1];
-            if (!termEl && !descriptionEl) return;
-
-            this.saveTerm(termEl, descriptionEl);
+            if (el.id === "field-title" || el.id === "field-description") {
+                this.saveSet(el, el.name);
+                return;
+            }
+            if (el.dataset.term === "true") {
+                this.onTermChange(el);
+            }
         };
-
-        //termContainer.addEventListener('input', this.debounce(handleTermEvent, this.wait));
-        // termContainer.addEventListener('blur', handleTermEvent, true);
-        termContainer.addEventListener('focusout', handleTermEvent);
+        const handleLanguageChange = (event) => {
+            const el = event.target;
+            if (el.id === "field-term-language" || el.id === "field-description-language") {
+                this.saveSet(el, el.name);
+            }
+        }
+        // termContainer.addEventListener('focusout', handleTermEvent);
+        form.addEventListener('focusout', handleFormEvent);
+        form.addEventListener("change", handleLanguageChange);
 
         this.s_d_Id = s_d_Id;
         if (draft) {
-            this.createURI = "http://localhost:8081/api/me/draft/" + this.s_d_Id + "/terms";
-            this.updateURI = "http://localhost:8081/api/me/draft/" + this.s_d_Id + "/terms/";
-            this.deleteURI = "http://localhost:8081/api/me/draft/" + this.s_d_Id + "/terms/";
+            this.updateDraftURI = "http://localhost:8081/api/me/draft/" + this.s_d_Id;
+
+            this.createTermURI = "http://localhost:8081/api/me/draft/" + this.s_d_Id + "/terms";
+            this.updateTermURI = "http://localhost:8081/api/me/draft/" + this.s_d_Id + "/terms/";
+            this.deleteTermURI = "http://localhost:8081/api/me/draft/" + this.s_d_Id + "/terms/";
             this.deleteDraftURI = "http://localhost:8081/api/me/draft/" + this.s_d_Id;
         } else {
 
 
         }
-
-    }
-    saved() {
-        return this.on === true;
-    }
-    turnOn(){
-        this.on = this.on === null ? true : this.on;
-    }
-    turnOff(){
-        this.on = false;
-    }
-    add(term, description, id1) {
-        if (!term || !description) return;
-
-        if (id1 && !term.getAttribute("data-id")) {
-            term.setAttribute("data-id", id1);
-        }
-
-        term.dataset.last = String(this.hashCode(this.termIsEmpty(term) ? '' : this.onNormalizeObj(term)));
-        description.dataset.last = String(this.hashCode(this.termIsEmpty(description) ? '' : this.onNormalizeObj(description)));
-
-        // const saveHandler = () => this.saveTerm(term, description);
-        // const debouncedHandler = this.debounce(saveHandler, this.wait);
-        // [term, description].forEach(el => {
-        //     el.addEventListener('input', debouncedHandler);
-        //     el.addEventListener('blur', saveHandler);
-        // });
-    }
-    debounce(fn, wait) {
-        let t;
-        return function(...args) {
-            clearTimeout(t);
-            t = setTimeout(() => fn.apply(this, args), wait);
-        };
     }
     hashCode(str) {
+        str = str ?? '';
         let hash = 0;
         for (let i = 0; i < str.length; i++) {
             hash = ((hash << 5) - hash) + str.charCodeAt(i);
@@ -1242,26 +1219,57 @@ class AutoSave {
         }
         return String(hash);
     }
-    showFieldError(el, message) {
-        if (!el || !el.errorEl) return;
-        if (message === "") {
-            this.clearFieldError(el);
-            return;
-        }
-        el.errorEl.innerHTML = message;
-        el.errorEl.style.display = 'block';
+    saveSet(el, type) {
+
+        if (this.on === false) return;
+
+        if (this.s_d_Id === 0) return;
+
+        const text = el.value.trim();
+        const lastText = (el.dataset.last ?? '');
+        const textHash = this.hashCode(text);
+
+        if (lastText === textHash) return;
+
+        this.editSet({ [type]: text })
+            .then(data => {
+                if (data && data.errors) {
+                    this.showFieldError(el, data.errors[el.name] || '');
+                    return;
+                }
+                el.dataset.last = (textHash);
+                return;
+            })
+            .catch(err => {
+                this.turnOff();
+                console.error('Ошибка saveSet:', err);
+            });
     }
-    clearFieldError(el) {
-        if (!el || !el.errorEl) return;
-        el.errorEl.innerHTML = '';
-        el.errorEl.style.display = 'none';
+    editSet(obj){
+        return this.request(this.updateDraftURI, {
+            method: "PATCH",
+            body: JSON.stringify(obj)
+        });
+    }
+    onTermChange(el){
+        if (!el.closest('[data-term]')) return;
+
+        const termRow = el.closest('[data-term-row]')
+        if (!termRow) return;
+
+        const termInps = termRow.querySelectorAll('[data-term]');
+        const termEl = termInps[0];
+        const descriptionEl = termInps[1];
+        if (!termEl && !descriptionEl) return;
+
+        this.saveTerm(termEl, descriptionEl);
     }
     saveTerm(term, description) {
 
         if (this.on === false) return;
 
-        const termText = this.termIsEmpty(term) ? '' : this.onNormalizeObj(term);
-        const descriptionText = this.termIsEmpty(description) ? '' : this.onNormalizeObj(description);
+        const termText = this.termIsEmpty(term) ? null : this.onNormalizeObj(term);
+        const descriptionText = this.termIsEmpty(description) ? null : this.onNormalizeObj(description);
         const lastTermText = (term.dataset.last ?? '');
         const lastDescriptionText  = (description.dataset.last ?? '');
         const termTextHash = this.hashCode(termText);
@@ -1298,6 +1306,18 @@ class AutoSave {
                 console.error('Ошибка saveTerm:', err);
             });
     }
+    createTerm(term){
+        return this.request(this.createTermURI, {
+            method: "POST",
+            body: JSON.stringify(term)
+        });
+    }
+    editTerm(id, term){
+        return this.request(`${this.updateTermURI}${id}`, {
+            method: "PATCH",
+            body: JSON.stringify(term)
+        });
+    }
     request(url, options = {}) {
         this.turnOn();
         return fetch(url, {
@@ -1320,21 +1340,29 @@ class AutoSave {
                 throw error;
             });
     }
-    createTerm(term){
-        return this.request(this.createURI, {
-            method: "POST",
-            body: JSON.stringify(term)
-        });
+    showFieldError(el, message) {
+        if (!el) return;
+        // const errorEl = el?.errorEl;
+        const errorEl = document.getElementById(el?.dataset?.errorId);
+        if (!errorEl) return;
+
+        if (message === "") {
+            this.clearFieldError(el);
+            return;
+        }
+        errorEl.innerHTML = message;
+        errorEl.style.display = 'block';
+    }
+    clearFieldError(el) {
+        if (!el) return;
+        const errorEl = document.getElementById(el?.dataset?.errorId);
+        if (!errorEl) return;
+        errorEl.innerHTML = '';
+        errorEl.style.display = 'none';
     }
 
-    editTerm(id, term){
-        return this.request(`${this.updateURI}${id}`, {
-            method: "PATCH",
-            body: JSON.stringify(term)
-        });
-    }
     deleteTerm(id, term) {
-        return this.request(`${this.deleteURI}${id}`, {
+        return this.request(`${this.deleteTermURI}${id}`, {
             method: "DELETE"
         })
             .then(data => {
@@ -1345,13 +1373,45 @@ class AutoSave {
                 return true;
             });
     }
+    saved() {
+        return this.on === true;
+    }
+    turnOn(){
+        this.on = this.on === null ? true : this.on;
+    }
+    turnOff(){
+        this.on = false;
+    }
+    add(term, description, id1) {
+        if (!term || !description) return;
 
+        if (id1 && !term.getAttribute("data-id")) {
+            term.setAttribute("data-id", id1);
+        }
+
+        term.dataset.last = String(this.hashCode(this.termIsEmpty(term) ? '' : this.onNormalizeObj(term)));
+        description.dataset.last = String(this.hashCode(this.termIsEmpty(description) ? '' : this.onNormalizeObj(description)));
+
+        // const saveHandler = () => this.saveTerm(term, description);
+        // const debouncedHandler = this.debounce(saveHandler, this.wait);
+        // [term, description].forEach(el => {
+        //     el.addEventListener('input', debouncedHandler);
+        //     el.addEventListener('blur', saveHandler);
+        // });
+    }
+    debounce(fn, wait) {
+        let t;
+        return function(...args) {
+            clearTimeout(t);
+            t = setTimeout(() => fn.apply(this, args), wait);
+        };
+    }
     showErrors(errs) {
         this.errorField.innerHTML = errors.getError(errs);
         this.errorField.style.display = 'block';
     }
     createTerms(terms){
-        return this.request(this.createURI, {
+        return this.request(this.createTermURI, {
             method: "POST",
             body: JSON.stringify(terms)
         })
@@ -1519,7 +1579,8 @@ document.addEventListener('DOMContentLoaded', function () {
     // const importButton = document.getElementById('overlay_import_button');
     //autoSave.init(((importButton && importButton.dataset != null && importButton.dataset.draftId !=null) ? importButton.dataset.draftId : 0));
     autoSave.init(
-        termController.container,
+        // termController.getTermContainer(),
+        setForm.form,
         fieldId ? fieldId.value : 0,
         fieldId?.dataset.draft === "true",
         document.getElementById('field-error'),

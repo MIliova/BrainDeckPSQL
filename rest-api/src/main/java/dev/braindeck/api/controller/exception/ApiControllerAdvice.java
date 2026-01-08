@@ -40,7 +40,11 @@ public class ApiControllerAdvice {
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ProblemDetail handleMethodArgumentNotValid(MethodArgumentNotValidException ex, Locale locale) {
 
-        ProblemDetail pd = problem(HttpStatus.BAD_REQUEST, "errors.400.title", ex.getMessage(), locale);
+        ProblemDetail pd = problem(
+                HttpStatus.BAD_REQUEST,
+                "errors.400.title",
+                ex.getMessage(),
+                locale);
 
         Map<String, String> errors = ex.getBindingResult().getFieldErrors().stream()
                 .collect(Collectors.groupingBy(
@@ -81,7 +85,11 @@ public class ApiControllerAdvice {
     // 4. Not found — нет ресурса
     @ExceptionHandler(NoSuchElementException.class)
     public ProblemDetail handleNotFound(Exception ex, Locale locale) {
-        ProblemDetail pd = problem(HttpStatus.NOT_FOUND, "errors.404.title", ex.getMessage(), locale);
+        ProblemDetail pd = problem(
+                HttpStatus.NOT_FOUND,
+                "errors.404.title",
+                ex.getMessage(),
+                locale);
 
         pd.setProperty("errors", Map.of("general",
                 messageSource.getMessage(ex.getMessage(), null, ex.getMessage(), locale)
@@ -92,7 +100,12 @@ public class ApiControllerAdvice {
 
     @ExceptionHandler(ForbiddenException.class)
     public ProblemDetail handleForbidden(ForbiddenException ex, Locale locale) {
-        ProblemDetail pd = problem(HttpStatus.FORBIDDEN, "errors.403.title", ex.getMessage(), locale);
+        ProblemDetail pd = problem(
+                HttpStatus.FORBIDDEN,
+                "errors.403.title",
+                ex.getMessage(),
+                locale);
+
         pd.setProperty("errors",Map.of("general",
                 messageSource.getMessage(ex.getMessage(), null, ex.getMessage(), locale)
         ));
@@ -101,18 +114,18 @@ public class ApiControllerAdvice {
 
     @ExceptionHandler(Exception.class)
     public ProblemDetail handleAny(Exception ex, Locale locale) {
-
         ProblemDetail pd = problem(
                 HttpStatus.INTERNAL_SERVER_ERROR,
                 "errors.500.title",
-                "errors.500.detail",
+                ex.getMessage(),
                 locale
         );
 
-        pd.setProperty("errors", Map.of("general", "Unexpected error"));
+        pd.setProperty("errors",Map.of("general",
+                messageSource.getMessage(ex.getMessage(), null, ex.getMessage(), locale)
+        ));
         return pd;
     }
-
 
     // 2. Ошибки при биндинге Query Params/PathVariables
     @ExceptionHandler(BindException.class)
@@ -121,7 +134,7 @@ public class ApiControllerAdvice {
         ProblemDetail pd = problem(
                 HttpStatus.BAD_REQUEST,
                 "errors.400.title",
-                "errors.400.detail",
+                ex.getMessage(),
                 locale
         );
 
@@ -145,11 +158,9 @@ public class ApiControllerAdvice {
                 locale
         );
 
-        pd.setProperty("errors", Map.of(
-                "general",
+        pd.setProperty("errors", Map.of("general",
                 messageSource.getMessage("errors.json.invalid", null, locale)
         ));
-
         return pd;
     }
 

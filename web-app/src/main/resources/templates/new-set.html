@@ -41,12 +41,10 @@
                         <span
                                 th:if="${payload?.title != null && payload?.title != ''}"
                                 th:text="#{messages.set.create.t}"
-                                th:data-message="#{messages.set.create.t}">&nbsp
-                        </span>
+                                th:data-message="#{messages.set.create.t}">&nbsp</span>
                         <span
-                                th:if="${payload?.title != null && payload?.title != ''}"
-                                th:data-message="#{messages.set.create.t}">&nbsp
-                        </span>
+                                th:if="${payload?.title == null || payload?.title != ''}"
+                                th:data-message="#{messages.set.create.t}">&nbsp</span>
                         <input type="text"
                                th:id="field-title"
                                th:field="*{title}"
@@ -73,12 +71,10 @@
                         <span
                                 th:if="${payload?.description != null && payload?.description != ''}"
                                 th:text="#{messages.set.create.d}"
-                                th:data-message="#{messages.set.create.d}">&nbsp;
-                        </span>
+                                th:data-message="#{messages.set.create.d}">&nbsp;</span>
                         <span
-                                th:if="${payload?.description != null && payload?.description != ''}"
-                                th:data-message="#{messages.set.create.d}">&nbsp;
-                        </span>
+                                th:if="${payload?.description == null || payload?.description == ''}"
+                                th:data-message="#{messages.set.create.d}">&nbsp;</span>
                         <textarea
                                   th:id="field-description"
                                   th:field="*{description}"

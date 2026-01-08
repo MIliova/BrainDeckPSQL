@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.util.Map;
+import java.util.Optional;
 
 @RestController
 @RequiredArgsConstructor
@@ -26,18 +27,27 @@ public class MyDraftRestController {
 
     @GetMapping
     public ResponseEntity<DraftDto> get() {
-        System.out.println("getDraftS");
 
         UserEntity user = userService.getCurrentUser();
         DraftDto draft = draftService.getDraftDto(user.getId());
-        System.out.println("getDraftE");
+
+        return ResponseEntity.ok(draft);
+    }
+
+    @GetMapping("/{draftId:\\d+}")
+    public ResponseEntity<DraftDto> getById(
+            @PathVariable("draftId") @Positive (message = "errors.draft.id") int draftId) {
+
+        UserEntity user = userService.getCurrentUser();
+        DraftDto draft = draftService.getDraftDtoById(user.getId(), draftId);
 
         return ResponseEntity.ok(draft);
     }
 
     @PatchMapping("/{draftId:\\d+}")
-    public ResponseEntity<Void> update(@PathVariable("draftId") @Positive (message = "errors.draft.id") int draftId,
-                                       @Valid @RequestBody DraftPayload payload) {
+    public ResponseEntity<Void> update(
+            @PathVariable("draftId") @Positive (message = "errors.draft.id") int draftId,
+            @Valid @RequestBody DraftPayload payload) {
         UserEntity user = userService.getCurrentUser();
         draftService.update(draftId,
                 payload.title(), payload.description(),
@@ -65,13 +75,17 @@ public class MyDraftRestController {
             UriComponentsBuilder uriBuilder) {
         UserEntity user = userService.getCurrentUser();
 
+        System.out.println(draftId);
+        System.out.println(payload);
+
         SetDto set = setService.createFromDraft(
                 draftId,
                 payload.title(),
                 payload.description(),
                 payload.termLanguageId(),
                 payload.descriptionLanguageId(),
-                user);
+                user.getId());
+
         return ResponseEntity.created(
                 uriBuilder.replacePath("/api/sets/{setId}")
                         .build(Map.of("setId", set.id())))
