@@ -1,9 +1,6 @@
 package dev.braindeck.web.service;
 
-import dev.braindeck.web.client.LanguagesRestClient;
 import dev.braindeck.web.client.UserRestClient;
-import dev.braindeck.web.controller.LanguagesControllerHelper;
-import dev.braindeck.web.entity.LanguagesDto;
 import dev.braindeck.web.entity.MyLocale;
 import dev.braindeck.web.entity.UserDto;
 import lombok.RequiredArgsConstructor;
@@ -18,10 +15,8 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class ModelPreparationService {
 
-    private final LanguagesRestClient languagesRestClient;
     private final MyLocale myLocale;
     private final UserRestClient userRestClient;
-    private final LanguagesControllerHelper languagesControllerHelper;
 
     public void prepareModel(Model model, Locale locale, Map<String, Object> modelContext) {
         UserDto user = userRestClient.get();
@@ -33,9 +28,6 @@ public class ModelPreparationService {
 
         Map<String, String> avLangs = myLocale.getAvailables();
         model.addAttribute("avLangs", avLangs);
-
-        LanguagesDto languagesList = languagesRestClient.findAllByTypes();
-        languagesControllerHelper.getLanguages(languagesList, model, locale);
 
         modelContext.forEach(model::addAttribute);
     }

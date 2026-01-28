@@ -20,11 +20,11 @@ public class MySetsRestClientImpl implements MySetsRestClient {
     private final RestClient restClient;
 
     @Override
-    public Optional<SetFullDto> findMySetById(int setId) {
+    public Optional<SetEditDto> findMySetById(int setId) {
         return Optional.ofNullable(restClient.get()
                 .uri("/api/users/me/set/{setId}", setId)
                 .retrieve()
-                .body(SetFullDto.class));
+                .body(SetEditDto.class));
     }
 
     @Override

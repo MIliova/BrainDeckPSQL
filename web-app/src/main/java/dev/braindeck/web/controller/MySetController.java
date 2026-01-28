@@ -1,5 +1,6 @@
 package dev.braindeck.web.controller;
 
+import dev.braindeck.web.client.LanguagesRestClient;
 import dev.braindeck.web.client.MySetsRestClient;
 import dev.braindeck.web.controller.payload.DraftPayload;
 import dev.braindeck.web.controller.payload.UpdateSetPayload;
@@ -28,15 +29,19 @@ public class MySetController {
     private final ModelPreparationService modelPreparationService;
     private final MessageSource messageSource;
     private final SetFormService setFormService;
+    private final LanguagesRestClient languagesRestClient;
+    private final LanguagesControllerHelper languagesControllerHelper;
 
     @GetMapping("/edit")
     public String get(
             @PathVariable("setId") int setId,
             Model model, Locale locale) {
-        model.addAttribute("currentView", "edit-set");
+        model.addAttribute("currentView", "new-set");
 
-        SetFullDto set = mySetsRestClient.findMySetById(setId)
+        SetEditDto set = mySetsRestClient.findMySetById(setId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        languagesControllerHelper.getLanguages(languagesRestClient.findAllByTypes(), model, locale,
+                set.termLanguageId(), set.descriptionLanguageId());
         modelPreparationService.prepareModel(model,  locale, Map.of(
                 "payload", new DraftPayload(
                         set.id(),
@@ -50,7 +55,7 @@ public class MySetController {
                 "pageTitle", messageSource.getMessage("messages.set.edit", null, locale)
         ));
 
-        return "edit-set";
+        return "new-set";
     }
 
     @PostMapping("/edit")
@@ -61,16 +66,19 @@ public class MySetController {
             BindingResult bindingResult,
             Model model, Locale locale) {
 
-        model.addAttribute("currentView", "edit-set");
+        model.addAttribute("currentView", "new-set");
 
         TermsValidateResult<UpdateTermPayload> termsValidateResult  = setFormService.validate(payloadTerms, UpdateTermPayload.class);
         if (bindingResult.hasErrors() || termsValidateResult.hasErrors()) {
             model.addAllAttributes(termsValidateResult.getModelAttributes());
+            languagesControllerHelper.getLanguages(languagesRestClient.findAllByTypes(), model, locale,
+                    payload.termLanguageId(), payload.descriptionLanguageId());
+
             modelPreparationService.prepareModel(model, locale, Map.of(
                     "actionUrl", "/set/" + setId + "/edit",
                     "pageTitle", messageSource.getMessage("messages.set.edit", null, locale)
             ));
-            return "edit-set";
+            return "new-set";
         }
 
         SetFormResult result = setFormService.update(setId, payload, termsValidateResult.getTerms());
@@ -78,16 +86,19 @@ public class MySetController {
             return "redirect:" + result.getRedirectUrl();
         }
         model.addAllAttributes(result.getModelAttributes());
+        languagesControllerHelper.getLanguages(languagesRestClient.findAllByTypes(), model, locale,
+                payload.termLanguageId(), payload.descriptionLanguageId());
+
         modelPreparationService.prepareModel(model, locale, Map.of(
                 "actionUrl", "/set/" + setId + "/edit",
                 "pageTitle", messageSource.getMessage("messages.set.edit", null, locale)
         ));
-        return "edit-set";
+        return "new-set";
     }
 
     @PostMapping("/delete")
     public String delete(@PathVariable("setId") int setId, Model model) {
-        model.addAttribute("currentView", "edit-set");
+        model.addAttribute("currentView", "new-set");
 
         mySetsRestClient.delete(setId);
         UserDto userDto = (UserDto) model.getAttribute("user");

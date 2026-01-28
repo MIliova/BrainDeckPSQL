@@ -15,14 +15,14 @@
 
 
         <div class="container-left-right">
-            <div><h1 data-th-text="#{messages.set.create.new}">Create a new set</h1></div>
+            <div><h1 data-th-text="${pageTitle}">Create a new set</h1></div>
             <div style="display: flex">
                 <div class="blue-row margin-left">
                     <button id="submitButton" class="blue-row-button" type="button" th:aria-label="#{messages.create}" onclick=""><span data-th-text="#{messages.create}">Create</span></button>
                 </div>
-                <div class="blue-row margin-left">
+                <div class="blue-row margin-left" th:if="${isDraft}">
                     <button id="deleteDraftButton" class="blue-row-button" type="button" th:aria-label="#{messages.delete.draft}"
-                            th:if="${isDraft}" onclick=""><span data-th-text="#{messages.delete.draft}">Delete draft</span></button>
+                             onclick=""><span data-th-text="#{messages.delete.draft}">Delete draft</span></button>
                 </div>
             </div>
         </div>

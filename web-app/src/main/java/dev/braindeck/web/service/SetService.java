@@ -5,8 +5,6 @@ import dev.braindeck.web.client.MySetsRestClient;
 import dev.braindeck.web.controller.exception.BadRequestException;
 import dev.braindeck.web.controller.payload.*;
 import dev.braindeck.web.entity.SetCreatedDto;
-import dev.braindeck.web.entity.SetDto;
-import dev.braindeck.web.entity.SetFullDto;
 import dev.braindeck.web.utills.ProblemDetailParser;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;

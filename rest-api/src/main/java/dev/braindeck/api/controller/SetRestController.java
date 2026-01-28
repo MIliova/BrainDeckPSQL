@@ -18,7 +18,6 @@ public class SetRestController {
 
     private final SetService setService;
 
-
     @GetMapping("/users/{userId:\\d+}/sets")
     public ResponseEntity<List<SetWithTCntUInfoDto>> findSets(
             @PathVariable("userId") @Positive int userId) {
@@ -28,7 +27,7 @@ public class SetRestController {
     @GetMapping("/sets/{setId:\\d+}")
     public ResponseEntity<SetShortDto> findSet(
             @PathVariable("setId") @Positive int setId) {
-        return ResponseEntity.ok(setService.findById(setId));
+        return ResponseEntity.ok(setService.findShortById(setId));
     }
 
 }

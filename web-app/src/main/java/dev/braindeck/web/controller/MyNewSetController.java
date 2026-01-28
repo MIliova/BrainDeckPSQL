@@ -1,5 +1,6 @@
 package dev.braindeck.web.controller;
 
+import dev.braindeck.web.client.LanguagesRestClient;
 import dev.braindeck.web.controller.payload.NewSetPayloadC;
 import dev.braindeck.web.controller.payload.NewTermPayload;
 import dev.braindeck.web.service.*;
@@ -22,12 +23,15 @@ public class MyNewSetController {
     private final MessageSource messageSource;
     private final ModelPreparationService modelPreparationService;
     private final SetFormService setFormService;
+    private final LanguagesRestClient languagesRestClient;
+    private final LanguagesControllerHelper languagesControllerHelper;
 
     @GetMapping
     public String create(Model model, Locale locale) {
         model.addAttribute("currentView", "new-set");
 
         NewSetPayloadC payload = new NewSetPayloadC();
+        languagesControllerHelper.getLanguages(languagesRestClient.findAllByTypes(), model, locale);
         modelPreparationService.prepareModel(model, locale, Map.of(
                 "actionUrl", "/set",
                 "payload", payload,
@@ -56,8 +60,9 @@ public class MyNewSetController {
 
             System.out.println(termsValidateResult.getModelAttributes());
 
-
             model.addAllAttributes(termsValidateResult.getModelAttributes());
+            languagesControllerHelper.getLanguages(languagesRestClient.findAllByTypes(), model, locale,
+                    payload.getTermLanguageId(), payload.getDescriptionLanguageId());
             modelPreparationService.prepareModel(model, locale, Map.of(
                     "actionUrl", "/set",
                     "pageTitle", messageSource.getMessage("messages.set.create.new", null, locale)
@@ -71,6 +76,8 @@ public class MyNewSetController {
         }
 
         model.addAllAttributes(result.getModelAttributes());
+        languagesControllerHelper.getLanguages(languagesRestClient.findAllByTypes(), model, locale,
+                payload.getTermLanguageId(), payload.getDescriptionLanguageId());
         modelPreparationService.prepareModel(model, locale, Map.of(
                 "actionUrl", "/set",
                 "pageTitle", messageSource.getMessage("messages.set.create.new", null, locale)

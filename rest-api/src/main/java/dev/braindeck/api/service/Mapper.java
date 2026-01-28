@@ -32,6 +32,13 @@ public class Mapper {
         return lDto;
     }
 
+    public NewDTermDto newTermToDto(TermEntity entity) {
+        if (entity == null) {
+            return null;
+        }
+        return new NewDTermDto(entity.getId());
+    }
+
     public NewDTermDto newDTermToDto(DTermEntity entity) {
         if (entity == null) {
             return null;
@@ -60,16 +67,6 @@ public class Mapper {
         );
     }
 
-    public SetDto setToDto(SetEntity entity, List<TermDto> terms) {
-        if (entity == null) {
-            return null;
-        }
-        return new SetDto(
-                entity.getId(), entity.getTitle(), entity.getDescription(), entity.getTermLanguageId(),
-                entity.getDescriptionLanguageId(), userToDto(entity.getUser()), terms
-        );
-    }
-
     public UserDto userToDto(UserEntity user) {
         if (user == null) {
             return null;
@@ -84,23 +81,6 @@ public class Mapper {
         return new DraftDto(entity.getId(), entity.getTitle(), entity.getDescription(),
                 entity.getTermLanguageId(), entity.getDescriptionLanguageId(),
                 draftTermsToDto(entity.getTerms()));
-    }
-
-    public DraftDto DraftSetToDto(DraftEntity entity, List<TermDto> terms) {
-        if (entity == null) {
-            return null;
-        }
-        return new DraftDto(entity.getId(), entity.getTitle(), entity.getDescription(),
-                entity.getTermLanguageId(), entity.getDescriptionLanguageId(),
-                terms);
-    }
-    public NewDraftDto NewDraftToDto(DraftEntity entity) {
-        if (entity == null) {
-            return null;
-        }
-        return new NewDraftDto(entity.getId(),
-                entity.getTitle(), entity.getDescription(),
-                entity.getTermLanguageId(), entity.getDescriptionLanguageId());
     }
 
     public DraftDto DraftEntityToDraftDto(DraftEntity entity) {
@@ -122,6 +102,5 @@ public class Mapper {
                         .toList()
         );
     }
-
 
 }

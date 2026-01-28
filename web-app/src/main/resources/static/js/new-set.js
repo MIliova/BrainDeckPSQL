@@ -1160,7 +1160,6 @@ class AutoSave {
         this.onNormalizeObj = onNormalizeObj || ((t) => t);
         this.showTermsFromImport = showTermsFromImport || (() => {});
         this.s_d_Id = 0;
-        this.wait = 800;
         this.on = null;
     }
     init(form, s_d_Id, draft = false, errorField, deleteDraftButton){
@@ -1199,15 +1198,18 @@ class AutoSave {
 
         this.s_d_Id = s_d_Id;
         if (draft) {
-            this.updateDraftURI = "http://localhost:8081/api/me/draft/" + this.s_d_Id;
+            this.updateSetURI = "http://localhost:8081/api/me/draft/" + this.s_d_Id;
 
             this.createTermURI = "http://localhost:8081/api/me/draft/" + this.s_d_Id + "/terms";
             this.updateTermURI = "http://localhost:8081/api/me/draft/" + this.s_d_Id + "/terms/";
-            this.deleteTermURI = "http://localhost:8081/api/me/draft/" + this.s_d_Id + "/terms/";
-            this.deleteDraftURI = "http://localhost:8081/api/me/draft/" + this.s_d_Id;
-        } else {
 
+            // this.deleteTermURI = "http://localhost:8081/api/me/draft/" + this.s_d_Id + "/terms/";
+            // this.deleteDraftURI = "http://localhost:8081/api/me/draft/" + this.s_d_Id;
+        } else if (s_d_Id !== 0) {
+            this.updateSetURI = "http://localhost:8081/api/me/draft/" + this.s_d_Id;
 
+            this.createTermURI = "http://localhost:8081/api/me/draft/" + this.s_d_Id + "/terms";
+            this.updateTermURI = "http://localhost:8081/api/me/draft/" + this.s_d_Id + "/terms/";
         }
     }
     hashCode(str) {
@@ -1246,7 +1248,7 @@ class AutoSave {
             });
     }
     editSet(obj){
-        return this.request(this.updateDraftURI, {
+        return this.request(this.updateSetURI, {
             method: "PATCH",
             body: JSON.stringify(obj)
         });

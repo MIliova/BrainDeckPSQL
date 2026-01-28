@@ -1,6 +1,6 @@
 package dev.braindeck.api.controller;
 
-import dev.braindeck.api.controller.payload.DraftPayload;
+import com.fasterxml.jackson.databind.JsonNode;
 import dev.braindeck.api.controller.payload.NewSetPayload;
 import dev.braindeck.api.dto.DraftDto;
 import dev.braindeck.api.dto.SetDto;
@@ -14,7 +14,6 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.util.Map;
-import java.util.Optional;
 
 @RestController
 @RequiredArgsConstructor
@@ -44,17 +43,43 @@ public class MyDraftRestController {
         return ResponseEntity.ok(draft);
     }
 
-    @PatchMapping("/{draftId:\\d+}")
-    public ResponseEntity<Void> update(
+    @PostMapping("/{draftId:\\d+}/convert")
+    public ResponseEntity<SetDto>  createSetFromDraft(
             @PathVariable("draftId") @Positive (message = "errors.draft.id") int draftId,
-            @Valid @RequestBody DraftPayload payload) {
+            @Valid @RequestBody NewSetPayload payload,
+            UriComponentsBuilder uriBuilder) {
         UserEntity user = userService.getCurrentUser();
-        draftService.update(draftId,
-                payload.title(), payload.description(),
-                payload.termLanguageId(), payload.descriptionLanguageId(),
-                user.getId());
+
+        SetDto set = setService.createFromDraft(
+                user.getId(),
+                draftId,
+                payload.title(),
+                payload.description(),
+                payload.termLanguageId(),
+                payload.descriptionLanguageId()
+                );
+
+        return ResponseEntity.created(
+                        uriBuilder.replacePath("/api/sets/{setId}")
+                                .build(Map.of("setId", set.id())))
+                .body(set);
+    }
+
+    @PatchMapping("/{draftId:\\d+}")
+    public ResponseEntity<Void> autoUpdate(
+            @PathVariable("draftId") @Positive (message = "errors.draft.id") int draftId,
+            @RequestBody JsonNode body) {
+
+        UserEntity user = userService.getCurrentUser();
+        draftService.autoUpdate(
+                user.getId(),
+                draftId,
+                body);
         return ResponseEntity.noContent().build();
     }
+
+
+
 
     @PostMapping("/{draftId:\\d+}")
     public ResponseEntity<DraftDto> deleteAndCreate(
@@ -68,27 +93,5 @@ public class MyDraftRestController {
                 .body(draft);
     }
 
-    @PostMapping("/{draftId:\\d+}/convert")
-    public ResponseEntity<SetDto>  createFromDraft(
-            @PathVariable("draftId") @Positive (message = "errors.draft.id") int draftId,
-            @Valid @RequestBody NewSetPayload payload,
-            UriComponentsBuilder uriBuilder) {
-        UserEntity user = userService.getCurrentUser();
 
-        System.out.println(draftId);
-        System.out.println(payload);
-
-        SetDto set = setService.createFromDraft(
-                draftId,
-                payload.title(),
-                payload.description(),
-                payload.termLanguageId(),
-                payload.descriptionLanguageId(),
-                user.getId());
-
-        return ResponseEntity.created(
-                uriBuilder.replacePath("/api/sets/{setId}")
-                        .build(Map.of("setId", set.id())))
-                .body(set);
-    }
 }

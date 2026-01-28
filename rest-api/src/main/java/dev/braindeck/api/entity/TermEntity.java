@@ -33,5 +33,4 @@ public class TermEntity {
         this.set = set;
     }
 
-
 }

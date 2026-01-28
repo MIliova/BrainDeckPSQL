@@ -24,7 +24,7 @@ public class MyDTermsRestController {
     private final UserService userService;
 
     @PostMapping
-    public ResponseEntity<NewDTermDto> create(
+    public ResponseEntity<NewDTermDto> autoCreate(
             @PathVariable("draftId") int draftId,
             @RequestBody @Valid DTermPayload term,
             UriComponentsBuilder uriBuilder) {
@@ -32,8 +32,22 @@ public class MyDTermsRestController {
         return ResponseEntity.created(
                         uriBuilder.replacePath("/api/drafts/{draftId}")
                                 .build(Map.of("draftId", draftId)))
-                .body(draftTermService.create(user.getId(), draftId, term));
+                .body(draftTermService.autoCreate(user.getId(), draftId, term));
     }
+
+    @PatchMapping("/{termId:\\d+}")
+    public ResponseEntity<Void> autoUpdate(
+            @PathVariable("draftId") @Positive (message = "errors.draft.id") int draftId,
+            @PathVariable("termId") @Positive (message = "errors.term.id") int termId,
+            @RequestBody @Valid DTermPayload payload) {
+        UserEntity user = userService.getCurrentUser();
+        draftTermService.autoUpdate(user.getId(), draftId, termId, payload);
+        return ResponseEntity.noContent().build();
+    }
+
+
+
+
 
     @PostMapping("/batch")
     public ResponseEntity<List<NewDTermDto>> createBatch(
@@ -45,16 +59,6 @@ public class MyDTermsRestController {
                         uriBuilder.replacePath("/api/drafts/{draftId}")
                                 .build(Map.of("draftId", draftId)))
                 .body(draftTermService.create(user.getId(), draftId, terms));
-    }
-
-    @PatchMapping("/{termId:\\d+}")
-    public ResponseEntity<Void> update(
-            @PathVariable("draftId") @Positive (message = "errors.draft.id") int draftId,
-            @PathVariable("termId") @Positive (message = "errors.term.id") int termId,
-            @RequestBody @Valid DTermPayload payload) {
-        UserEntity user = userService.getCurrentUser();
-        draftTermService.update(termId, draftId, user.getId(), payload);
-        return ResponseEntity.noContent().build();
     }
 
     @DeleteMapping("/{termId:\\d+}")

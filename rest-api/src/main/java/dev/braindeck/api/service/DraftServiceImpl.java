@@ -1,5 +1,6 @@
 package dev.braindeck.api.service;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import dev.braindeck.api.controller.exception.ForbiddenException;
 import dev.braindeck.api.dto.DraftDto;
 import dev.braindeck.api.entity.DraftEntity;
@@ -75,17 +76,31 @@ public class DraftServiceImpl implements DraftService {
                 .orElseGet(() -> this.findOrCreateDraftEntity(userId));
     }
 
-
-
     @Override
     @Transactional
-    public void update (int id, String title, String description, int termLanguageId, int descriptionLanguageId, int currentUserId) {
-        DraftEntity draftEntity = this.findDraftEntityById(currentUserId, id);
+    public void autoUpdate(int userId, int id, JsonNode body) {
 
-        draftEntity.setTitle(title);
-        draftEntity.setDescription(description);
-        draftEntity.setTermLanguageId(termLanguageId);
-        draftEntity.setDescriptionLanguageId(descriptionLanguageId);
+        DraftEntity draftEntity = this.findDraftEntityById(userId, id);
+
+        if (body.has("title")) {
+            JsonNode node = body.get("title");
+            draftEntity.setTitle(node.isNull() ? null : node.asText());
+        }
+
+        if (body.has("description")) {
+            JsonNode node = body.get("description");
+            draftEntity.setDescription(node.isNull() ? null : node.asText());
+        }
+
+        if (body.has("termLanguageId")) {
+            JsonNode node = body.get("termLanguageId");
+            draftEntity.setTermLanguageId(node.isNull() ? null : node.asInt());
+        }
+
+        if (body.has("descriptionLanguageId")) {
+            JsonNode node = body.get("descriptionLanguageId");
+            draftEntity.setDescriptionLanguageId(node.isNull() ? null : node.asInt());
+        }
 
         draftRepository.save(draftEntity);
     }

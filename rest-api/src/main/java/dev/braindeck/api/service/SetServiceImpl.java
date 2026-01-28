@@ -1,13 +1,18 @@
 package dev.braindeck.api.service;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import dev.braindeck.api.controller.exception.ForbiddenException;
 import dev.braindeck.api.controller.payload.NewTermPayload;
 import dev.braindeck.api.controller.payload.UpdateTermPayload;
 import dev.braindeck.api.dto.*;
 
 import dev.braindeck.api.entity.*;
+import dev.braindeck.api.repository.DraftTermRepository;
 import dev.braindeck.api.repository.SetRepository;
+import dev.braindeck.api.repository.TermRepository;
 import dev.braindeck.api.repository.UserRepository;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,65 +26,33 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class SetServiceImpl implements SetService {
 
+    private final UserRepository userRepository;
     private final SetRepository setRepository;
+    private final TermRepository termRepository;
+
     private final TermService termService;
     private final DraftService draftService;
-    private final UserRepository userRepository;
-
-
-    @Transactional
-    @Override
-    public SetDto createFromDraft(
-            int draftId,
-            String title,
-            String description,
-            int termLanguageId,
-            int descriptionLanguageId,
-            int userId) {
-
-        DraftEntity draftEntity = draftService.findDraftEntityById(userId, draftId);
-        if (draftEntity == null) {
-            throw new ForbiddenException("errors.draft.not.belong.user");
-        }
-
-        System.out.println(draftEntity);
-
-        UserEntity user = userRepository.getReferenceById(userId);
-        SetEntity set = new SetEntity(title, description, termLanguageId, descriptionLanguageId, user);
-
-        List<TermEntity> terms = draftEntity.getTerms().stream().map(term -> new TermEntity(term.getTerm(), term.getDescription(), set)).toList();
-        set.setTerms(terms);
-
-        System.out.println(set);
-
-        SetEntity savedSet = setRepository.save(set);
-
-        draftService.delete(draftEntity);
-
-        return Mapper.setToDto(savedSet);
-    }
 
     @Transactional
     @Override
     public SetCreatedDto create(
+            int userId,
             String title,
             String description,
             int termLanguageId,
             int descriptionLanguageId,
-            int userId,
             List<NewTermPayload> listTerms) {
 
         UserEntity userRef = userRepository.getReferenceById(userId);
 
         SetEntity set = new SetEntity(title, description, termLanguageId, descriptionLanguageId, userRef);
+        SetEntity saved = setRepository.save(set);
 
         List<TermEntity> terms = listTerms.stream()
-                .map(payload -> new TermEntity(payload.getTerm(), payload.getDescription(), set))
+                .map(payload -> new TermEntity(payload.getTerm(), payload.getDescription(), saved))
                 .toList();
+        termRepository.saveAll(terms);
 
-        set.setTerms(terms);
-
-        SetEntity saved = setRepository.save(set);
         return new SetCreatedDto(
                 saved.getId(),
                 saved.getUser().getId()
@@ -88,79 +61,51 @@ public class SetServiceImpl implements SetService {
 
     @Transactional
     @Override
-    public void update(int id, String title, String description, int termLanguageId, int descriptionLanguageId,
-                       List<UpdateTermPayload> termsPayload, int currentUserId) {
-        SetEntity set = setRepository.findById(id).orElseThrow(() -> new NoSuchElementException("errors.set.not.found"));
+    public SetDto createFromDraft(
+            int userId,
+            int draftId,
+            String title,
+            String description,
+            int termLanguageId,
+            int descriptionLanguageId) {
 
-        if (!set.getUser().getId().equals(currentUserId)) {
-            throw new ForbiddenException("errors.set.not.belong.user");
+        System.out.println("createFromDraft " + draftId);
+
+        DraftEntity draftEntity = draftService.findDraftEntityById(userId, draftId);
+        if (draftEntity == null) {
+            throw new ForbiddenException("errors.draft.not.belong.user");
         }
 
-        set.setTitle(title);
-        set.setDescription(description);
-        set.setTermLanguageId(termLanguageId);
-        set.setDescriptionLanguageId(descriptionLanguageId);
+        UserEntity user = userRepository.getReferenceById(userId);
+        SetEntity set = new SetEntity(title, description, termLanguageId, descriptionLanguageId, user);
+//        SetEntity savedSet = setRepository.save(set); //
+//        entityManager.flush(); //
 
-        Map<Integer, TermEntity> existingTerms = set.getTerms().stream().collect(Collectors.toMap(TermEntity::getId, termEntity -> termEntity));
+        List<TermEntity> terms = draftEntity.getTerms().stream().map(term -> new TermEntity(term.getTerm(), term.getDescription(), set)).toList();
 
-        List<TermEntity> newTermList = new ArrayList<>();
-        for (UpdateTermPayload payload : termsPayload) {
-            if (payload.id() != null && existingTerms.containsKey(payload.id()) ) {
-                TermEntity term = existingTerms.get(payload.id());
-                if (!Objects.equals(term.getTerm(), payload.term()) || !Objects.equals(term.getDescription(), payload.description())) {
-                    term.setTerm(payload.term());
-                    term.setDescription(payload.description());
-                }
-            } else {
-                TermEntity term = new TermEntity(payload.term(), payload.description(), set);
-                newTermList.add(term);
-            }
-        }
+//        termRepository.saveAll(terms); //
+        set.setTerms(terms);
+        SetEntity savedSet = setRepository.save(set);
 
-        set.getTerms().removeIf(t -> termsPayload.stream()
-                .noneMatch(p -> p.id() != null && p.id().equals(t.getId())));
+        draftService.delete(draftEntity);
 
-        set.getTerms().addAll(newTermList);
-
-        setRepository.save(set);
-    }
-
-    @Transactional
-    @Override
-    public void delete(int id, int currentUserId) {
-        SetEntity set = setRepository.findById(id)
-                .orElseThrow(() -> new NoSuchElementException("errors.set.not.found"));
-
-        if (!set.getUser().getId().equals(currentUserId)) {
-            throw new ForbiddenException("errors.set.not.belong.user");
-        }
-
-        setRepository.deleteById(id);
+        return Mapper.setToDto(savedSet);
     }
 
     @Transactional(readOnly = true)
     @Override
-    public SetDto findByIdForUser(int id, int currentUserId) {
-        SetEntity set = setRepository.findById(id)
+    public SetShortDto findShortById(int id) {
+        SetShortDto setDto = setRepository.findDtoById(id)
                 .orElseThrow(()-> new NoSuchElementException("errors.set.not.found"));
-
-        if (!set.getUser().getId().equals(currentUserId)) {
-            throw new ForbiddenException("errors.set.not.belong.user");
-        }
-
-        List<TermDto> terms = termService.findAllBySet(set);
-        return Mapper.setToDto(set, terms);
-    }
-
-    @Transactional(readOnly = true)
-    @Override
-    public SetEntity findEntityById(int id, int userId) {
-        SetEntity setEntity = setRepository.findById(id)
-                .orElseThrow(()-> new NoSuchElementException("errors.set.not.found"));
-        if (!setEntity.getUser().getId().equals(userId)) {
-            throw new ForbiddenException("errors.set.not.belong.user");
-        }
-        return setEntity;
+        List<TermDto> terms = termService.findAllBySetId(id);
+        return new SetShortDto(
+                setDto.id(),
+                setDto.title(),
+                setDto.description(),
+                setDto.userId(),
+                setDto.userName(),
+                terms
+        );
     }
 
     @Transactional
@@ -188,18 +133,134 @@ public class SetServiceImpl implements SetService {
 
     @Transactional(readOnly = true)
     @Override
-    public SetShortDto findById(int id) {
-        SetShortDto setDto = setRepository.findDtoById(id)
-                .orElseThrow(()-> new NoSuchElementException("errors.set.not.found"));
-        List<TermDto> terms = termService.findAllBySetId(id);
-        return new SetShortDto(
-                setDto.id(),
-                setDto.title(),
-                setDto.description(),
-                setDto.userId(),
-                setDto.userName(),
-                terms
+    public SetEditDto findSetEditDtoById(int userId, int id) {
+        SetEntity set = findById(id, userId);
+        return new SetEditDto(
+                set.getId(),
+                set.getTitle(),
+                set.getDescription(),
+                set.getTermLanguageId(),
+                set.getDescriptionLanguageId(),
+                Mapper.termsToDto(set.getTerms())
         );
     }
+
+    @Transactional(readOnly = true)
+    @Override
+    public SetEntity findById(int userId, int id) {
+        SetEntity set = setRepository.findById(id)
+                .orElseThrow(()-> new NoSuchElementException("errors.set.not.found"));
+        if (!set.getUser().getId().equals(userId)) {
+            throw new ForbiddenException("errors.set.not.belong.user");
+        }
+        return set;
+    }
+
+//    @Override
+//    @Transactional
+//    public void autoUpdate (int userId, int id, JsonNode body) {
+//
+//        SetEntity set = this.findById(userId, id);
+//
+//        if (body.has("title")) {
+//            JsonNode node = body.get("title");
+//            set.setTitle(node.isNull() ? null : node.asText());
+//        }
+//
+//        if (body.has("description")) {
+//            JsonNode node = body.get("description");
+//            set.setDescription(node.isNull() ? null : node.asText());
+//        }
+//
+//        if (body.has("termLanguageId")) {
+//            JsonNode node = body.get("termLanguageId");
+//            set.setTermLanguageId(node.isNull() ? null : node.asInt());
+//        }
+//
+//        if (body.has("descriptionLanguageId")) {
+//            JsonNode node = body.get("descriptionLanguageId");
+//            set.setDescriptionLanguageId(node.isNull() ? null : node.asInt());
+//        }
+//
+//        setRepository.save(set);
+//    }
+
+
+    @Transactional
+    @Override
+    public void update(int id, String title, String description, int termLanguageId, int descriptionLanguageId,
+                       List<UpdateTermPayload> termsPayload, int userId) {
+        SetEntity set = setRepository.findById(id).orElseThrow(() -> new NoSuchElementException("errors.set.not.found"));
+
+        if (!set.getUser().getId().equals(userId)) {
+            throw new ForbiddenException("errors.set.not.belong.user");
+        }
+
+        set.setTitle(title);
+        set.setDescription(description);
+        set.setTermLanguageId(termLanguageId);
+        set.setDescriptionLanguageId(descriptionLanguageId);
+
+        Map<Integer, TermEntity> existingTerms = set.getTerms().stream().collect(Collectors.toMap(TermEntity::getId, termEntity -> termEntity));
+
+        List<TermEntity> toInsert = new ArrayList<>();
+        List<TermEntity> toUpdate = new ArrayList<>();
+        List<TermEntity> toDelete = new ArrayList<>();
+
+        for (UpdateTermPayload payload : termsPayload) {
+            if (payload.id() != null && existingTerms.containsKey(payload.id())) {
+                TermEntity term = existingTerms.get(payload.id());
+                if (!Objects.equals(term.getTerm(), payload.term()) ||
+                        !Objects.equals(term.getDescription(), payload.description())) {
+                    term.setTerm(payload.term());
+                    term.setDescription(payload.description());
+                    toUpdate.add(term);
+                }
+            } else {
+                TermEntity term = new TermEntity(payload.term(), payload.description(), set);
+                toInsert.add(term);
+            }
+        }
+
+        for (TermEntity term : set.getTerms()) {
+            boolean existsInPayload = termsPayload.stream()
+                    .anyMatch(p -> p.id() != null && p.id().equals(term.getId()));
+            if (!existsInPayload) {
+                toDelete.add(term);
+            }
+        }
+        if (!toDelete.isEmpty()) {
+            termRepository.deleteAll(toDelete);
+        }
+
+        if (!toInsert.isEmpty()) {
+            termRepository.saveAll(toInsert);
+        }
+
+        if (!toUpdate.isEmpty()) {
+            termRepository.saveAll(toUpdate);
+        }
+
+        setRepository.save(set);
+    }
+
+    @Transactional
+    @Override
+    public void delete(int id, int userId) {
+        SetEntity set = setRepository.findById(id)
+                .orElseThrow(() -> new NoSuchElementException("errors.set.not.found"));
+
+        if (!set.getUser().getId().equals(userId)) {
+            throw new ForbiddenException("errors.set.not.belong.user");
+        }
+
+        setRepository.deleteById(id);
+    }
+
+
+
+
+
+
 
 }

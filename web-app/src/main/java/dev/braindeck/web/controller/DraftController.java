@@ -27,6 +27,9 @@ public class DraftController {
     private final MessageSource messageSource;
     private final ModelPreparationService modelPreparationService;
     private final SetFormService setFormService;
+    private final LanguagesRestClient languagesRestClient;
+    private final LanguagesControllerHelper languagesControllerHelper;
+
 
     @GetMapping
     public String get(Model model, Locale locale) {
@@ -35,6 +38,9 @@ public class DraftController {
         if (draft == null) {
             return "redirect:/set";
         }
+
+        languagesControllerHelper.getLanguages(languagesRestClient.findAllByTypes(), model, locale, draft.termLanguageId(), draft.descriptionLanguageId());
+
         modelPreparationService.prepareModel(model, locale, Map.of(
                 "payload", new DraftPayload(
                         draft.id(),
@@ -46,7 +52,7 @@ public class DraftController {
                 "terms", draft.terms(),
                 "isDraft", true,
                 "actionUrl", "/draft/" + draft.id(),
-                "pageTitle", messageSource.getMessage("messages.set.create.new", null, locale)
+                "pageTitle", messageSource.getMessage(draft.id() > 0 ? "messages.draft.edit" : "messages.set.create.new", null, locale)
         ));
         return "new-set";
     }
@@ -60,6 +66,10 @@ public class DraftController {
         if (draft == null) {
             return "redirect:/set";
         }
+
+        languagesControllerHelper.getLanguages(languagesRestClient.findAllByTypes(), model, locale,
+                draft.termLanguageId(), draft.descriptionLanguageId());
+
         modelPreparationService.prepareModel(model, locale, Map.of(
                 "payload", new DraftPayload(
                         draft.id(),
@@ -71,7 +81,7 @@ public class DraftController {
                 "terms", draft.terms(),
                 "isDraft", true,
                 "actionUrl", "/draft/" + draft.id(),
-                "pageTitle", messageSource.getMessage("messages.set.create.new", null, locale)
+                "pageTitle", messageSource.getMessage("messages.draft.edit", null, locale)
         ));
         return "new-set";
     }
@@ -89,10 +99,14 @@ public class DraftController {
         TermsValidateResult<NewTermPayload> termsValidateResult  = setFormService.validate(payloadTerms, NewTermPayload.class);
         if (bindingResult.hasErrors() || termsValidateResult.hasErrors()) {
             model.addAllAttributes(termsValidateResult.getModelAttributes());
+
+            languagesControllerHelper.getLanguages(languagesRestClient.findAllByTypes(), model, locale,
+                    payload.getTermLanguageId(), payload.getDescriptionLanguageId());
+
             modelPreparationService.prepareModel(model, locale, Map.of(
                     "isDraft", true,
                     "actionUrl", "/draft/" + draftId,
-                    "pageTitle", messageSource.getMessage("messages.set.create.new", null, locale)
+                    "pageTitle", messageSource.getMessage("messages.draft.edit", null, locale)
             ));
             return "new-set";
         }
@@ -102,10 +116,12 @@ public class DraftController {
             return "redirect:" + result.getRedirectUrl();
         }
         model.addAllAttributes(result.getModelAttributes());
+        languagesControllerHelper.getLanguages(languagesRestClient.findAllByTypes(), model, locale,
+                payload.getTermLanguageId(), payload.getDescriptionLanguageId());
         modelPreparationService.prepareModel(model, locale, Map.of(
                 "isDraft", true,
                 "actionUrl", "/draft/" + draftId,
-                "pageTitle", messageSource.getMessage("messages.set.create.new", null, locale)
+                "pageTitle", messageSource.getMessage("messages.draft.edit", null, locale)
         ));
         return "new-set";
     }

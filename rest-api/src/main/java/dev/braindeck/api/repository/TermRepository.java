@@ -12,9 +12,6 @@ import java.util.List;
 
 @Repository
 public interface TermRepository extends JpaRepository<TermEntity, Integer> {
-    @Modifying
-    @Query("DELETE FROM TermEntity t WHERE t.set.id = :setId")
-    void deleteBySetId(@Param("setId") Integer setId);
 
     List<TermEntity> findAllBySet(SetEntity setEntity);
 

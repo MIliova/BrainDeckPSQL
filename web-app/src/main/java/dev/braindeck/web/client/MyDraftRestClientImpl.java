@@ -3,8 +3,6 @@ package dev.braindeck.web.client;
 import dev.braindeck.web.controller.payload.*;
 import dev.braindeck.web.entity.DraftDto;
 import dev.braindeck.web.entity.SetCreatedDto;
-import dev.braindeck.web.entity.SetDto;
-import dev.braindeck.web.entity.SetFullDto;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;

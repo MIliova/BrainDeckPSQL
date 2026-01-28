@@ -22,7 +22,7 @@ public class DTermServiceImpl implements DTermService {
     private static final int TERM_MAX_LENGTH = 950;
 
     @Override
-    public NewDTermDto create(int userId, int draftId, DTermPayload payload) {
+    public NewDTermDto autoCreate(int userId, int draftId, DTermPayload payload) {
         DraftEntity draft = draftService.findOrCreateDraftEntityById(userId, draftId);
         DTermEntity entity = new DTermEntity(
                 null,
@@ -33,24 +33,14 @@ public class DTermServiceImpl implements DTermService {
         draftTermRepository.save(entity);
         return Mapper.newDTermToDto(entity);
     }
-    @Override
-    public List<NewDTermDto> create(int userId, int draftId, List<DTermPayload> payloads) {
-        DraftEntity draft = draftService.findOrCreateDraftEntityById(userId, draftId);
-        List<DTermEntity> list = new ArrayList<>();
-        for (DTermPayload p : payloads) {
-            list.add(new DTermEntity(null, p.term(), p.description(), draft));
-        }
-        draftTermRepository.saveAll(list);
-        return Mapper.newDTermToDto(list);
-    }
 
     @Override
     @Transactional
-    public void update(int termId, int draftId, int currentUserId, DTermPayload payload) {
+    public void autoUpdate(int userId, int draftId, int termId, DTermPayload payload) {
         DTermEntity term = draftTermRepository.findById(termId)
                 .orElseThrow(() -> new NoSuchElementException("errors.term.not.found"));
 
-        checkOwnership(term, draftId, currentUserId);
+        checkOwnership(term, draftId, userId);
 
         if (!Objects.equals(payload.term(), term.getTerm())) {
             term.setTerm(payload.term());
@@ -61,6 +51,17 @@ public class DTermServiceImpl implements DTermService {
         }
 
         draftTermRepository.save(term);
+    }
+
+    @Override
+    public List<NewDTermDto> create(int userId, int draftId, List<DTermPayload> payloads) {
+        DraftEntity draft = draftService.findOrCreateDraftEntityById(userId, draftId);
+        List<DTermEntity> list = new ArrayList<>();
+        for (DTermPayload p : payloads) {
+            list.add(new DTermEntity(null, p.term(), p.description(), draft));
+        }
+        draftTermRepository.saveAll(list);
+        return Mapper.newDTermToDto(list);
     }
 
     @Override

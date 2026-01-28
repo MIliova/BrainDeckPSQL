@@ -1,18 +1,13 @@
-package dev.braindeck.web.controller.payload;
+package dev.braindeck.api.dto;
 
 import java.util.List;
 
-public record RestDraftPayloadDeprecated(
-
+public record SetEditDto(
+        Integer id,
         String title,
-
         String description,
-
         Integer termLanguageId,
-
         Integer descriptionLanguageId,
-
-        List<DTermPayload> terms
-
+        List<TermDto> terms
 ) {
 }

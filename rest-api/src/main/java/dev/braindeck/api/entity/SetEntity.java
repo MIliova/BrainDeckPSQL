@@ -40,7 +40,7 @@ public class SetEntity {
     @JoinColumn(name="user_id", updatable = false, nullable = false)
     private UserEntity user;
 
-    @OneToMany(mappedBy = "set", cascade = CascadeType.ALL , orphanRemoval = true, fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "set", cascade = CascadeType.PERSIST, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<TermEntity> terms = new ArrayList<>();
 
     @Column (name="created_at", nullable = false, updatable = false)

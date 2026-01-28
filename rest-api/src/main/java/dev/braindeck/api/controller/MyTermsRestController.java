@@ -2,6 +2,7 @@ package dev.braindeck.api.controller;
 
 import dev.braindeck.api.controller.payload.DTermPayload.DTermPayload;
 import dev.braindeck.api.controller.payload.UpdateTermPayload;
+import dev.braindeck.api.dto.NewDTermDto;
 import dev.braindeck.api.dto.TermDto;
 import dev.braindeck.api.entity.UserEntity;
 import dev.braindeck.api.service.TermService;
@@ -23,6 +24,33 @@ public class MyTermsRestController {
 
     private final TermService termService;
     private final UserService userService;
+
+//    @PostMapping("/autosave")
+//    public ResponseEntity<NewDTermDto> autoCreate(
+//            @PathVariable("setId") int setId,
+//            @RequestBody @Valid DTermPayload term,
+//            UriComponentsBuilder uriBuilder) {
+//        UserEntity user = userService.getCurrentUser();
+//        return ResponseEntity.created(
+//                uriBuilder.replacePath("/api/me/sets/{setId:\\d+}/terms/autosave")
+//                        .build(Map.of("setId", setId)))
+//                .body(termService.autoCreate(user.getId(), setId, term));
+//    }
+//
+//    @PatchMapping("/{termId:\\d+}/autosave")
+//    public ResponseEntity<Void> autoUpdate(
+//            @PathVariable("setId") @Positive (message = "errors.set.id") int setId,
+//            @PathVariable("termId") @Positive (message = "errors.term.id") int termId,
+//            @RequestBody @Valid DTermPayload payload) {
+//        UserEntity user = userService.getCurrentUser();
+//        termService.autoUpdate(user.getId(), setId, termId, payload);
+//        return ResponseEntity.noContent().build();
+//    }
+
+
+
+
+
 
     @PostMapping
     public ResponseEntity<TermDto> create(
