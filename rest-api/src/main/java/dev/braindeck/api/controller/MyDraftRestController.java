@@ -9,12 +9,14 @@ import dev.braindeck.api.service.*;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.util.Map;
 
+@Slf4j
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/me/draft")
@@ -60,8 +62,9 @@ public class MyDraftRestController {
                 );
 
         return ResponseEntity.created(
-                        uriBuilder.replacePath("/api/sets/{setId}")
-                                .build(Map.of("setId", set.id())))
+                uriBuilder
+                        .replacePath("/api/sets/{setId}")
+                        .build(Map.of("setId", set.id())))
                 .body(set);
     }
 
@@ -78,10 +81,7 @@ public class MyDraftRestController {
         return ResponseEntity.noContent().build();
     }
 
-
-
-
-    @PostMapping("/{draftId:\\d+}")
+    @DeleteMapping("/{draftId:\\d+}")
     public ResponseEntity<DraftDto> deleteAndCreate(
             @PathVariable("draftId") @Positive (message = "errors.draft.id") int draftId,
             UriComponentsBuilder uriBuilder) {

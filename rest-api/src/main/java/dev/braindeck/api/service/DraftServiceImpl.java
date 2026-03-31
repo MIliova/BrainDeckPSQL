@@ -1,6 +1,7 @@
 package dev.braindeck.api.service;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import dev.braindeck.api.controller.exception.ForbiddenException;
 import dev.braindeck.api.dto.DraftDto;
 import dev.braindeck.api.entity.DraftEntity;
@@ -9,7 +10,10 @@ import dev.braindeck.api.entity.NewDraftEntity;
 import dev.braindeck.api.entity.UserEntity;
 import dev.braindeck.api.repository.DraftRepository;
 import dev.braindeck.api.repository.UserRepository;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -17,12 +21,16 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.NoSuchElementException;
 import java.util.Optional;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class DraftServiceImpl implements DraftService {
 
     private final DraftRepository draftRepository;
     private final UserRepository userRepository;
+
+//    @PersistenceContext
+//    private final EntityManager entityManager;
 
     @Transactional
     public DraftDto getDraftDto(int userId) {
@@ -115,9 +123,19 @@ public class DraftServiceImpl implements DraftService {
     @Transactional
     public DraftDto deleteAndCreate(int draftId, UserEntity user) {
         DraftEntity draftEntity = this.findDraftEntityById(user.getId(), draftId);
-        draftRepository.delete(draftEntity);
-        DraftEntity draft =  draftRepository.save(new NewDraftEntity(user));
-        return Mapper.DraftSetToDto(draft);
+
+        draftEntity.getTerms().clear();
+
+        draftEntity.setTitle(null);
+        draftEntity.setDescription(null);
+        draftEntity.setTermLanguageId(null);
+        draftEntity.setDescriptionLanguageId(null);
+
+//        log.info("managed? {}", entityManager.contains(draftEntity));
+
+//        draftRepository.flush();
+
+        return Mapper.DraftSetToDto(draftEntity);
     }
 
     private void checkOwner(DraftEntity draftEntity, int currentUserId) {

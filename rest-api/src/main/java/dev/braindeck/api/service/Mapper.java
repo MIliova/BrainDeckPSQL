@@ -39,6 +39,17 @@ public class Mapper {
         return new NewDTermDto(entity.getId());
     }
 
+    public List <NewDTermDto> newTermToDto(List<TermEntity> listEntity) {
+        if (listEntity == null) {
+            return null;
+        }
+        List<NewDTermDto> lDto = new ArrayList<>();
+        for (TermEntity entity : listEntity) {
+            lDto.add(new NewDTermDto(entity.getId()));
+        }
+        return lDto;
+    }
+
     public NewDTermDto newDTermToDto(DTermEntity entity) {
         if (entity == null) {
             return null;

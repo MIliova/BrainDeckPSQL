@@ -52,7 +52,13 @@ public class DraftController {
                 "terms", draft.terms(),
                 "isDraft", true,
                 "actionUrl", "/draft/" + draft.id(),
-                "pageTitle", messageSource.getMessage(draft.id() > 0 ? "messages.draft.edit" : "messages.set.create.new", null, locale)
+                "pageTitle", messageSource.getMessage(
+                        draft.id() > 0 && (
+                        draft.title() != null ||
+                        draft.description() != null ||
+                        draft.termLanguageId() != null ||
+                        draft.descriptionLanguageId() != null
+                ) ? "messages.draft.edit" : "messages.set.create.new", null, locale)
         ));
         return "new-set";
     }

@@ -36,7 +36,9 @@ public class DraftEntity {
     @JoinColumn(name="user_id", updatable = false, nullable = false)
     private UserEntity user;
 
-    @OneToMany(mappedBy = "draft", fetch = FetchType.LAZY, orphanRemoval = true)
+    @OneToMany(mappedBy = "draft", fetch = FetchType.LAZY,
+            cascade = CascadeType.ALL,//?для удаления
+            orphanRemoval = true)
     private List<DTermEntity> terms = new ArrayList<>();
 
     @Column (name="created_at", nullable = false)

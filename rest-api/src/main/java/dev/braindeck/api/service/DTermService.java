@@ -3,6 +3,7 @@ package dev.braindeck.api.service;
 import dev.braindeck.api.controller.payload.DTermPayload.DTermPayload;
 import dev.braindeck.api.dto.ImportTermDto;
 import dev.braindeck.api.dto.NewDTermDto;
+import dev.braindeck.api.dto.TermDto;
 
 import java.util.List;
 
@@ -13,7 +14,7 @@ public interface DTermService {
 
     void autoUpdate(int userId, int draftId, int termId, DTermPayload payload);
 
-    List<NewDTermDto> create(int userId, int draftId, List<DTermPayload> terms);
+    List<TermDto> autoCreate(int userId, int draftId, List<DTermPayload> terms);
 
     void delete(int termId, int draftId, int currentUserId);
 

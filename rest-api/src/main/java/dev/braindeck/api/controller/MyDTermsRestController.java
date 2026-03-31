@@ -2,6 +2,7 @@ package dev.braindeck.api.controller;
 
 import dev.braindeck.api.controller.payload.DTermPayload.DTermPayload;
 import dev.braindeck.api.dto.NewDTermDto;
+import dev.braindeck.api.dto.TermDto;
 import dev.braindeck.api.entity.UserEntity;
 import dev.braindeck.api.service.DTermService;
 import dev.braindeck.api.service.UserService;
@@ -45,12 +46,8 @@ public class MyDTermsRestController {
         return ResponseEntity.noContent().build();
     }
 
-
-
-
-
     @PostMapping("/batch")
-    public ResponseEntity<List<NewDTermDto>> createBatch(
+    public ResponseEntity<List<TermDto>> autoCreateBatch(
             @PathVariable("draftId") int draftId,
             @RequestBody @Valid List<@Valid DTermPayload> terms,
             UriComponentsBuilder uriBuilder) {
@@ -58,7 +55,7 @@ public class MyDTermsRestController {
         return ResponseEntity.created(
                         uriBuilder.replacePath("/api/drafts/{draftId}")
                                 .build(Map.of("draftId", draftId)))
-                .body(draftTermService.create(user.getId(), draftId, terms));
+                .body(draftTermService.autoCreate(user.getId(), draftId, terms));
     }
 
     @DeleteMapping("/{termId:\\d+}")

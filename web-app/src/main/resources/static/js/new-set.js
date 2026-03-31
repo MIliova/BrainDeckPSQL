@@ -812,7 +812,12 @@ class TermRow {
 
     createField(placeholderClass, placeholder, type, text) {
         const div = document.createElement('div');
-        div.className = `term-input ${placeholderClass}`;
+        // div.className = `term-input ${placeholderClass}`;
+        div.className = `term-input`;
+        if (text === "") {
+            div.classList.add(`${type}-placeholder`);
+        }
+
         div.dataset.term = 'true';
         div.id = type + this.index;
 
@@ -953,6 +958,7 @@ class TermController {
     }
     addTerms(data){
         if (data && Array.isArray(data) && data.length > 0) {
+
             data.forEach((d) => {
                 this.addTerm(d);
             })
@@ -993,7 +999,7 @@ class TermsImport {
     </div>
 </div>`;
     }
-    init (textarea, importButton, clearButton, errorDiv, previewDiv) {
+    init (textarea, importButton, clearButton, errorDiv, previewDiv, overlay) {
         if (this.inited) return;
         this.inited = true;
         if (!textarea || !importButton || !clearButton || !errorDiv || !previewDiv)
@@ -1001,6 +1007,8 @@ class TermsImport {
         this.textarea = textarea;
         this.errorDiv = errorDiv;
         this.previewDiv = previewDiv;
+
+        this.overlay = overlay
 
         this.colSeparator = this.textarea.form.elements['col-separator'];
         this.rowSeparator = this.textarea.form.elements['row-separator'];
@@ -1038,14 +1046,22 @@ class TermsImport {
         });
     }
     onHide () {
-        this.clearPreview();
+        this.clear();
     }
     onShow () {
         this.textarea.focus();
     }
     clear () {
-        this.onHide();
+        this.clearPreview();
+        this.textarea.value = '';
+        this.colSeparator.value = 'tab';
+        this.rowSeparator.value = 'newline';
         this.onShow();
+    }
+    clearPreview() {
+        this.data = null;
+        this.previewDiv.innerHTML = '';
+        this.errorDiv.style.display = "none";
     }
     placeholderTextChange() {
         const colSep = this.colSeparator.value === 'tab' ? '\t'
@@ -1071,11 +1087,7 @@ class TermsImport {
             this.errorDiv.style.display = "block";
         }
     }
-    clearPreview() {
-        this.data = null;
-        this.previewDiv.innerHTML = '';
-        this.errorDiv.style.display = "none";
-    }
+
     importText(){
         this.clearPreview();
 
@@ -1093,7 +1105,7 @@ class TermsImport {
             jsonData['rowCustom']  = this.rowCustom.value//form.elements['row-custom'];
         }
 
-        fetch('http://localhost:8081/api/import/terms', {
+        fetch('http://localhost:8081/api/import/terms/preview', {
             method: 'POST',
             headers: {
                 "Content-Type": "application/json"
@@ -1151,6 +1163,8 @@ class TermsImport {
             await this.createTermsFromImport(this.data);
         }
         this.onHide();
+        this.overlay.hide();
+
     }
 }
 
@@ -1198,18 +1212,23 @@ class AutoSave {
 
         this.s_d_Id = s_d_Id;
         if (draft) {
-            this.updateSetURI = "http://localhost:8081/api/me/draft/" + this.s_d_Id;
+            this.updateSetURI   = "http://localhost:8081/api/me/draft/" + this.s_d_Id;
+            this.deleteDraftURI = "http://localhost:8081/api/me/draft/" + this.s_d_Id;
 
-            this.createTermURI = "http://localhost:8081/api/me/draft/" + this.s_d_Id + "/terms";
-            this.updateTermURI = "http://localhost:8081/api/me/draft/" + this.s_d_Id + "/terms/";
+            this.createTermURI  = "http://localhost:8081/api/me/draft/" + this.s_d_Id + "/terms";
+            this.updateTermURI  = "http://localhost:8081/api/me/draft/" + this.s_d_Id + "/terms/";
+            this.createTermsURI = "http://localhost:8081/api/me/draft/" + this.s_d_Id + "/terms/batch";
 
             // this.deleteTermURI = "http://localhost:8081/api/me/draft/" + this.s_d_Id + "/terms/";
-            // this.deleteDraftURI = "http://localhost:8081/api/me/draft/" + this.s_d_Id;
-        } else if (s_d_Id !== 0) {
-            this.updateSetURI = "http://localhost:8081/api/me/draft/" + this.s_d_Id;
 
-            this.createTermURI = "http://localhost:8081/api/me/draft/" + this.s_d_Id + "/terms";
-            this.updateTermURI = "http://localhost:8081/api/me/draft/" + this.s_d_Id + "/terms/";
+
+        } else if (s_d_Id !== 0) {
+            this.updateSetURI   = "http://localhost:8081/api/users/me/set/" + this.s_d_Id + "/autosave";
+
+            this.createTermURI  = "http://localhost:8081/api/users/me/set/" + this.s_d_Id + "/terms";
+            this.updateTermURI  = "http://localhost:8081/api/users/me/set/" + this.s_d_Id + "/terms/";
+            this.createTermsURI = "http://localhost:8081/api/users/me/set/" + this.s_d_Id + "/terms/batch";
+
         }
     }
     hashCode(str) {
@@ -1413,7 +1432,7 @@ class AutoSave {
         this.errorField.style.display = 'block';
     }
     createTerms(terms){
-        return this.request(this.createTermURI, {
+        return this.request(this.createTermsURI, {
             method: "POST",
             body: JSON.stringify(terms)
         })
@@ -1425,9 +1444,9 @@ class AutoSave {
                 if (data?.errors && typeof data.errors === 'object') {
                     this.showErrors(data.errors);
 
-                } else if (data?.id) {
-                    this.s_d_Id = data.id;
-                    this.showTermsFromImport(data.terms);
+                } else {
+                    // this.s_d_Id = data.id;
+                    this.showTermsFromImport(data);
                 }
 
                 return data;
@@ -1449,7 +1468,7 @@ class AutoSave {
                     this.showErrors(data.errors);
                     return false;
                 }
-
+                location.reload(true);
                 return data;
             })
             .catch(error => {
@@ -1574,7 +1593,8 @@ document.addEventListener('DOMContentLoaded', function () {
         document.getElementById('overlay_import_button'),
         document.getElementById('overlay_clear_button'),
         document.getElementById("field-import-error"),
-        document.getElementById("field-import-preview")
+        document.getElementById("field-import-preview"),
+        overlay
         );
 
 

@@ -33,7 +33,7 @@ public interface SetService {
 
     SetEntity findById(int userId, int id);
 
-//    void autoUpdate (int userId, int id, JsonNode body);
+    void autoUpdate (int userId, int id, JsonNode body);
 
     void update(int id, String title, String description,
                 int termLanguageId, int descriptionLanguageId, List<UpdateTermPayload> terms, int userId);

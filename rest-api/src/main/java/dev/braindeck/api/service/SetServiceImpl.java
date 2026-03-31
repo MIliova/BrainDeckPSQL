@@ -7,12 +7,9 @@ import dev.braindeck.api.controller.payload.UpdateTermPayload;
 import dev.braindeck.api.dto.*;
 
 import dev.braindeck.api.entity.*;
-import dev.braindeck.api.repository.DraftTermRepository;
 import dev.braindeck.api.repository.SetRepository;
 import dev.braindeck.api.repository.TermRepository;
 import dev.braindeck.api.repository.UserRepository;
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.PersistenceContext;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -156,34 +153,34 @@ public class SetServiceImpl implements SetService {
         return set;
     }
 
-//    @Override
-//    @Transactional
-//    public void autoUpdate (int userId, int id, JsonNode body) {
-//
-//        SetEntity set = this.findById(userId, id);
-//
-//        if (body.has("title")) {
-//            JsonNode node = body.get("title");
-//            set.setTitle(node.isNull() ? null : node.asText());
-//        }
-//
-//        if (body.has("description")) {
-//            JsonNode node = body.get("description");
-//            set.setDescription(node.isNull() ? null : node.asText());
-//        }
-//
-//        if (body.has("termLanguageId")) {
-//            JsonNode node = body.get("termLanguageId");
-//            set.setTermLanguageId(node.isNull() ? null : node.asInt());
-//        }
-//
-//        if (body.has("descriptionLanguageId")) {
-//            JsonNode node = body.get("descriptionLanguageId");
-//            set.setDescriptionLanguageId(node.isNull() ? null : node.asInt());
-//        }
-//
-//        setRepository.save(set);
-//    }
+    @Override
+    @Transactional
+    public void autoUpdate (int userId, int id, JsonNode body) {
+
+        SetEntity set = this.findById(userId, id);
+
+        if (body.has("title")) {
+            JsonNode node = body.get("title");
+            set.setTitle(node.isNull() ? null : node.asText());
+        }
+
+        if (body.has("description")) {
+            JsonNode node = body.get("description");
+            set.setDescription(node.isNull() ? null : node.asText());
+        }
+
+        if (body.has("termLanguageId")) {
+            JsonNode node = body.get("termLanguageId");
+            set.setTermLanguageId(node.isNull() ? null : node.asInt());
+        }
+
+        if (body.has("descriptionLanguageId")) {
+            JsonNode node = body.get("descriptionLanguageId");
+            set.setDescriptionLanguageId(node.isNull() ? null : node.asInt());
+        }
+
+        setRepository.save(set);
+    }
 
 
     @Transactional
