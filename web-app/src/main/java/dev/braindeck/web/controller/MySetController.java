@@ -40,6 +40,7 @@ public class MySetController {
 
         SetEditDto set = mySetsRestClient.findMySetById(setId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+
         languagesControllerHelper.getLanguages(languagesRestClient.findAllByTypes(), model, locale,
                 set.termLanguageId(), set.descriptionLanguageId());
         modelPreparationService.prepareModel(model,  locale, Map.of(

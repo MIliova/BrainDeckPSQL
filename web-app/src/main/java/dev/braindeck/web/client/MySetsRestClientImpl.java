@@ -7,6 +7,7 @@ import dev.braindeck.web.controller.payload.UpdateTermPayload;
 import dev.braindeck.web.entity.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.MediaType;
 import org.springframework.web.client.RestClient;
 
@@ -58,6 +59,15 @@ public class MySetsRestClientImpl implements MySetsRestClient {
                 .uri("/api/me/set/{setId}", setId)
                 .retrieve()
                 .toBodilessEntity();
+    }
+
+    @Override
+    public List<SetWithCountDto> findAllMySets() {
+        return restClient
+                .get()
+                .uri("/api/user/me/sets")
+                .retrieve()
+                .body(new ParameterizedTypeReference<List<SetWithCountDto>>() {});
     }
 
 }

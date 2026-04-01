@@ -782,6 +782,7 @@ class TermRow {
     constructor(
         index,
         {onTextNormalization} = {},
+
         obj = null,
         first = false,
         data) {
@@ -856,6 +857,28 @@ class TermRow {
     }
 
     buildRow() {
+
+        let termIndex = document.createElement('div');
+        termIndex.className = 'term-index';
+        termIndex.textContent = this.index + 1;
+
+        let fieldError = document.createElement('div');
+        fieldError.className = 'field-error';
+        fieldError.id = 'error-term-row' + this.index;
+
+        let img = document.createElement('img');
+        img.width = 30;
+        img.src = "/images/delete-term.png";
+        img.alt = this.data.dataTermDeleteText;
+        let imgDiv = document.createElement('div');
+        imgDiv.appendChild(img);
+
+        let containerLeftRight = document.createElement('div');
+        containerLeftRight.className = 'container-left-right';
+        containerLeftRight.appendChild(termIndex);
+        containerLeftRight.appendChild(fieldError);
+        containerLeftRight.appendChild(imgDiv);
+
         const term = this.createField('term-placeholder', this.data.dataTermPlaceholder, "term", this.obj.term);
         const termLabel = this.createLabel(this.data.dataTermText, this.first, "term");
         const termError = this.createError("term");
@@ -866,15 +889,22 @@ class TermRow {
         const descrError = this.createError("description");
         const descrBlock = this.createWrapBloc(descr, descrLabel, descrError);
 
-        let containerLeftRightBlueRow = document.createElement('div');
-        containerLeftRightBlueRow.className = 'container-left-right-top blue-row';
-        containerLeftRightBlueRow.dataset.termRow = '';
-        containerLeftRightBlueRow.appendChild(termBlock);
-        containerLeftRightBlueRow.appendChild(descrBlock);
+        let containerLeftRightTop = document.createElement('div');
+        containerLeftRightTop.className = 'container-left-right-top';
+        containerLeftRightTop.dataset.termRow = '';
+        containerLeftRightTop.dataset.errorId = fieldError.id;
+        containerLeftRightTop.appendChild(termBlock);
+        containerLeftRightTop.appendChild(descrBlock);
+
+        let blueRow = document.createElement('div');
+        blueRow.className = 'blue-row';
+        blueRow.dataset.termRow = '';
+        blueRow.appendChild(containerLeftRight);
+        blueRow.appendChild(containerLeftRightTop);
 
         let div = document.createElement('div');
         div.setAttribute('data-error-class', 'blue-row-err');
-        div.appendChild(containerLeftRightBlueRow);
+        div.appendChild(blueRow);
 
         let divBlueRowMargin = document.createElement('div');
         divBlueRowMargin.className = 'blue-row-margin';
@@ -895,6 +925,8 @@ class TermRow {
 
         this.descr = descr;
         this.root = divBlueRowMargin;
+        this.containerLeftRightTop = containerLeftRightTop;
+        this.deleteRowBtn = img;
 
         // this.setForm.add(term, descr, this.obj.id);
         // this.divplaceholder.add(term, 'term');
@@ -912,14 +944,21 @@ class TermController {
         this.container = container;
         this.onTextNormalization = onTextNormalization;
         this.container.addEventListener("row-created", e => {
-            const {term, descr, id} = e.detail;
+            const {term, descr, id, row, errorIdEl} = e.detail;
+
             this.services.addToForm(term, descr, id);
             this.services.addToEditable(term);
             this.services.addToEditable(descr);
             this.services.addToPlaceholder(term, "term");
             this.services.addToPlaceholder(descr, "description");
+            this.services.deleteRowBtn.addEventListener(
+                'click', () => autoSave.deleteTerm(id, row, errorIdEl)
+            );
+
         });
         this.lastIndex = 0;
+
+
     }
     getTermContainer() {
         return this.container;
@@ -934,7 +973,7 @@ class TermController {
         const row = new TermRow(
             this.getTermIndex(),
             {onTextNormalization: this.onTextNormalization},
-            obj,
+        obj,
             first,
             {
                 dataBasePlaceholder: this.container.getAttribute('data-base-placeholder'),
@@ -942,7 +981,8 @@ class TermController {
                 dataDescriptionPlaceholder: this.container.getAttribute('data-description-placeholder'),
                 dataTermText: this.container.getAttribute('data-term-text'),
                 dataDescrText: this.container.getAttribute('data-descr-text'),
-                dataLanguageText: this.container.getAttribute('data-language-text')
+                dataLanguageText: this.container.getAttribute('data-language-text'),
+                dataTermDeleteText: this.container.getAttribute('data-term-delete')
             });
         const el = row.getElement();
         this.container.appendChild(el);
@@ -951,7 +991,9 @@ class TermController {
             detail: {
                 term: row.term,
                 descr: row.descr,
-                id: row.obj.id
+                id: row.obj.id,
+                row: row,
+                errorIdEl: row.containerLeftRightTop
             },
             bubbles: true
         }));
@@ -973,6 +1015,7 @@ class TermButton {
         button.style.display = 'block';
         button.addEventListener("click", () => this.termsController.addTerm());
     }
+
 }
 
 class TermsImport {
@@ -1176,6 +1219,7 @@ class AutoSave {
         this.s_d_Id = 0;
         this.on = null;
     }
+
     init(form, s_d_Id, draft = false, errorField, deleteDraftButton){
         if (Number(s_d_Id) < 1)
             return;
@@ -1219,7 +1263,7 @@ class AutoSave {
             this.updateTermURI  = "http://localhost:8081/api/me/draft/" + this.s_d_Id + "/terms/";
             this.createTermsURI = "http://localhost:8081/api/me/draft/" + this.s_d_Id + "/terms/batch";
 
-            // this.deleteTermURI = "http://localhost:8081/api/me/draft/" + this.s_d_Id + "/terms/";
+            this.deleteTermURI  = "http://localhost:8081/api/me/draft/" + this.s_d_Id + "/terms";
 
 
         } else if (s_d_Id !== 0) {
@@ -1228,6 +1272,8 @@ class AutoSave {
             this.createTermURI  = "http://localhost:8081/api/users/me/set/" + this.s_d_Id + "/terms";
             this.updateTermURI  = "http://localhost:8081/api/users/me/set/" + this.s_d_Id + "/terms/";
             this.createTermsURI = "http://localhost:8081/api/users/me/set/" + this.s_d_Id + "/terms/batch";
+
+            this.deleteTermURI  = "http://localhost:8081/api/me/set/" + this.s_d_Id + "/terms";
 
         }
     }
@@ -1381,19 +1427,6 @@ class AutoSave {
         errorEl.innerHTML = '';
         errorEl.style.display = 'none';
     }
-
-    deleteTerm(id, term) {
-        return this.request(`${this.deleteTermURI}${id}`, {
-            method: "DELETE"
-        })
-            .then(data => {
-                if (data?.errors) {
-                    this.showFieldError(term, data.errors);
-                    return false;
-                }
-                return true;
-            });
-    }
     saved() {
         return this.on === true;
     }
@@ -1477,7 +1510,23 @@ class AutoSave {
                 return false;
             });
     }
+    deleteTerm(id, row, errorIdEl) {
+        if (this.s_d_Id === 0) {
+            row.remove();
+            return;
+        }
 
+        return this.request(`${this.deleteTermURI}${id}`, {
+            method: "DELETE"
+        })
+            .then(data => {
+                if (data?.errors) {
+                    this.showFieldError(errorIdEl, data.errors);
+                    return false;
+                }
+                return true;
+            });
+    }
 
 
 }
@@ -1508,6 +1557,7 @@ const autoSave = new AutoSave(
         }
     }
 );
+
 const setForm = new SetForm(
     {
         termIsEmpty(el) {
@@ -1533,9 +1583,9 @@ document.addEventListener('DOMContentLoaded', function () {
     termController.init(
         document.getElementById('terms-description-area'),
         {
-        addToForm: (term, descr, id) => setForm.add(term, descr, id),
-        addToPlaceholder: (el, type) => divplaceholder.add(el, type),
-        addToEditable: (el) => editableDiv.add(el)
+            addToForm: (term, descr, id) => setForm.add(term, descr, id),
+            addToPlaceholder: (el, type) => divplaceholder.add(el, type),
+            addToEditable: (el) => editableDiv.add(el)
         },
         {
             onTextNormalization(text) {

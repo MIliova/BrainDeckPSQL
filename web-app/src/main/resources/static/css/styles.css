@@ -55,6 +55,11 @@ body {
 .term {
     font-size: 70%;
 }
+.term-index {
+    font-weight: 700;
+    margin: 10px;
+
+}
 .language-button, .language-button-err{
     display: none;
     font-size: 80%;

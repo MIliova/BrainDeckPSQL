@@ -4,6 +4,7 @@ import dev.braindeck.web.utills.ProblemDetailParser;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.coyote.BadRequestException;
+import org.springframework.context.MessageSource;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -19,11 +20,13 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class WebControllerAdvice {
 
+    private final MessageSource messageSource;
+
     private String determineView(RestClientResponseException ex, Model model) {
         String currentView = (String) model.getAttribute("currentView");
         if (currentView == null) {
             log.warn("currentView is not set, defaulting to 'error/500'");
-            return "error/500";
+            return "errors/500";
         }
         return currentView;
     }
@@ -43,19 +46,21 @@ public class WebControllerAdvice {
     @ExceptionHandler(HttpClientErrorException.NotFound.class)
     public String handleHttpClientError(HttpClientErrorException.NotFound ex, Model model, Locale locale) {
         model.addAttribute("errors", ProblemDetailParser.parse(ex));
-        return "error/404";
+        model.addAttribute("pageTitle", messageSource.getMessage("errors.404.title", null,locale));
+
+        return "errors/error";
     }
 
     @ExceptionHandler(HttpClientErrorException.Forbidden.class)
     public String handleForbidden(HttpClientErrorException.Forbidden ex, Model model, Locale locale) {
         model.addAttribute("errors", ProblemDetailParser.parse(ex));
-        return "error/403";
+        return "errors/403";
     }
 
     @ExceptionHandler(HttpServerErrorException.InternalServerError.class)
     public String handleInternalServerError(HttpServerErrorException.InternalServerError ex, Model model) {
         model.addAttribute("errors", ProblemDetailParser.parse(ex));
-        return "error/500";
+        return "errors/500";
     }
 
 //    @ExceptionHandler(Throwable.class)
@@ -68,7 +73,7 @@ public class WebControllerAdvice {
     public String handleGenericException(Exception ex, Model model) {
         log.error("Unexpected error", ex);
         model.addAttribute("errors", Map.of("general", ex.getMessage()));
-        return "error/500";
+        return "errors/500";
     }
 }
 

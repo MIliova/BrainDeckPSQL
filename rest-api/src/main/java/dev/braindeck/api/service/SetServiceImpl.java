@@ -128,10 +128,11 @@ public class SetServiceImpl implements SetService {
                 .toList();
     }
 
+
     @Transactional(readOnly = true)
     @Override
     public SetEditDto findSetEditDtoById(int userId, int id) {
-        SetEntity set = findById(id, userId);
+        SetEntity set = findById(userId, id);
         return new SetEditDto(
                 set.getId(),
                 set.getTitle(),
@@ -145,8 +146,10 @@ public class SetServiceImpl implements SetService {
     @Transactional(readOnly = true)
     @Override
     public SetEntity findById(int userId, int id) {
+
         SetEntity set = setRepository.findById(id)
                 .orElseThrow(()-> new NoSuchElementException("errors.set.not.found"));
+
         if (!set.getUser().getId().equals(userId)) {
             throw new ForbiddenException("errors.set.not.belong.user");
         }

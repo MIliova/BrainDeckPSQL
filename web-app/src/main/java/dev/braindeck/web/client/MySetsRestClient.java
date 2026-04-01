@@ -18,4 +18,7 @@ public interface MySetsRestClient {
 
     Optional<SetEditDto> findMySetById(int id);
 
+    List<SetWithCountDto> findAllMySets();
+
+
 }

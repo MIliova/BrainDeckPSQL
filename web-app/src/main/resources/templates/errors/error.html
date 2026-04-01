@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+    <head>
+        <meta charset="UTF-8">
+        <title th:text="${pageTitle}"></title>
+        <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@100;200;300&display=swap" rel="stylesheet">
+        <link rel="stylesheet" href="/css/styles.css">
+    </head>
+<body>
+    <div class="main">
+        <div class="main-left">&nbsp;</div>
+        <div class="main-center">
+            <div th:insert="~{fragments/fragment::header-menu}"></div>
+            <div><h1 th:text="${pageTitle}">My Library</h1></div>
+            <div>
+                <p data-th-text="${errors?.general}"></p>
+            </div>
+        </div>
+        <div class="main-right">&nbsp;</div>
+    </div>
+</body>
+</html>

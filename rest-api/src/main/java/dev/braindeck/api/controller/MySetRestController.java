@@ -14,6 +14,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -27,8 +28,11 @@ public class MySetRestController {
     @GetMapping("/{setId:\\d+}")
     public ResponseEntity<SetEditDto> findMySet(
             @PathVariable("setId") @Positive (message = "errors.set.id") int setId) {
+
         UserEntity user = userService.getCurrentUser();
-        return ResponseEntity.ok(setService.findSetEditDtoById(user.getId(), setId));
+        SetEditDto setEditDto = setService.findSetEditDtoById(user.getId(), setId);
+
+        return ResponseEntity.ok(setEditDto);
     }
 
     @PostMapping

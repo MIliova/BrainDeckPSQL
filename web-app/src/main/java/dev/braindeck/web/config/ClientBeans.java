@@ -43,6 +43,14 @@ public class ClientBeans {
     }
 
     @Bean
+    public MyFoldersRestClientImpl myFoldersRestClient(@Value("${braindeck.api.uri}") String apiBaseUrl) {
+        return new MyFoldersRestClientImpl(RestClient
+                .builder()
+                .baseUrl(apiBaseUrl)
+                .build());
+    }
+
+    @Bean
     public UserRestClientImpl userRestClient(@Value("${braindeck.api.uri}") String apiBaseUrl) {
         return new UserRestClientImpl(RestClient
                 .builder()
