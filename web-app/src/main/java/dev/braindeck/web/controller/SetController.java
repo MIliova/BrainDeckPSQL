@@ -14,7 +14,7 @@ import java.util.Map;
 
 @Controller
 @RequiredArgsConstructor
-@RequestMapping("/user/{userId:\\d+}/set/{setId:\\d+}")
+@RequestMapping("/set/{setId:\\d+}")
 public class SetController {
 
     private final SetsRestClient setsRestClient;
@@ -26,7 +26,7 @@ public class SetController {
                           Model model, Locale locale) {
         model.addAttribute("currentView", "set");
 
-        SetShortDto setDto = setsRestClient.findSetById(setId);
+        SetShortDto setDto = setsRestClient.findById(setId);
 
         modelPreparationService.prepareModel(model, locale, Map.of(
                 "set", setDto,

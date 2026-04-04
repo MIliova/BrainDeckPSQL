@@ -26,16 +26,16 @@ public class MyDraftRestClientImpl implements MyDraftRestClient {
     }
 
     @Override
-    public Optional<DraftDto> get(int draftId) {
+    public Optional<DraftDto> get(int id) {
         return Optional.ofNullable(restClient.get()
-                .uri("/api/me/draft/{draftId}", draftId)
+                .uri("/api/me/draft/{id}", id)
                 .retrieve()
                 .body(DraftDto.class));
     }
 
     @Override
     public SetCreatedDto createFromDraft(
-            int draftId,
+            int id,
             String title,
             String description,
             Integer termLanguageId,
@@ -43,7 +43,7 @@ public class MyDraftRestClientImpl implements MyDraftRestClient {
             List<NewTermPayload> terms) {
         return restClient
                 .post()
-                .uri("/api/me/draft/{draftId}/convert", draftId)
+                .uri("/api/me/draft/{id}/convert", id)
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(new RestSetPayload(title,  description,  termLanguageId,  descriptionLanguageId, terms))
                 .retrieve()

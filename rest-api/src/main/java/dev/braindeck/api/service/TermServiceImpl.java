@@ -71,6 +71,7 @@ public class TermServiceImpl implements TermService {
     }
 
     @Override
+    @Transactional
     public void delete(int termId, int setId, int currentUserId) {
         TermEntity term = termRepository.findById(termId)
                 .orElseThrow(() -> new NoSuchElementException("errors.term.not.found"));

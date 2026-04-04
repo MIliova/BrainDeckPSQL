@@ -21,9 +21,9 @@ public class MySetsRestClientImpl implements MySetsRestClient {
     private final RestClient restClient;
 
     @Override
-    public Optional<SetEditDto> findMySetById(int setId) {
+    public Optional<SetEditDto> findById(int id) {
         return Optional.ofNullable(restClient.get()
-                .uri("/api/users/me/set/{setId}", setId)
+                .uri("/api/me/set/{id}", id)
                 .retrieve()
                 .body(SetEditDto.class));
     }
@@ -33,7 +33,7 @@ public class MySetsRestClientImpl implements MySetsRestClient {
                              List<NewTermPayload> terms) {
         return restClient
                 .post()
-                .uri("/api/users/me/set")
+                .uri("/api/me/set")
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(new RestSetPayload(title, description, termLanguageId, descriptionLanguageId, terms))
                 .retrieve()
@@ -41,31 +41,31 @@ public class MySetsRestClientImpl implements MySetsRestClient {
     }
 
     @Override
-    public void update(int setId, String title, String description, Integer termLanguageId, Integer descriptionLanguageId,
+    public void update(int id, String title, String description, Integer termLanguageId, Integer descriptionLanguageId,
                        List<UpdateTermPayload> terms) {
         restClient
                 .patch()
-                .uri("/api/users/me/set/{setId}", setId)
+                .uri("/api/me/set/{id}", id)
                 .contentType(MediaType.APPLICATION_JSON)
-                .body(new RestUpdateSetPayload( setId, title, description, termLanguageId, descriptionLanguageId, terms))
+                .body(new RestUpdateSetPayload( id, title, description, termLanguageId, descriptionLanguageId, terms))
                 .retrieve()
                 .toBodilessEntity();
     }
 
     @Override
-    public void delete(int setId) {
+    public void delete(int id) {
         restClient
                 .delete()
-                .uri("/api/me/set/{setId}", setId)
+                .uri("/api/me/set/{id}", id)
                 .retrieve()
                 .toBodilessEntity();
     }
 
     @Override
-    public List<SetWithCountDto> findAllMySets() {
+    public List<SetWithCountDto> findAll() {
         return restClient
                 .get()
-                .uri("/api/user/me/sets")
+                .uri("/api/me/sets")
                 .retrieve()
                 .body(new ParameterizedTypeReference<List<SetWithCountDto>>() {});
     }

@@ -14,17 +14,17 @@ import java.util.List;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api")
-public class SetRestController {
+public class SetsRestController {
 
     private final SetService setService;
 
-    @GetMapping("/users/{userId:\\d+}/sets")
+    @GetMapping("/user/{userId:\\d+}/sets")
     public ResponseEntity<List<SetWithTCntUInfoDto>> findSets(
             @PathVariable("userId") @Positive int userId) {
         return ResponseEntity.ok(setService.findAllByUserId(userId));
     }
 
-    @GetMapping("/sets/{setId:\\d+}")
+    @GetMapping("/set/{setId:\\d+}")
     public ResponseEntity<SetShortDto> findSet(
             @PathVariable("setId") @Positive int setId) {
         return ResponseEntity.ok(setService.findShortById(setId));

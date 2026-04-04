@@ -31,7 +31,7 @@ public class MyDTermsRestController {
             UriComponentsBuilder uriBuilder) {
         UserEntity user = userService.getCurrentUser();
         return ResponseEntity.created(
-                        uriBuilder.replacePath("/api/drafts/{draftId}")
+                        uriBuilder.replacePath("/api/me/draft/{draftId}")
                                 .build(Map.of("draftId", draftId)))
                 .body(draftTermService.autoCreate(user.getId(), draftId, term));
     }
@@ -53,7 +53,7 @@ public class MyDTermsRestController {
             UriComponentsBuilder uriBuilder) {
         UserEntity user = userService.getCurrentUser();
         return ResponseEntity.created(
-                        uriBuilder.replacePath("/api/drafts/{draftId}")
+                        uriBuilder.replacePath("/api/me/draft/{draftId}")
                                 .build(Map.of("draftId", draftId)))
                 .body(draftTermService.autoCreate(user.getId(), draftId, terms));
     }

@@ -26,7 +26,7 @@ public class MySetsController {
             Model model, Locale locale) {
         model.addAttribute("currentView", "sets");
 
-        List<SetWithCountDto> sets = mySetsRestClient.findAllMySets();
+        List<SetWithCountDto> sets = mySetsRestClient.findAll();
 
         modelPreparationService.prepareModel(model, locale, Map.of(
                 "sets", sets,

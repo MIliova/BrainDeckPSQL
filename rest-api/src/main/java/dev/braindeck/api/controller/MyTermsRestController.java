@@ -18,7 +18,7 @@ import java.util.Map;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/me/sets/{setId:\\d+}/terms")
+@RequestMapping("/api/me/set/{setId:\\d+}/terms")
 public class MyTermsRestController {
 
     private final TermService termService;
@@ -31,11 +31,11 @@ public class MyTermsRestController {
             UriComponentsBuilder uriBuilder) {
         UserEntity user = userService.getCurrentUser();
         return ResponseEntity.created(uriBuilder
-                        .replacePath("/api/me/sets/{setId}").build(Map.of("setId", setId)))
+                        .replacePath("/api/me/set/{setId}").build(Map.of("setId", setId)))
                 .body(termService.autoCreate(user.getId(), setId, term));
     }
 
-    @PutMapping("/{termId:\\d+}")
+    @PatchMapping("/{termId:\\d+}")
     public ResponseEntity<Void> autoUpdate(
             @PathVariable("setId") @Positive int setId,
             @PathVariable("termId") @Positive int termId,
@@ -52,7 +52,7 @@ public class MyTermsRestController {
             UriComponentsBuilder uriBuilder) {
         UserEntity user = userService.getCurrentUser();
         return ResponseEntity.created(uriBuilder
-                        .replacePath("/api/me/sets/{setId}").build(Map.of("setId", setId)))
+                        .replacePath("/api/me/set/{setId}").build(Map.of("setId", setId)))
                 .body(termService.autoCreate(user.getId(), setId, terms));
     }
 

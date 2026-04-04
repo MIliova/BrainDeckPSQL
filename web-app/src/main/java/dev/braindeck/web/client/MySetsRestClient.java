@@ -16,9 +16,9 @@ public interface MySetsRestClient {
 
     void delete(int id);
 
-    Optional<SetEditDto> findMySetById(int id);
+    Optional<SetEditDto> findById(int id);
 
-    List<SetWithCountDto> findAllMySets();
+    List<SetWithCountDto> findAll();
 
 
 }

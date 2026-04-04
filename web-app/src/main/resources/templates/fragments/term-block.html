@@ -1,17 +1,21 @@
 <div th:fragment="termBlock(term, index, termErrs)">
     <div data-term-row class="blue-row"
-        th:with="termErrors=${termErrs != null ? termErrs.get(index) : null}">
+         th:data-id="${term?.id }"
+         th:data-new="${term == null ? true : false}"
+         th:with="termErrors=${termErrs != null ? termErrs.get(index) : null}">
         <div class="container-left-right">
             <div th:text="${index+1}" class="term-index"></div>
-            <div class="field-error" th:id="'error-term-row' + ${index}">vjgvjg</div>
-            <div><img width="30" src="/images/delete-term.png" th:alt="#{messages.term.delete}" /></div>
+            <div class="field-error"
+                 th:id="'error-term-row' + ${index}"
+                 th:attr="style=${'display:none;'}"
+            ></div>
+            <div data-delete-term-row-button th:data-error-id="'error-term-row' + ${index}" class="delete-term-row-button"><img width="30" src="/images/delete-term.png" th:alt="#{messages.term.delete}" /></div>
         </div>
-        <div class="container-left-right-top" th:data-error-id="'error-term-row' + ${index}">
+        <div class="container-left-right-top" >
             <div class="term-block">
                 <div data-term="true" class="term-input"
-                     th:classappend="${term == null || term?.term == ''} ? 'term-placeholder'"
                      th:id="'term'+${index}"
-                     th:data-id="${term?.id }"
+                     th:classappend="${term == null || term?.term == ''} ? 'term-placeholder'"
                      th:data-base-placeholder="#{messages.set.create.placeholder} "
                      th:data-placeholder="#{messages.set.create.term_placeholder}"
                      data-placeholder-class="term-placeholder"
@@ -42,7 +46,7 @@
                 </div>
             </div>
             <div class="term-block">
-                <div data-term="true" class="term-input"
+                <div data-description="true" class="term-input"
                      th:id="'description'+${index}"
                      th:classappend="${term == null || term?.description == ''} ? 'description-placeholder'"
                      th:data-base-placeholder="#{messages.set.create.placeholder} "

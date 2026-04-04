@@ -20,7 +20,7 @@ public class MyFoldersRestClientImpl implements MyFoldersRestClient {
     @Override
     public Optional<FolderEditDto> findById(int id) {
         return Optional.ofNullable(restClient.get()
-                .uri("/api/users/me/folder/{id}", id)
+                .uri("/api/me/folder/{id}", id)
                 .retrieve()
                 .body(FolderEditDto.class));
     }
@@ -31,7 +31,7 @@ public class MyFoldersRestClientImpl implements MyFoldersRestClient {
     public FolderCreatedDto create(String title) {
         return restClient
                 .post()
-                .uri("/api/users/me/folder")
+                .uri("/api/me/folder")
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(new RestFolderPayload(title))
                 .retrieve()
@@ -42,7 +42,7 @@ public class MyFoldersRestClientImpl implements MyFoldersRestClient {
     public void update(int id, String title) {
         restClient
                 .patch()
-                .uri("/api/users/me/folder/{id}", id)
+                .uri("/api/me/folder/{id}", id)
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(new RestUpdateFolderPayload( id, title))
                 .retrieve()
@@ -53,7 +53,7 @@ public class MyFoldersRestClientImpl implements MyFoldersRestClient {
     public void delete(int id) {
         restClient
                 .delete()
-                .uri("/api/users/me/folder/{id}", id)
+                .uri("/api/me/folder/{id}", id)
                 .retrieve()
                 .toBodilessEntity();
     }
@@ -62,7 +62,7 @@ public class MyFoldersRestClientImpl implements MyFoldersRestClient {
     public List<FolderWithCountDto> findAll() {
         return restClient
                 .get()
-                .uri("/api/users/me/folders")
+                .uri("/api/me/folders")
                 .retrieve()
                 .body(new ParameterizedTypeReference<List<FolderWithCountDto>>() {});
     }

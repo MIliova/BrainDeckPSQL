@@ -14,14 +14,14 @@ import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/user")
+@RequestMapping("/api/me/sets")
 public class MySetsRestController {
 
     private final SetService setService;
     private final UserService userService;
 
 
-    @GetMapping("/me/sets")
+    @GetMapping("")
     public ResponseEntity<List<SetWithTCntUInfoDto>> findSets() {
         UserEntity user = userService.getCurrentUser();
 

@@ -239,6 +239,9 @@ select {
     /*font-size: 100%;*/
     /*font-weight: bold;*/
     /*margin: 9px 5px;*/
+
+
+
 }
 .blue-row-button-img {
     background-color: #244f73;
@@ -425,7 +428,6 @@ select {
     text-align:left;
 
 }
-
 .numberH {
     margin-left: -7px;
     padding: 5px;
@@ -448,6 +450,7 @@ select {
     color: #25334c;
 
 }
-
-
+.delete-term-row-button{
+    cursor: pointer;
+}
 

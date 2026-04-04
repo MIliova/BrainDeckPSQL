@@ -15,17 +15,31 @@
 
 
         <div class="container-left-right">
-            <div><h1 data-th-text="${pageTitle}">Create a new set</h1></div>
+            <div><h1 th:text="${pageTitle}">Create a new set/Edit a set</h1></div>
             <div style="display: flex">
+                <div class="blue-row margin-left" th:if="${payload.id != null and !isDraft}">
+                    <a class="blue-row-a-img" th:href="@{/set/{id}(id=${payload.id})}">
+                        <img width="20" src="/images/back-to-set.png" th:alt="#{messages.set.create.import}" />
+                        [[#{messages.set.edit.back}]]
+                    </a>
+                </div>
                 <div class="blue-row margin-left">
-                    <button id="submitButton" class="blue-row-button" type="button" th:aria-label="#{messages.create}" onclick=""><span data-th-text="#{messages.create}">Create</span></button>
+                    <button id="submitButton" class="blue-row-button-img" type="button"
+                            th:aria-label="${payload.id} != null ? #{messages.save} : #{messages.create}"><img
+                            width="20" src="/images/save.png" th:alt="${payload.id} != null ? #{messages.save} : #{messages.create}" /><span
+                            th:text="${payload.id} != null ? #{messages.save} : #{messages.create}">Create/Save</span></button>
                 </div>
                 <div class="blue-row margin-left" th:if="${isDraft}">
-                    <button id="deleteDraftButton" class="blue-row-button" type="button" th:aria-label="#{messages.delete.draft}"
-                             onclick=""><span data-th-text="#{messages.delete.draft}">Delete draft</span></button>
+                    <button id="delete-draft-button" class="blue-row-button-img" type="button"
+                            th:aria-label="#{messages.delete.draft}"><img
+                            width="20" src="/images/delete-set.png" th:alt="#{messages.delete.draft}" /><span
+                            th:text="#{messages.delete.draft}">Delete draft</span></button>
                 </div>
             </div>
         </div>
+
+
+
 
 
         <div aria-hidden="true">
@@ -43,7 +57,7 @@
                                 th:text="#{messages.set.create.t}"
                                 th:data-message="#{messages.set.create.t}">&nbsp</span>
                         <span
-                                th:if="${payload?.title == null || payload?.title != ''}"
+                                th:if="${payload?.title == null || payload?.title == ''}"
                                 th:data-message="#{messages.set.create.t}">&nbsp</span>
                         <input type="text"
                                th:id="field-title"
@@ -141,7 +155,7 @@
                      th:data-term-text="#{messages.set.create.te}"
                      th:data-descr-text="#{messages.set.create.de}"
                      th:data-language-text="#{messages.set.create.cl}"
-                     th:data-term-delete="#{messages.term.delete}"
+                     th:data-term-delete-text="#{messages.term.delete}"
                      th:with="lastIndex=${terms != null and #lists.size(terms) > 0 and terms[0] != null ? #lists.size(terms) : 0}">
 
 
@@ -179,7 +193,7 @@
         </div>
 
         <div class="container-center" style="margin: 40px 0">
-            <div class="blue-row" id="add_term_button" style="display: none;"><button class="blue-row-button" type="button" aria-label="Add" ><span th:data="#{messages.set.edit.add}">Add term</span></button></div>
+            <div class="blue-row" id="add_term_button"><button class="blue-row-button" type="button" aria-label="Add" ><span th:data="#{messages.set.edit.add}">Add term</span></button></div>
         </div>
 
 

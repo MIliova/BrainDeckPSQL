@@ -24,7 +24,7 @@ class DivPlaceholder {
         if (el.dataset._ph_inited)
             return;
         this.els.push({el:el, type:type});
-        this.initEl({el:el, type:type})
+        this.initEl({el:el, type:type});
     }
     initEl(obj){
         const el = obj.el;
@@ -52,7 +52,8 @@ class DivPlaceholder {
     }
     show(el){
         el.dataset._ph = "1";
-        el.textContent = el.dataset.placeholder;//el.getAttribute('data-placeholder');
+        // el.textContent = el.dataset.placeholder;//el.getAttribute('data-placeholder');
+        el.innerHTML = '<p>'+el.dataset.placeholder+'</p>';//??????
         el.classList.add(el.dataset.placeholderClass);// getAttribute('data-placeholder-class'));
     }
     hide(el){
@@ -60,7 +61,7 @@ class DivPlaceholder {
         el.classList.remove(el.dataset.placeholderClass);// el.getAttribute('data-placeholder-class'));
     }
     onfocus(el){
-        el.textContent = '';
+        //el.textContent = '';
         el.innerHTML = '<p><br></p>'; //!!!!!!!
         const p = el.querySelector('p');
         const range = document.createRange();
@@ -321,8 +322,8 @@ class TextNormalization {
 }
 
 class LanguageMenu {
-    constructor({ onChange } = {}) {
-        this.onChange = onChange || (() => {});
+    constructor(divplaceholder) {
+        this.divplaceholder = divplaceholder;
 
         this.inputs = {};
         this.buttons = [];
@@ -331,9 +332,9 @@ class LanguageMenu {
         this.owner = null;
         this.inited = false;
 
-
-        this._handleDocClick = this._handleDocClick.bind(this);
+        // this._handleDocClick = this._handleDocClick.bind(this);
     }
+
     addInput(el, type) {
         this.inputs[type] = el;
     }
@@ -348,7 +349,8 @@ class LanguageMenu {
         this._initButtons();
         this._initOptions();
 
-        document.addEventListener('click', this._handleDocClick);
+        document.addEventListener('click', this._handleDocClick.bind(this));
+
     }
     _initButtons(){
         if (this.inited) return;
@@ -386,8 +388,7 @@ class LanguageMenu {
         //     this.languageMenu.style.display = 'none'; // Скрыть меню
         // }
         if (!event.target.closest(".language-button") &&
-            !this.languageMenu.contains(event.target))
-        {
+            !this.languageMenu.contains(event.target)) {
             this.languageMenu.style.display = 'none';
         }
     }
@@ -410,8 +411,7 @@ class LanguageMenu {
 
         this.languageMenu.style.display = 'none';
 
-        this.onChange(type, text);
-        //divplaceholder.update(type, text);
+        this.divplaceholder.update(type, text);
     }
     reset(){
         this.buttons.forEach(obj => {
@@ -781,18 +781,18 @@ class Overlay {
 class TermRow {
     constructor(
         index,
-        {onTextNormalization} = {},
-
         obj = null,
         first = false,
-        data) {
+        data,
+        textNormalization
+    ) {
         this.index = index;
         this.obj = obj ?? {term: "", description: "", id: null};
         this.first = !!first;
 
         this.data = data ?? {};
 
-        this.onTextNormalization = onTextNormalization || ((t) => t);
+        this.textNormalization = textNormalization;
 
         this.buildRow();
     }
@@ -819,14 +819,23 @@ class TermRow {
             div.classList.add(`${type}-placeholder`);
         }
 
-        div.dataset.term = 'true';
+        div.dataset[type] = 'true';
         div.id = type + this.index;
 
-        div.setAttribute('data-base-placeholder', this.data.dataBasePlaceholder);
-        div.setAttribute('data-placeholder', placeholder);
-        div.setAttribute('data-placeholder-class', `${type}-placeholder`);
+        div.dataset.basePlaceholder = this.data.dataBasePlaceholder;
+        div.dataset.placeholder = placeholder;
+        div.dataset.placeholderClass = `${type}-placeholder`;
         div.contentEditable = 'true';
-        div.innerHTML = this.onTextNormalization(text);
+        div.innerHTML = this.textNormalization.normalizeText(text);
+
+        // if (text === "") {
+        //     const p = document.createElement('p');
+        //     div.innerHTML = '<br>';
+        //     div.appendChild(p);
+        // } else {
+        //     div.innerHTML = this.textNormalization.normalizeText(text);
+        // }
+
         return div;
     }
 
@@ -860,17 +869,21 @@ class TermRow {
 
         let termIndex = document.createElement('div');
         termIndex.className = 'term-index';
-        termIndex.textContent = this.index + 1;
+        // termIndex.textContent = this.index + 1;
 
         let fieldError = document.createElement('div');
         fieldError.className = 'field-error';
         fieldError.id = 'error-term-row' + this.index;
+        fieldError.style.display = "none";
 
         let img = document.createElement('img');
         img.width = 30;
         img.src = "/images/delete-term.png";
         img.alt = this.data.dataTermDeleteText;
         let imgDiv = document.createElement('div');
+        imgDiv.className = 'delete-term-row-button';
+        imgDiv.dataset.deleteTermRowButton='';
+        imgDiv.dataset.errorId='error-term-row' + this.index;
         imgDiv.appendChild(img);
 
         let containerLeftRight = document.createElement('div');
@@ -891,28 +904,29 @@ class TermRow {
 
         let containerLeftRightTop = document.createElement('div');
         containerLeftRightTop.className = 'container-left-right-top';
-        containerLeftRightTop.dataset.termRow = '';
-        containerLeftRightTop.dataset.errorId = fieldError.id;
         containerLeftRightTop.appendChild(termBlock);
         containerLeftRightTop.appendChild(descrBlock);
 
-        let blueRow = document.createElement('div');
-        blueRow.className = 'blue-row';
-        blueRow.dataset.termRow = '';
-        blueRow.appendChild(containerLeftRight);
-        blueRow.appendChild(containerLeftRightTop);
+        let termRow = document.createElement('div');
+        termRow.className = 'blue-row';
+        termRow.dataset.termRow = 'true';
+        termRow.appendChild(containerLeftRight);
+        termRow.appendChild(containerLeftRightTop);
+        if (this.obj.id)
+            termRow.dataset.id = this.obj.id;
+        else
+            termRow.dataset.new = 'true';
 
         let div = document.createElement('div');
-        div.setAttribute('data-error-class', 'blue-row-err');
-        div.appendChild(blueRow);
+        div.dataset.errorClass = 'blue-row-err';
+        div.appendChild(termRow);
 
         let divBlueRowMargin = document.createElement('div');
         divBlueRowMargin.className = 'blue-row-margin';
         divBlueRowMargin.appendChild(div);
 
         this.term = term;
-        if (this.obj.id)
-            term.setAttribute("data-id", this.obj.id);
+
         // term.errorEl = termError;
         // descr.errorEl = descrError;
 
@@ -939,26 +953,83 @@ class TermRow {
 }
 
 class TermController {
-    init(container, services, {onTextNormalization} = {}) {
-        this.services = services;
-        this.container = container;
-        this.onTextNormalization = onTextNormalization;
-        this.container.addEventListener("row-created", e => {
-            const {term, descr, id, row, errorIdEl} = e.detail;
+//     constructor(addTermButtonId, deleteDraftButtonId) {
+//         this.addTermButtonId = addTermButtonId;
+//         this.deleteDraftButtonId = deleteDraftButtonId;
+//         "add_term_button"
+//
+// "delete-draft-button"
+//     }
+    addAddTermButtonOnClick(button){
+        if (!button) return;
+        button.addEventListener('click', () => this.addTerm());
+        button.style.display = 'block';
+    }
 
-            this.services.addToForm(term, descr, id);
-            this.services.addToEditable(term);
-            this.services.addToEditable(descr);
-            this.services.addToPlaceholder(term, "term");
-            this.services.addToPlaceholder(descr, "description");
-            this.services.deleteRowBtn.addEventListener(
-                'click', () => autoSave.deleteTerm(id, row, errorIdEl)
-            );
+    addAddDeleteDraftButtonOnClick(button){
+        if (!button) return;
+        button.addEventListener('click', () => this.deleteDraft());
+        button.style.display = 'block';
+    }
+
+    init(container, api, divplaceholder, editableDiv, setForm, textNormalization) {
+        this.container = container;
+        this.api = api;
+        this.textNormalization = textNormalization;
+
+        this.container.addEventListener('click', this.handleClick.bind(this));
+
+        this.container.addEventListener("row-created", e => {
+            const {term, descr, id} = e.detail;
+
+            divplaceholder.add(term, 'term');
+            divplaceholder.add(descr, 'description');
+            editableDiv.add(term);
+            editableDiv.add(descr);
+            setForm.add(term, descr, id);
+            api.add(term, descr);
 
         });
+
         this.lastIndex = 0;
+    }
+
+    async handleClick(event) {
+        console.log('handleClick');
+        const target = event.target;
+
+        if (target.id === "add_term_button") {
+            this.addTerm();
+            return;
+        }
+
+        if (target.id === "delete-draft-button") {
+            this.deleteDraft();
+            return;
+        }
 
 
+
+        const button = target.closest('[data-delete-term-row-button]');
+        if (!button)
+            return;
+        const termRow = button.closest('[data-term-row]');
+        if (termRow === null)
+            return;
+
+        const id = termRow.dataset.id;
+        if (id) {
+            try {
+                await this.api.deleteTerm(id, button);
+            } catch (e) {
+                return;
+            }
+        }
+        termRow.remove();
+        this.updateNumbers();
+    }
+    deleteDraft() {
+        this.api.deleteDraft();
     }
     getTermContainer() {
         return this.container;
@@ -971,49 +1042,44 @@ class TermController {
     }
     addTerm(obj = null, first = false) {
         const row = new TermRow(
-            this.getTermIndex(),
-            {onTextNormalization: this.onTextNormalization},
-        obj,
-            first,
+            this.getTermIndex(), obj, first,
             {
-                dataBasePlaceholder: this.container.getAttribute('data-base-placeholder'),
-                dataTermPlaceholder: this.container.getAttribute('data-term-placeholder'),
-                dataDescriptionPlaceholder: this.container.getAttribute('data-description-placeholder'),
-                dataTermText: this.container.getAttribute('data-term-text'),
-                dataDescrText: this.container.getAttribute('data-descr-text'),
-                dataLanguageText: this.container.getAttribute('data-language-text'),
-                dataTermDeleteText: this.container.getAttribute('data-term-delete')
-            });
+                dataBasePlaceholder: this.container.dataset.basePlaceholder,
+                dataTermPlaceholder: this.container.dataset.termPlaceholder,
+                dataDescriptionPlaceholder: this.container.dataset.descriptionPlaceholder,
+                dataTermText: this.container.dataset.termText,
+                dataDescrText: this.container.dataset.descrText,
+                dataLanguageText: this.container.dataset.languageText,
+                dataTermDeleteText: this.container.dataset.termDeleteText
+            },
+            this.textNormalization
+            );
         const el = row.getElement();
         this.container.appendChild(el);
+        this.updateNumbers();
 
         el.dispatchEvent(new CustomEvent('row-created', {
             detail: {
                 term: row.term,
                 descr: row.descr,
-                id: row.obj.id,
-                row: row,
-                errorIdEl: row.containerLeftRightTop
+                id: row.obj.id
             },
             bubbles: true
         }));
     }
     addTerms(data){
         if (data && Array.isArray(data) && data.length > 0) {
-
             data.forEach((d) => {
                 this.addTerm(d);
             })
         }
     }
-}
-
-class TermButton {
-    init (button, termsController) {
-        if (!button || !termsController || !termsController.addTerm) return;
-        this.termsController = termsController;
-        button.style.display = 'block';
-        button.addEventListener("click", () => this.termsController.addTerm());
+    updateNumbers() {
+        const divs = this.container.querySelectorAll('.term-index');
+        divs.forEach((div, index) => {
+            // div.dataset.number = index + 1;
+            div.textContent = `${index + 1}`;
+        });
     }
 
 }
@@ -1216,45 +1282,78 @@ class AutoSave {
         this.termIsEmpty = termIsEmpty || (() => false);
         this.onNormalizeObj = onNormalizeObj || ((t) => t);
         this.showTermsFromImport = showTermsFromImport || (() => {});
+
         this.s_d_Id = 0;
         this.on = null;
+
+        // this.onInput = this.debounce(this.handleFormInput.bind(this), 500);
+        // this.onInput = this.handleFormInput.bind(this);
+        this.onFocusOut = this.handleFormFocusOut.bind(this);
+        this.onChange = this.handleLanguageChange.bind(this);
     }
 
-    init(form, s_d_Id, draft = false, errorField, deleteDraftButton){
-        if (Number(s_d_Id) < 1)
+    debounce(fn, delay) {
+        let timeout;
+
+        return (...args) => {
+            clearTimeout(timeout);
+            timeout = setTimeout(() => fn(...args), delay);
+        };
+    }
+    handleFormInput (event) {
+        let target = event.target;
+
+        if (target.nodeType === Node.TEXT_NODE) {
+            target = target.parentElement;
+        }
+
+        const el = target.closest('[data-term="true"], [data-description="true"]');
+        if (!el) return;
+        this.saveTerm(el);
+
+    }
+    handleFormFocusOut (event) {
+        let target = event.target;
+        if (target.id === "field-title" || target.id === "field-description") {
+            this.saveSet(target, target.name);
             return;
+        }
+
+        if (target.nodeType === Node.TEXT_NODE) {
+            target = target.parentElement;
+        }
+
+        const el = target.closest('[data-term="true"], [data-description="true"]');
+        if (!el) return;
+        this.saveTerm(el);
+    }
+    handleLanguageChange (event) {
+        const el = event.target;
+        if (el.id === "field-term-language" || el.id === "field-description-language") {
+            this.saveSet(el, el.name);
+        }
+    }
+    init(container, form, s_d_Id, draft = false, errorField){
+        if (Number(s_d_Id) < 1 )
+            return false;
+
+        this.s_d_Id = s_d_Id;
 
         if (errorField) {
             this.errorField = errorField;
         }
 
-        if (deleteDraftButton) {
-            deleteDraftButton.addEventListener('click', () => {
-                this.deleteDraft();
-            });
-        }
-        const handleFormEvent = (event) => {
-            const el = event.target;
+        // if (deleteDraftButton) {
+        //     deleteDraftButton.addEventListener('click', () => {
+        //         this.deleteDraft();
+        //     });
+        // }
 
-            if (el.id === "field-title" || el.id === "field-description") {
-                this.saveSet(el, el.name);
-                return;
-            }
-            if (el.dataset.term === "true") {
-                this.onTermChange(el);
-            }
-        };
-        const handleLanguageChange = (event) => {
-            const el = event.target;
-            if (el.id === "field-term-language" || el.id === "field-description-language") {
-                this.saveSet(el, el.name);
-            }
-        }
-        // termContainer.addEventListener('focusout', handleTermEvent);
-        form.addEventListener('focusout', handleFormEvent);
-        form.addEventListener("change", handleLanguageChange);
+        // form.addEventListener("focusout", this.onInput);
+        // container.addEventListener('input', this.onInput);
+        form.addEventListener("focusout", this.onFocusOut);
+        form.addEventListener("change", this.onChange);
 
-        this.s_d_Id = s_d_Id;
         if (draft) {
             this.updateSetURI   = "http://localhost:8081/api/me/draft/" + this.s_d_Id;
             this.deleteDraftURI = "http://localhost:8081/api/me/draft/" + this.s_d_Id;
@@ -1263,19 +1362,19 @@ class AutoSave {
             this.updateTermURI  = "http://localhost:8081/api/me/draft/" + this.s_d_Id + "/terms/";
             this.createTermsURI = "http://localhost:8081/api/me/draft/" + this.s_d_Id + "/terms/batch";
 
-            this.deleteTermURI  = "http://localhost:8081/api/me/draft/" + this.s_d_Id + "/terms";
+            this.deleteTermURI  = "http://localhost:8081/api/me/draft/" + this.s_d_Id + "/terms/";
 
+        } else {
+            this.updateSetURI   = "http://localhost:8081/api/me/set/" + this.s_d_Id + "/autosave";
 
-        } else if (s_d_Id !== 0) {
-            this.updateSetURI   = "http://localhost:8081/api/users/me/set/" + this.s_d_Id + "/autosave";
+            this.createTermURI  = "http://localhost:8081/api/me/set/" + this.s_d_Id + "/terms";
+            this.updateTermURI  = "http://localhost:8081/api/me/set/" + this.s_d_Id + "/terms/";
+            this.createTermsURI = "http://localhost:8081/api/me/set/" + this.s_d_Id + "/terms/batch";
 
-            this.createTermURI  = "http://localhost:8081/api/users/me/set/" + this.s_d_Id + "/terms";
-            this.updateTermURI  = "http://localhost:8081/api/users/me/set/" + this.s_d_Id + "/terms/";
-            this.createTermsURI = "http://localhost:8081/api/users/me/set/" + this.s_d_Id + "/terms/batch";
-
-            this.deleteTermURI  = "http://localhost:8081/api/me/set/" + this.s_d_Id + "/terms";
+            this.deleteTermURI  = "http://localhost:8081/api/me/set/" + this.s_d_Id + "/terms/";
 
         }
+
     }
     hashCode(str) {
         str = str ?? '';
@@ -1305,35 +1404,43 @@ class AutoSave {
                     return;
                 }
                 el.dataset.last = (textHash);
-                return;
             })
             .catch(err => {
                 this.turnOff();
                 console.error('Ошибка saveSet:', err);
             });
     }
+
     editSet(obj){
         return this.request(this.updateSetURI, {
             method: "PATCH",
             body: JSON.stringify(obj)
         });
     }
-    onTermChange(el){
-        if (!el.closest('[data-term]')) return;
-
-        const termRow = el.closest('[data-term-row]')
-        if (!termRow) return;
-
-        const termInps = termRow.querySelectorAll('[data-term]');
-        const termEl = termInps[0];
-        const descriptionEl = termInps[1];
-        if (!termEl && !descriptionEl) return;
-
-        this.saveTerm(termEl, descriptionEl);
-    }
-    saveTerm(term, description) {
+    saveTerm(el){
+        console.log("saveTerm");
 
         if (this.on === false) return;
+
+        if (this.s_d_Id === 0) return;
+
+
+        if (!el.dataset.term && !el.dataset.description)
+            return;
+
+        const termRow = el.closest('[data-term-row]')
+        if (!termRow)
+            return;
+
+        const id = termRow.dataset.id;
+        const term = termRow.querySelector('[data-term]');
+        const description = termRow.querySelector('[data-description]');
+
+        if (!term || !description)
+            return;
+
+        if (!id && termRow.dataset.new !== 'true')
+            return;
 
         const termText = this.termIsEmpty(term) ? null : this.onNormalizeObj(term);
         const descriptionText = this.termIsEmpty(description) ? null : this.onNormalizeObj(description);
@@ -1342,9 +1449,8 @@ class AutoSave {
         const termTextHash = this.hashCode(termText);
         const descriptionTextHash = this.hashCode(descriptionText);
 
-        if (lastTermText === termTextHash && lastDescriptionText === descriptionTextHash) return;
-
-        const id = term.getAttribute("data-id");
+        if (lastTermText === termTextHash && lastDescriptionText === descriptionTextHash)
+            return;
 
         const request = id
             ? this.editTerm(id, { term: termText, description: descriptionText })
@@ -1355,22 +1461,31 @@ class AutoSave {
                 if (data && data.errors) {
                     this.showFieldError(term, data.errors.term || '');
                     this.showFieldError(description, data.errors.description || '')
-                    return;
+                    return false;
                 }
 
                 term.dataset.last = (termTextHash);
                 description.dataset.last = (descriptionTextHash);
 
-                if (!data) return;
+                if (id)
+                    return;
 
-                if (!id && data.id) {
-                    term.setAttribute('data-id', data.id);
-                }
+                const termRow = term.closest('[data-term-row]');
+                if (termRow == null)
+                    return;
+                termRow.dataset.new = 'false';
 
+                if (!data)
+                    return true;
+
+                termRow.dataset.id = data.id;
+
+                return true;
             })
             .catch(err => {
                 this.turnOff();
                 console.error('Ошибка saveTerm:', err);
+                return false;
             });
     }
     createTerm(term){
@@ -1436,12 +1551,12 @@ class AutoSave {
     turnOff(){
         this.on = false;
     }
-    add(term, description, id1) {
+    add(term, description) {
         if (!term || !description) return;
 
-        if (id1 && !term.getAttribute("data-id")) {
-            term.setAttribute("data-id", id1);
-        }
+        // if (id1 && !term.dataset.id) {
+        //     term.setAttribute("data-id", id1);
+        // }
 
         term.dataset.last = String(this.hashCode(this.termIsEmpty(term) ? '' : this.onNormalizeObj(term)));
         description.dataset.last = String(this.hashCode(this.termIsEmpty(description) ? '' : this.onNormalizeObj(description)));
@@ -1453,18 +1568,14 @@ class AutoSave {
         //     el.addEventListener('blur', saveHandler);
         // });
     }
-    debounce(fn, wait) {
-        let t;
-        return function(...args) {
-            clearTimeout(t);
-            t = setTimeout(() => fn.apply(this, args), wait);
-        };
-    }
+
     showErrors(errs) {
         this.errorField.innerHTML = errors.getError(errs);
         this.errorField.style.display = 'block';
     }
     createTerms(terms){
+        if (this.s_d_Id === 0) return;
+
         return this.request(this.createTermsURI, {
             method: "POST",
             body: JSON.stringify(terms)
@@ -1510,34 +1621,26 @@ class AutoSave {
                 return false;
             });
     }
-    deleteTerm(id, row, errorIdEl) {
-        if (this.s_d_Id === 0) {
-            row.remove();
-            return;
-        }
+    deleteTerm(id, el) {
+        if (this.s_d_Id === 0) return;
 
         return this.request(`${this.deleteTermURI}${id}`, {
             method: "DELETE"
         })
             .then(data => {
                 if (data?.errors) {
-                    this.showFieldError(errorIdEl, data.errors);
-                    return false;
+                    this.showFieldError(el, data.errors);
+                    throw new Error(data.errors);
                 }
                 return true;
             });
     }
 
-
 }
 
 const divplaceholder= new DivPlaceholder();
 const editableDiv= new EditableDiv();
-const languageMenu1 = new LanguageMenu({
-    onChange(type, text) {
-        divplaceholder.update(type, text);
-    }
-});
+const languageMenu1 = new LanguageMenu(divplaceholder);
 const errors = new Errors();
 const termController = new TermController();
 const autoSave = new AutoSave(
@@ -1557,6 +1660,7 @@ const autoSave = new AutoSave(
         }
     }
 );
+
 
 const setForm = new SetForm(
     {
@@ -1578,20 +1682,18 @@ const termsImport = new TermsImport(
     });
 const overlay = new Overlay(() => termsImport.onHide(), () => termsImport.onShow());
 const textNormalization = new TextNormalization();
-const termButton = new TermButton();
+
+
 document.addEventListener('DOMContentLoaded', function () {
     termController.init(
         document.getElementById('terms-description-area'),
-        {
-            addToForm: (term, descr, id) => setForm.add(term, descr, id),
-            addToPlaceholder: (el, type) => divplaceholder.add(el, type),
-            addToEditable: (el) => editableDiv.add(el)
-        },
-        {
-            onTextNormalization(text) {
-                return textNormalization.normalizeText(text);
-            }
-        });
+        autoSave,
+        divplaceholder,
+        editableDiv,
+        setForm,
+        textNormalization);
+    termController.addAddTermButtonOnClick(document.getElementById('add_term_button'));
+    termController.addAddDeleteDraftButtonOnClick(document.getElementById('deleteDraftButton'));
 
     document.querySelectorAll('.language-button').forEach(el => {
         languageMenu1.addButton(el, el.dataset.language);
@@ -1611,6 +1713,7 @@ document.addEventListener('DOMContentLoaded', function () {
     let i = 0;
     let term = document.getElementById('term'+i);
     let descr = document.getElementById('description'+i);
+    // let deleteButton = document.getElementById('delete-term-row-button'+i);
     while (term && descr) {
         divplaceholder.add(term, 'term');
         divplaceholder.add(descr, 'description');
@@ -1618,13 +1721,16 @@ document.addEventListener('DOMContentLoaded', function () {
         editableDiv.add(descr);
         textNormalization.add(term);
         textNormalization.add(descr);
-        autoSave.add(term, descr, term.getAttribute("data-id"));
-        setForm.add(term, descr, term.getAttribute("data-id"));
+        autoSave.add(term, descr);
+        setForm.add(term, descr, term.closest('[data-term-row]').dataset.id);
+
+        termController.setTermIndex(i);
+
         i++;
         term = document.getElementById('term'+i);
         descr = document.getElementById('description'+i);
     }
-    termController.setTermIndex(--i);
+    // termController.setTermIndex(--i);
 
     // divplaceholder.add(document.getElementById("overlay"), 'overlay', overlay.onfocus);
 
@@ -1651,14 +1757,12 @@ document.addEventListener('DOMContentLoaded', function () {
     // const importButton = document.getElementById('overlay_import_button');
     //autoSave.init(((importButton && importButton.dataset != null && importButton.dataset.draftId !=null) ? importButton.dataset.draftId : 0));
     autoSave.init(
-        // termController.getTermContainer(),
+        termController.getTermContainer(),
         setForm.form,
         fieldId ? fieldId.value : 0,
         fieldId?.dataset.draft === "true",
-        document.getElementById('field-error'),
-        document.getElementById('deleteDraftButton')
+        document.getElementById('field-error')
     );
-    termButton.init(document.getElementById('add_term_button'), termController);
 });
 
 //console.log(event.target.classList);

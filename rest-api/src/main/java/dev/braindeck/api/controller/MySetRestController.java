@@ -14,12 +14,11 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.util.UriComponentsBuilder;
 
-import java.util.List;
 import java.util.Map;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/users/me/set")
+@RequestMapping("/api/me/set")
 public class MySetRestController {
 
     private final UserService userService;
@@ -53,7 +52,7 @@ public class MySetRestController {
                 payload.terms());
         return ResponseEntity.created(
                 uriBuilder
-                        .replacePath("/api/users/me/set/{setId}")
+                        .replacePath("/api/me/set/{setId}")
                         .build(Map.of("setId", set.id())))
                 .body(set);
     }
@@ -91,4 +90,6 @@ public class MySetRestController {
         setService.delete(setId, user.getId());
         return ResponseEntity.noContent().build();
     }
+
+
 }

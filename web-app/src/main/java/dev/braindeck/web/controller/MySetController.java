@@ -38,7 +38,7 @@ public class MySetController {
             Model model, Locale locale) {
         model.addAttribute("currentView", "new-set");
 
-        SetEditDto set = mySetsRestClient.findMySetById(setId)
+        SetEditDto set = mySetsRestClient.findById(setId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
         languagesControllerHelper.getLanguages(languagesRestClient.findAllByTypes(), model, locale,

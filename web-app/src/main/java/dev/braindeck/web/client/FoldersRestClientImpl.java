@@ -1,10 +1,10 @@
 package dev.braindeck.web.client;
 
-import dev.braindeck.web.entity.*;
+import dev.braindeck.web.entity.SetShortDto;
+import dev.braindeck.web.entity.SetWithCountDto;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.ParameterizedTypeReference;
-
 import org.springframework.web.client.RestClient;
 
 import java.util.List;
@@ -12,14 +12,14 @@ import java.util.List;
 
 @Slf4j
 @RequiredArgsConstructor
-public class SetsRestClientImpl implements SetsRestClient {
+public class FoldersRestClientImpl implements SetsRestClient {
 
     private final RestClient restClient;
 
     @Override
     public SetShortDto findById(int id) {
         return restClient.get()
-                .uri("/api/set/{id}", id)
+                .uri("/api/folder/{id}", id)
                 .retrieve()
                 .body(SetShortDto.class);
     }
@@ -28,7 +28,7 @@ public class SetsRestClientImpl implements SetsRestClient {
     public List<SetWithCountDto> findAll(int userId) {
         return restClient
                 .get()
-                .uri("/api/user/{userId}/sets", userId)
+                .uri("/api/user/{userId}/folders", userId)
                 .retrieve()
                 .body(new ParameterizedTypeReference<List<SetWithCountDto>>() {});
     }
