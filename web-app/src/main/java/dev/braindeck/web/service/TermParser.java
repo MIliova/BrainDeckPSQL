@@ -38,7 +38,7 @@ public class TermParser {
             throw new IllegalArgumentException("Terms must not be empty");
         }
 
-        Map<Integer, Map<String, String>> termErrors = new HashMap<>();
+        Map<Integer, Map<String, String>> termsErrors = new HashMap<>();
 
         for (int i = 0; i < terms.size(); i++) {
             T term = terms.get(i);
@@ -53,32 +53,32 @@ public class TermParser {
                                 ConstraintViolation::getMessage,
                                 (existing, replacement) -> existing + "; " + replacement
                         ));
-                termErrors.put(i, fieldErrors);
+                termsErrors.put(i, fieldErrors);
             }
         }
 
-        return new ParseResult<>(terms, termErrors);
+        return new ParseResult<>(terms, termsErrors);
     }
 
     public static class ParseResult<T> {
         private final List<T> terms;
-        private final Map<Integer, Map<String, String>> termErrors;
+        private final Map<Integer, Map<String, String>> termsErrors;
 
-        public ParseResult(List<T> terms, Map<Integer, Map<String, String>> termErrors) {
+        public ParseResult(List<T> terms, Map<Integer, Map<String, String>> termsErrors) {
             this.terms = terms;
-            this.termErrors = termErrors;
+            this.termsErrors = termsErrors;
         }
 
         public List<T> getTerms() {
             return terms;
         }
 
-        public Map<Integer, Map<String, String>> getTermErrors() {
-            return termErrors;
+        public Map<Integer, Map<String, String>> getTermsErrors() {
+            return termsErrors;
         }
 
         public boolean hasErrors() {
-            return !termErrors.isEmpty();
+            return !termsErrors.isEmpty();
         }
     }
 }

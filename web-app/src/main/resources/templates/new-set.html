@@ -8,279 +8,290 @@
     <script src="/js/new-set.js" defer></script>
 </head>
 <body>
-<div class="main">
-    <div class="main-left">&nbsp;</div>
-    <div class="main-center">
-        <div th:insert="~{fragments/fragment::header-menu}"></div>
-
-
-        <div class="container-left-right">
-            <div><h1 th:text="${pageTitle}">Create a new set/Edit a set</h1></div>
-            <div style="display: flex">
-                <div class="blue-row margin-left" th:if="${payload.id != null and !isDraft}">
-                    <a class="blue-row-a-img" th:href="@{/set/{id}(id=${payload.id})}">
-                        <img width="20" src="/images/back-to-set.png" th:alt="#{messages.set.create.import}" />
-                        [[#{messages.set.edit.back}]]
-                    </a>
-                </div>
-                <div class="blue-row margin-left">
-                    <button id="submitButton" class="blue-row-button-img" type="button"
+    <div class="main">
+        <aside class="main-left">&nbsp;</aside>
+        <div class="main-center">
+            <div th:replace="~{fragments/header-menu::header-menu}"></div>
+            <header class="container-left-right">
+                <div><h1 th:text="${pageTitle}">Create a new set/Edit a set</h1></div>
+                <div style="display: flex">
+                    <div class="blue-row margin-left" th:if="${payload.id != null and !isDraft}">
+                        <a class="blue-row-a-img" th:href="@{/set/{id}(id=${payload.id})}">
+                            <img width="20" src="/images/back-to-set.png" th:alt="#{messages.set.create.import}" />
+                            [[#{messages.set.edit.back}]]
+                        </a>
+                    </div>
+                    <div class="blue-row margin-left">
+                        <button id="submitButton" class="blue-row-button-img" type="button"
                             th:aria-label="${payload.id} != null ? #{messages.save} : #{messages.create}"><img
                             width="20" src="/images/save.png" th:alt="${payload.id} != null ? #{messages.save} : #{messages.create}" /><span
                             th:text="${payload.id} != null ? #{messages.save} : #{messages.create}">Create/Save</span></button>
-                </div>
-                <div class="blue-row margin-left" th:if="${isDraft}">
-                    <button id="delete-draft-button" class="blue-row-button-img" type="button"
+                    </div>
+                    <div class="blue-row margin-left" th:if="${isDraft}">
+                        <button id="delete-draft-button" class="blue-row-button-img" type="button"
                             th:aria-label="#{messages.delete.draft}"><img
                             width="20" src="/images/delete-set.png" th:alt="#{messages.delete.draft}" /><span
                             th:text="#{messages.delete.draft}">Delete draft</span></button>
+                    </div>
                 </div>
-            </div>
-        </div>
+            </header>
+            <main> <!--aria-hidden="true"-->
+                <form method="post" id="set-form"
+                      th:action="${actionUrl}"
+                      th:object="${payload}"
+                      th:data-is-draft="${isDraft}">
 
-
-
-
-
-        <div aria-hidden="true">
-            <form method="post" id="set-form"
-                  th:action="${actionUrl}"
-                  th:object="${payload}"
-                  th:data-is-draft="${isDraft}">
-
-
-                <div th:data-error-class="blue-row-err"
-                     th:classappend="${#fields.hasErrors('title')} ? 'blue-row-err'">
-                    <div class="textarea-description">
+                    <section>
+                        <div th:data-error-class="blue-row-err"
+                             th:classappend="${#fields.hasErrors('title')} ? 'blue-row-err'">
+                            <div class="textarea-description">
                         <span
                                 th:if="${payload?.title != null && payload?.title != ''}"
                                 th:text="#{messages.set.create.t}"
                                 th:data-message="#{messages.set.create.t}">&nbsp</span>
-                        <span
-                                th:if="${payload?.title == null || payload?.title == ''}"
-                                th:data-message="#{messages.set.create.t}">&nbsp</span>
-                        <input type="text"
-                               th:id="field-title"
-                               th:field="*{title}"
-                               th:placeholder="#{messages.set.create.et}"
-                               th:aria-label="#{messages.set.create.t}"
-                               th:data-message="#{messages.set.create.j.et}"
-                               th:data-error-id="error-title">
-                    </div>
-                </div>
-                <div class="field-error"
-                     th:id="error-title"
-                     th:classappend="${#fields.hasErrors('title')} ? '' : 'display-none'">
-                    <span th:if="${#fields.hasErrors('title')}" th:errors="*{title}"></span>
-                </div>
-                <br>
-
-
-
-
-
-                <div th:data-error-class="blue-row-err"
-                     th:classappend="${#fields.hasErrors('description')} ? 'blue-row-err'">
-                    <div class="textarea-description">
+                                <span
+                                        th:if="${payload?.title == null || payload?.title == ''}"
+                                        th:data-message="#{messages.set.create.t}">&nbsp</span>
+                                <input type="text"
+                                       th:id="field-title"
+                                       th:field="*{title}"
+                                       th:placeholder="#{messages.set.create.et}"
+                                       th:aria-label="#{messages.set.create.t}"
+                                       th:data-message="#{messages.set.create.j.et}"
+                                       th:data-error-id="error-title">
+                            </div>
+                        </div>
+                        <div class="field-error"
+                             th:id="error-title"
+                             th:classappend="${#fields.hasErrors('title')} ? '' : 'display-none'">
+                            <span th:if="${#fields.hasErrors('title')}" th:errors="*{title}"></span>
+                        </div>
+                        <br>
+                        <div th:data-error-class="blue-row-err"
+                             th:classappend="${#fields.hasErrors('description')} ? 'blue-row-err'">
+                            <div class="textarea-description">
                         <span
                                 th:if="${payload?.description != null && payload?.description != ''}"
                                 th:text="#{messages.set.create.d}"
                                 th:data-message="#{messages.set.create.d}">&nbsp;</span>
-                        <span
-                                th:if="${payload?.description == null || payload?.description == ''}"
-                                th:data-message="#{messages.set.create.d}">&nbsp;</span>
-                        <textarea
-                                  th:id="field-description"
-                                  th:field="*{description}"
-                                  th:placeholder="#{messages.set.create.ed}"
-                                  th:aria-label="#{messages.set.create.d}"
-                                  th:data-message="#{messages.set.create.j.ad}"
-                                  th:data-error-id="error-description"
-                        ></textarea>
-                    </div>
-                </div>
-                <div class="field-error"
-                     th:id="error-description"
-                     th:classappend="${#fields.hasErrors('description')} ? '' : 'display-none'">
-                    <span th:if="${#fields.hasErrors('description')}" th:errors="*{description}"></span>
-                </div>
-                <input type="hidden"
-                       th:id="field-term-language"
-                       th:field="*{termLanguageId}"
-                       th:data-message="#{messages.set.create.j.atl}"
-                       th:data-error-id="error-term-language-id">
-                <input type="hidden"
-                       th:id="field-description-language"
-                       th:field="*{descriptionLanguageId}"
-                       th:data-message="#{messages.set.create.j.adl}"
-                       th:data-error-id="error-description-language-id">
-                <input type="hidden" name="terms" value=""
-                       th:id="field-terms"
-                       th:data-message-min-three-terms="#{messages.set.create.j.ats}"
-                       th:data-message-not-blank-term="#{error.set.term.not.blank}"
-                       th:data-message-description-up="#{error.set.term.description.size}">
-
-                <input type="hidden"
-                       th:if="*{id} != null"
-                       th:field="*{id}"
-                       th:id="'field-id'"
-                       th:data-draft="${isDraft}">
-
-
-                <div class="container-left-right transp-row">
-                    <div class="transp-button" id="overlay_show_button">
-                        <span class="transp-row-button-img" ><img width="20" src="/images/import.png" th:alt="#{messages.set.create.import}" />[[#{messages.set.create.import}]]</span>
-                    </div>
-                </div>
-
-
-
-
-                <div id="field-error" class="field-error display-none"
-                 th:attr="style=${errors} ? 'display:block;' : ''"
-                 th:data-message="#{messages.set.create.j.yn}">
-                    <div th:if="${errors}">
-                        <div th:each="entry : ${errors}">
-                            <span th:text="${entry.key} + ': ' + ${entry.value}"></span>
+                                <span
+                                        th:if="${payload?.description == null || payload?.description == ''}"
+                                        th:data-message="#{messages.set.create.d}">&nbsp;</span>
+                                <textarea
+                                        th:id="field-description"
+                                        th:field="*{description}"
+                                        th:placeholder="#{messages.set.create.ed}"
+                                        th:aria-label="#{messages.set.create.d}"
+                                        th:data-message="#{messages.set.create.j.ad}"
+                                        th:data-error-id="error-description"
+                                ></textarea>
+                            </div>
                         </div>
-                    </div>
-                </div>
-
-
-
-                <div id="terms-description-area"
-                     th:data-base-placeholder="#{messages.set.create.placeholder} "
-                     th:data-term-placeholder="#{messages.set.create.term_placeholder}"
-                     th:data-description-placeholder="#{messages.set.create.description_placeholder}"
-                     th:data-term-text="#{messages.set.create.te}"
-                     th:data-descr-text="#{messages.set.create.de}"
-                     th:data-language-text="#{messages.set.create.cl}"
-                     th:data-term-delete-text="#{messages.term.delete}"
-                     th:with="lastIndex=${terms != null and #lists.size(terms) > 0 and terms[0] != null ? #lists.size(terms) : 0}">
-
-
-
-                    <div class="blue-row-margin"
-                         th:if="${terms != null and #lists.size(terms) > 0 and terms[0] != null}"
-                         th:each="term, iter : ${terms}">
-                        <div th:data-error-class="blue-row-err"
-                             th:classappend="${
-                                            termErrors != null
-                                            && termErrors.containsKey(iter.index)
-                                            && termErrors[iter.index].containsKey('term')
-                                            || iter.index==0
-                                            && #fields.hasErrors('termLanguageId')
-                                            || termErrors != null
-                                            && termErrors.containsKey(iter.index)
-                                            && termErrors[iter.index].containsKey('description')
-                                            || iter.index==0
-                                            && #fields.hasErrors('descriptionLanguageId')
-                                         } ? 'blue-row-err'">
-                            <div th:replace="~{fragments/term-block :: termBlock(${term}, ${iter.index}, ${termErrors})}"></div>
+                        <div class="field-error"
+                             th:id="error-description"
+                             th:classappend="${#fields.hasErrors('description')} ? '' : 'display-none'">
+                            <span th:if="${#fields.hasErrors('description')}" th:errors="*{description}"></span>
                         </div>
-                    </div>
+                        <input type="hidden"
+                               th:id="field-term-language"
+                               th:field="*{termLanguageId}"
+                               th:data-message="#{messages.set.create.j.atl}"
+                               th:data-error-id="error-term-language-id">
+                        <input type="hidden"
+                               th:id="field-description-language"
+                               th:field="*{descriptionLanguageId}"
+                               th:data-message="#{messages.set.create.j.adl}"
+                               th:data-error-id="error-description-language-id">
+                        <input type="hidden" name="terms" value=""
+                               th:id="field-terms"
+                               th:data-message-min-three-terms="#{messages.set.create.j.ats}"
+                               th:data-message-not-blank-term="#{error.set.term.not.blank}"
+                               th:data-message-description-up="#{error.set.term.description.size}">
+
+                        <input type="hidden"
+                               th:if="*{id} != null"
+                               th:field="*{id}"
+                               th:id="'field-id'"
+                               th:data-draft="${isDraft}">
+                    </section>
 
 
 
-                    <div class="blue-row-margin"
-                         th:each="i : ${#numbers.sequence(lastIndex, lastIndex + (2 - lastIndex > 0 ? 2 - lastIndex : 0))}">
-                        <div th:data-error-class="blue-row-err">
-                            <div th:replace="~{fragments/term-block :: termBlock(${null}, ${i}, ${null})}"></div>
+
+
+
+
+
+
+
+                    <section>
+
+                        <div class="container-left-right transp-row">
+                            <div class="transp-button" id="overlay_show_button">
+                                <span class="transp-row-button-img" ><img width="20" src="/images/import.png" th:alt="#{messages.set.create.import}" />[[#{messages.set.create.import}]]</span>
+                            </div>
+                        </div>
+
+                        <div id="field-error" class="field-error display-none"
+                             th:attr="style=${errors} ? 'display:block;' : ''"
+                             th:data-message="#{messages.set.create.j.yn}">
+                            <div th:if="${errors}">
+                                <div th:each="entry : ${errors}">
+                                    <span th:text="${entry.key} + ': ' + ${entry.value}"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <section id="terms-description-area"
+                             th:data-base-placeholder="#{messages.set.create.placeholder} "
+                             th:data-term-placeholder="#{messages.set.create.term_placeholder}"
+                             th:data-description-placeholder="#{messages.set.create.description_placeholder}"
+                             th:data-term-text="#{messages.set.create.te}"
+                             th:data-descr-text="#{messages.set.create.de}"
+                             th:data-language-text="#{messages.set.create.cl}"
+                             th:data-term-delete-text="#{messages.term.delete}"
+                             th:with="lastIndex=${terms != null and #lists.size(terms) > 0 and terms[0] != null ? #lists.size(terms) : 0}">
+
+
+                            <!--                                     th:if="${terms != null and #lists.size(terms) > 0 and terms[0] != null}"-->
+
+                            <article class="term-row-container"
+                                     data-term-row-container
+                                     th:if="${!#lists.isEmpty(terms)}"
+                                     th:each="term, iter : ${terms}">
+                                <div
+                                            th:with="
+                                            termErrors=${termsErrors != null && termsErrors.containsKey(iter.index) ? termsErrors.get(iter.index) : null},
+                                            hasRowError=${(
+                                            termErrors != null and (termErrors.containsKey('term') or termErrors.containsKey('description'))
+                                            ) or (
+                                            iter.index == 0 and (#fields.hasErrors('termLanguageId') or #fields.hasErrors('descriptionLanguageId'))
+                                            )}"
+
+                                            th:replace="~{fragments/term-block :: termBlock(
+                                            ${term},
+                                            ${iter.index},
+                                            ${termErrors},
+                                            ${hasRowError} ? 'blue-row-err')}"></div>
+                                <div class="row-plus-btn"><button data-plus-btn type="button" class="plus-btn" aria-label="Add">+</button></div>
+                            </article>
+
+
+
+                            <article class="term-row-container"
+                                     data-term-row-container
+                                     th:each="i : ${#numbers.sequence(lastIndex, lastIndex + (2 - lastIndex > 0 ? 2 - lastIndex : 0))}">
+                                <div th:replace="~{fragments/term-block :: termBlock(${null}, ${i}, ${null}, ${null})}"></div>
+                                <div class="row-plus-btn"><button data-plus-btn type="button" class="plus-btn" aria-label="Add">+</button></div>
+                            </article>
+                        </section>
+
+                        <div class="container-center">
+                            <button id="add_term_button" class="blue-row blue-row-button2" type="button" aria-label="Add" th:data="#{messages.set.edit.add}">Add term</button>
+
+
+                        </div>
+
+                    </section>
+
+
+
+
+
+                </form>
+
+            </main>
+            <footer>
+                © 2026
+            </footer>
+        </div>
+        <aside class="main-right">&nbsp;</aside>
+    </div>
+
+
+    <div th:replace="~{fragments/header-menu::language-menu}"></div>
+
+
+    <div class="textarea-import overlay" id="overlay">
+        <div class="content">
+
+
+
+            <div class="container-left-right">
+                <div><h3 style="text-align: left" th:text="#{messages.set.create.import.h}"></h3></div>
+                <div class="transp-button" id="overlay_hide_button" >
+                    <span class="transp-row-button-img" ><img width="20" src="/images/close.png" th:alt="#{messages.set.create.import.close}" />[[#{messages.set.create.import.close}]]</span>
+                </div>
+            </div>
+
+
+            <div id="field-import-error" class="field-error display-none"></div>
+
+
+            <form>
+                <textarea  id="field-import" name="import"
+                           th:text="${payload?.description}"
+                           th:placeholder="#{messages.set.create.import.div.placeholder}"
+                           th:aria-label="#{messages.set.create.import}"
+                ></textarea>
+                <div style="display: flex">
+                    <div style="text-align: left; margin-right: 20px">
+                        <h3 style="text-align: left" th:text="#{messages.set.create.import.colSeparator}"></h3>
+                        <div th:aria-label="#{messages.set.create.import.colSeparator}" style="display: block">
+                            <div><label for="import-radio-tab">
+                                <input id="import-radio-tab" type="radio" name="col-separator" value="tab" checked=""><span>Tab</span></label>
+                            </div>
+                            <div><label for="import-radio-comma">
+                                <input id="import-radio-comma" type="radio" name="col-separator" value="comma"><span>Comma</span></label>
+                            </div>
+                            <div><label for="import-radio-custom1">
+                                <input id="import-radio-custom1" type="radio" name="col-separator" value="custom">
+                                <label><input class="input2" name="col-custom" aria-label="Custom" placeholder="-" type="text" value="-"></label></label>
+                            </div>
+                </div>
+            </div>
+
+
+                    <div style="text-align: left">
+                        <h3 th:text="#{messages.set.create.import.rowSeparator}"></h3>
+                        <div th:aria-label="#{messages.set.create.import.colSeparator}" style="display: block">
+                            <div>
+                                <label for="import-radio-newline">
+                                    <input id="import-radio-newline" type="radio" name="row-separator" value="newline" checked=""><span>New line</span>
+                                </label>
+                            </div>
+                            <div>
+                                <label for="import-radio-semicolon">
+                                    <input id="import-radio-semicolon" type="radio" name="row-separator" value="semicolon">
+                                    <span>Semicolon</span>
+                                </label>
+                            </div>
+                            <div>
+                                <label for="import-radio-custom2">
+                                    <input id="import-radio-custom2" type="radio" name="row-separator" value="custom">
+                                    <label>
+                                        <input class="input2" name="row-custom" aria-label="Custom" placeholder="\n\n" type="text" value="\n\n"></label>
+                                </label>
+                            </div>
                         </div>
                     </div>
                 </div>
             </form>
+
+
+            <div class="container-right">
+                <div class="transp-button" id="overlay_clear_button"><span class="transp-row-button-img" ><img width="20" src="/images/clear.png" th:alt="#{messages.set.create.import.clear}" />[[#{messages.set.create.import.clear}]]</span></div>
+                <div class="transp-button" id="overlay_import_button"><span class="transp-row-button-img" ><img width="20" src="/images/import.png" th:alt="#{messages.set.create.import}" />[[#{messages.set.create.import}]]</span></div>
+            </div>
+
+            <div id="field-import-preview" class="import-preview" th:data-term="#{messages.set.create.te}" th:data-description="#{messages.set.create.de}"></div>
+
+
+
+
+
         </div>
-
-        <div class="container-center" style="margin: 40px 0">
-            <div class="blue-row" id="add_term_button"><button class="blue-row-button" type="button" aria-label="Add" ><span th:data="#{messages.set.edit.add}">Add term</span></button></div>
-        </div>
-
-
     </div>
-    <div class="main-right">&nbsp;</div>
-</div>
-
-
-<div th:insert="~{fragments/fragment::language-menu}"></div>
-
-
-<div class="textarea-import overlay" id="overlay">
-    <div class="content">
-
-
-
-        <div class="container-left-right">
-            <div><h3 style="text-align: left" th:text="#{messages.set.create.import.h}"></h3></div>
-            <div class="transp-button" id="overlay_hide_button" >
-                <span class="transp-row-button-img" ><img width="20" src="/images/close.png" th:alt="#{messages.set.create.import.close}" />[[#{messages.set.create.import.close}]]</span>
-            </div>
-        </div>
-
-
-        <div id="field-import-error" class="field-error display-none"></div>
-
-
-        <form>
-        <textarea  id="field-import" name="import"
-               th:text="${payload?.description}"
-               th:placeholder="#{messages.set.create.import.div.placeholder}"
-               th:aria-label="#{messages.set.create.import}"
-               ></textarea>
-        <div style="display: flex">
-            <div style="text-align: left; margin-right: 20px">
-                <h3 style="text-align: left" th:text="#{messages.set.create.import.colSeparator}"></h3>
-                <div th:aria-label="#{messages.set.create.import.colSeparator}" style="display: block">
-                    <div><label for="import-radio-tab">
-                        <input id="import-radio-tab" type="radio" name="col-separator" value="tab" checked=""><span>Tab</span></label></div>
-                    <div><label for="import-radio-comma">
-                        <input id="import-radio-comma" type="radio" name="col-separator" value="comma"><span>Comma</span></label></div>
-                    <div><label for="import-radio-custom1">
-                        <input id="import-radio-custom1" type="radio" name="col-separator" value="custom">
-                        <label><input class="input2" name="col-custom" aria-label="Custom" placeholder="-" type="text" value="-"></label></label></div>
-                </div>
-            </div>
-
-
-            <div style="text-align: left">
-                <h3 th:text="#{messages.set.create.import.rowSeparator}"></h3>
-                <div th:aria-label="#{messages.set.create.import.colSeparator}" style="display: block">
-                    <div><label for="import-radio-newline">
-                        <input id="import-radio-newline" type="radio" name="row-separator" value="newline" checked=""><span>New line</span></label></div>
-                    <div><label for="import-radio-semicolon">
-                        <input id="import-radio-semicolon" type="radio" name="row-separator" value="semicolon">
-                        <span>Semicolon</span></label></div>
-                    <div><label for="import-radio-custom2">
-                        <input id="import-radio-custom2" type="radio" name="row-separator" value="custom">
-                        <label><input class="input2" name="row-custom" aria-label="Custom" placeholder="\n\n" type="text" value="\n\n"></label>
-                    </label></div>
-                </div>
-            </div>
-        </div>
-        </form>
-
-
-
-        <div class="container-right">
-            <div class="transp-button" id="overlay_clear_button">
-                <span class="transp-row-button-img" ><img width="20" src="/images/clear.png" th:alt="#{messages.set.create.import.clear}" />[[#{messages.set.create.import.clear}]]</span>
-            </div>
-            <div class="transp-button" id="overlay_import_button">
-                <span class="transp-row-button-img" ><img width="20" src="/images/import.png" th:alt="#{messages.set.create.import}" />[[#{messages.set.create.import}]]</span>
-            </div>
-        </div>
-
-        <div id="field-import-preview" class="import-preview" th:data-term="#{messages.set.create.te}" th:data-description="#{messages.set.create.de}">
-
-
-        </div>
-
-
-
-
-
-    </div>
-</div>
 
 </body>
 </html>

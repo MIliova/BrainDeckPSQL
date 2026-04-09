@@ -1,162 +1,172 @@
 class DivPlaceholder {
     constructor() {
-        this.els = [];
-        // this.inited = false;
+        this.TYPE = {
+            TERM: 'term',
+            DESCRIPTION: 'description'
+        };
+        this.handleFocus = this.handleFocus.bind(this);
+        this.handleBlur = this.handleBlur.bind(this);
     }
-    // pushEl(el, type) {
-    //     if (el.dataset._ph_inited)
-    //         return;
-    //     this.els.push({el:el, type:type});
-    // }
-    // reset(){
-    //     this.els = [];
-    //     this.inited = false;
-    // }
-    // reInit(){
-    //     this.init();
-    // }
-    // init() {
-    //     if (this.inited) return;
-    //     this.els.forEach(obj => this.initEl(obj));
-    //     this.inited = true;
-    // }
-    add(el, type) {
-        if (el.dataset._ph_inited)
-            return;
-        this.els.push({el:el, type:type});
-        this.initEl({el:el, type:type});
-    }
-    initEl(obj){
-        const el = obj.el;
-        if (el.dataset._ph_inited)
-            return;
-        el.dataset._ph_inited = "1";
-        if (el.textContent.trim() === "") {
+    init(container) {
+        this.container = container;
+        // container.addEventListener('input', this.handleFocus);
+        container.addEventListener('focusin', this.handleFocus);
+        container.addEventListener('focusout', this.handleBlur);
+
+        const elements = container.querySelectorAll('[contenteditable]');
+        elements.forEach(el => {
             this.show(el);
-        }
-        el.addEventListener('focus', () => {
-            if (el.dataset._ph === "1" /*&& el.textContent.trim() === el.getAttribute('data-placeholder')*/) {
-                this.hide(el);
-                obj.onfocus?.() ?? this.onfocus(el);
-                // if (obj.onfocus)
-                //     obj.onfocus();
-                // else
-                //     this.onfocus(el);
-            }
-        });
-        el.addEventListener('blur', () => {
-            if (el.textContent.trim() === "") {
-                this.show(el);
-            }
         });
     }
-    show(el){
-        el.dataset._ph = "1";
-        // el.textContent = el.dataset.placeholder;//el.getAttribute('data-placeholder');
-        el.innerHTML = '<p>'+el.dataset.placeholder+'</p>';//??????
-        el.classList.add(el.dataset.placeholderClass);// getAttribute('data-placeholder-class'));
+    show(el) {
+        if (!el) return;
+        const isEmpty = el.textContent.trim() === "";
+        el.classList.toggle('empty', isEmpty);
     }
-    hide(el){
-        el.dataset._ph = "0";
-        el.classList.remove(el.dataset.placeholderClass);// el.getAttribute('data-placeholder-class'));
-    }
-    onfocus(el){
-        //el.textContent = '';
-        el.innerHTML = '<p><br></p>'; //!!!!!!!
-        const p = el.querySelector('p');
-        const range = document.createRange();
-        const sel = window.getSelection();
-        range.setStart(p, 0);
-        range.collapse(true);
-        sel.removeAllRanges();
-        sel.addRange(range);
-    }
-    update(type, text){
-        this.els.forEach(obj => {
-            if (obj.type === type) {
-                const el = obj.el;
-                const oldPH = el.dataset.placeholder;//getAttribute('data-placeholder');
-                el.dataset.placeholder = el.dataset.basePlaceholder + " " + text;
-                //obj.el.setAttribute('data-placeholder', obj.el.getAttribute('data-base-placeholder') + ' ' + text);
-                if (obj.el.dataset._ph === '1' /*&& obj.el.textContent.trim() === oldPH*/) {
-                    this.show(obj.el);
-                }
-            }
-        })
+    hide(el) {
+        if (!el) return;
+        el.classList.toggle('empty', false);
     }
 
+    el(event) {
+        return event.target.closest('[contenteditable]');
+    }
+    async handleFocus(event) {
+        console.log('DivPlaceholder handleFocus');
+        let el = this.el(event);
+        this.hide(el);
+    }
+    async handleBlur(event) {
+        console.log('DivPlaceholder handleBlur');
+        let el = this.el(event);
+        this.show(el);
+    }
+    update(type, text){
+        if (type !== this.TYPE.TERM && type !== this.TYPE.DESCRIPTION)
+            return;
+        const elements = this.container.querySelectorAll('[data-type="' + type + '"]');
+
+        elements.forEach(el => {
+            el.dataset.placeholder = el.dataset.basePlaceholder + " " + text;
+        })
+    }
     isActive(el) {
-        return el.dataset._ph === "1" /*&& el.textContent.trim() === el.dataset.placeholder*/;
-        //return el.dataset._ph === "1" && el.textContent.trim() === el.getAttribute('data-placeholder');
+        return el.textContent.trim() === "";
     }
 }
 
 class EditableDiv {
-    // constructor() {
-    //     this.els = [];
-    //     this.inited = false;
-    // }
-    add(el) {
-        //this.els.push(el);
-        this.initEl(el)
+    constructor() {
+        this.handleKeydown = this.handleKeydown.bind(this);
+        this.handleBeforeinput = this.handleBeforeinput.bind(this);
+        this.handleInput = this.handleInput.bind(this);
+        this.handleBlur = this.handleBlur.bind(this);
     }
-    initEl(el) {
-        if (el.dataset._ed_inited)
-            return;
-        el.dataset._ed_inited = "1";
-        this.ensureParagraphStructure(el);
+    init(container) {
+        console.log('EditableDiv' + container);
+        container.addEventListener('keydown', this.handleKeydown);
+        container.addEventListener('beforeinput', this.handleBeforeinput);
+        container.addEventListener('input', this.handleInput);
+        container.addEventListener('blur', this.handleBlur);
+    }
+    el(event) {
+        return event.target.closest('[contenteditable]');
+    }
+    async handleKeydown(event) {
+        console.log('EditableDiv handleKeydown');
+        let el = this.el(event);
+        if (!el) return;
 
-        el.addEventListener('keydown', (event) => {
-            if (event.key === 'Enter') {
-                event.preventDefault();
-                this.insertParagraphAfterCurrent(el);
-                this.autoResizeDiv(el);
-            }
-        });
-
-        el.addEventListener('input', () => {
-            this.ensureParagraphStructure(el);
-            this.removeExtraBreaks(el);
+        if (event.key === 'Enter') {
+            event.preventDefault();
+            this.insertParagraphAfterCurrent(el);
             this.autoResizeDiv(el);
-        });
-        el.addEventListener('blur', () => {
-            this.keepTopOnBlur(el);
-        });
+        }
     }
-    // reset(){
-    //     this.els = [];
-    //     this.inited = false;
-    // }
-    // reInit(){
-    //     this.init();
-    // }
-    // init() {
-    //     if (this.inited) return;
-    //     this.inited = true;
-    //     this.els.forEach(el => {
-    //         this.initEl(el);
-    //     });
-    // }
+    async handleBeforeinput(event) {
+        console.log('EditableDiv handleBeforeinput');
+        let el = this.el(event);
+        if (!el) return;
+
+        if (!el.querySelector('p')) {
+            event.preventDefault();
+
+            const p = document.createElement('p');
+            p.textContent = event.data || '';
+            el.appendChild(p);
+
+            // ставим курсор в конец
+            const range = document.createRange();
+            range.selectNodeContents(p);
+            range.collapse(false);
+
+            const sel = window.getSelection();
+            sel.removeAllRanges();
+            sel.addRange(range);
+        }
+    }
+
+    async handleInput(event) {
+        console.log('EditableDiv handleInput');
+        let el = this.el(event);
+        if (!el) return;
+
+        this.ensureParagraphStructure(el);
+        this.removeExtraBreaks(el);
+        this.autoResizeDiv(el);
+    }
+
+    async handleBlur(event) {
+        console.log('EditableDiv handleBlur');
+        let el = this.el(event);
+        if (!el) return;
+
+        this.keepTopOnBlur(el);
+    }
+
     keepTopOnBlur (el) {
         el.scrollTop = 0;
     }
+
     ensureParagraphStructure(el) {
-        // Если div пуст — создаем <p><br>
-        if (el.children.length === 0) {
+        if (!el.querySelector('p')) {
             const p = document.createElement('p');
             p.innerHTML = '<br>';
+
+            // переносим ВСЁ содержимое
+            while (el.firstChild) {
+                p.appendChild(el.firstChild);
+            }
+
             el.appendChild(p);
-            return;
+
+            // ставим курсор в конец
+            const range = document.createRange();
+            range.selectNodeContents(p);
+            range.collapse(false);
+
+            const sel = window.getSelection();
+            sel.removeAllRanges();
+            sel.addRange(range);
         }
 
-        // Текст на корневом уровне → перенести в <p>
-        [...el.childNodes].forEach(node => {
-            if (node.nodeType === Node.TEXT_NODE && node.textContent.trim() !== '') {
-                const p = document.createElement('p');
-                p.textContent = node.textContent;
-                node.replaceWith(p);
-            }
-        });
+        // // Если div пуст — создаем <p><br>
+        // if (el.children.length === 0) {
+        //     const p = document.createElement('p');
+        //     p.innerHTML = '<br>';
+        //     el.appendChild(p);
+        //     return;
+        // }
+        // console.log("ensureParagraphStructure text");
+        //
+        // // Текст на корневом уровне → перенести в <p>
+        // [...el.childNodes].forEach(node => {
+        //     if (node.nodeType === Node.TEXT_NODE && node.textContent.trim() !== '') {
+        //         const p = document.createElement('p');
+        //         p.textContent = node.textContent;
+        //         node.replaceWith(p);
+        //     }
+        // });
     }
 
     insertParagraphAfterCurrent(el) {
@@ -223,7 +233,9 @@ class EditableDiv {
 
         // Ставим курсор в начало нового абзаца
         const newRange = document.createRange();
-        newRange.setStart(newP, 0);
+//!!!
+        newRange.setStart(newP.firstChild || newP, 0);// newRange.setStart(newP, 0);//!!!
+//!!!
         newRange.collapse(true);
         selection.removeAllRanges();
         selection.addRange(newRange);
@@ -813,11 +825,11 @@ class TermRow {
 
     createField(placeholderClass, placeholder, type, text) {
         const div = document.createElement('div');
-        // div.className = `term-input ${placeholderClass}`;
-        div.className = `term-input`;
-        if (text === "") {
-            div.classList.add(`${type}-placeholder`);
-        }
+        div.className = `term-input ${placeholderClass}`;
+        // div.className = `term-input`;
+        // if (text === "") {
+        //     div.classList.add(`${type}-placeholder`);
+        // }
 
         div.dataset[type] = 'true';
         div.id = type + this.index;
@@ -882,8 +894,8 @@ class TermRow {
         img.alt = this.data.dataTermDeleteText;
         let imgDiv = document.createElement('div');
         imgDiv.className = 'delete-term-row-button';
-        imgDiv.dataset.deleteTermRowButton='';
-        imgDiv.dataset.errorId='error-term-row' + this.index;
+        imgDiv.dataset.deleteTermRowButton = '';
+        imgDiv.dataset.errorId = 'error-term-row' + this.index;
         imgDiv.appendChild(img);
 
         let containerLeftRight = document.createElement('div');
@@ -892,12 +904,12 @@ class TermRow {
         containerLeftRight.appendChild(fieldError);
         containerLeftRight.appendChild(imgDiv);
 
-        const term = this.createField('term-placeholder', this.data.dataTermPlaceholder, "term", this.obj.term);
+        const term = this.createField('placeholder', this.data.dataTermPlaceholder, "term", this.obj.term);
         const termLabel = this.createLabel(this.data.dataTermText, this.first, "term");
         const termError = this.createError("term");
         const termBlock = this.createWrapBloc(term, termLabel, termError);
 
-        const descr = this.createField('description-placeholder', this.data.dataDescriptionPlaceholder, "description", this.obj.description);
+        const descr = this.createField('placeholder', this.data.dataDescriptionPlaceholder, "description", this.obj.description);
         const descrLabel = this.createLabel(this.data.dataDescrText, this.first, "description");
         const descrError = this.createError("description");
         const descrBlock = this.createWrapBloc(descr, descrLabel, descrError);
@@ -910,6 +922,8 @@ class TermRow {
         let termRow = document.createElement('div');
         termRow.className = 'blue-row';
         termRow.dataset.termRow = 'true';
+        termRow.dataset.errorClass = 'blue-row-err';
+
         termRow.appendChild(containerLeftRight);
         termRow.appendChild(containerLeftRightTop);
         if (this.obj.id)
@@ -917,13 +931,28 @@ class TermRow {
         else
             termRow.dataset.new = 'true';
 
-        let div = document.createElement('div');
-        div.dataset.errorClass = 'blue-row-err';
-        div.appendChild(termRow);
+        // let div = document.createElement('div');
+        // div.dataset.errorClass = 'blue-row-err';
+        // div.appendChild(termRow);
 
-        let divBlueRowMargin = document.createElement('div');
-        divBlueRowMargin.className = 'blue-row-margin';
-        divBlueRowMargin.appendChild(div);
+        let termRowDiv = document.createElement('article');
+        // divBlueRowMargin.className = 'blue-row-margin';
+        termRowDiv.className = 'term-row-container';
+        termRowDiv.dataset.termRowContainer = 'true';
+
+        termRowDiv.appendChild(termRow);
+
+        let plusBtn = document.createElement('button');
+        plusBtn.className = 'plus-btn';
+        plusBtn.ariaLabel = "Add";
+        plusBtn.innerText = "+";
+        plusBtn.type="button";
+        plusBtn.dataset.plusBtn = 'true';
+
+        let rowPlusBtn = document.createElement('div');
+        rowPlusBtn.className = 'row-plus-btn';
+        rowPlusBtn.appendChild(plusBtn);
+        termRowDiv.appendChild(rowPlusBtn);
 
         this.term = term;
 
@@ -938,17 +967,12 @@ class TermRow {
         // descrError.setAttribute("id", "error-description-" + this.obj.id);//?????
 
         this.descr = descr;
-        this.root = divBlueRowMargin;
-        this.containerLeftRightTop = containerLeftRightTop;
-        this.deleteRowBtn = img;
+        this.root = termRowDiv;
+        // this.containerLeftRightTop = containerLeftRightTop;
+        // this.deleteRowBtn = img;
 
-        // this.setForm.add(term, descr, this.obj.id);
-        // this.divplaceholder.add(term, 'term');
-        // this.divplaceholder.add(descr, 'description');
-        // this.editableDiv.add(term);
-        // this.editableDiv.add(descr);
 
-        return div;
+        return termRowDiv;
     }
 }
 
@@ -960,11 +984,11 @@ class TermController {
 //
 // "delete-draft-button"
 //     }
-    addAddTermButtonOnClick(button){
-        if (!button) return;
-        button.addEventListener('click', () => this.addTerm());
-        button.style.display = 'block';
-    }
+//     addAddTermButtonOnClick(button){
+//         if (!button) return;
+//         button.addEventListener('click', () => this.addTerm());
+//         button.style.display = 'block';
+//     }
 
     addAddDeleteDraftButtonOnClick(button){
         if (!button) return;
@@ -972,20 +996,22 @@ class TermController {
         button.style.display = 'block';
     }
 
-    init(container, api, divplaceholder, editableDiv, setForm, textNormalization) {
+    init(container, api, divplaceholder, setForm, textNormalization) {
         this.container = container;
         this.api = api;
         this.textNormalization = textNormalization;
 
-        this.container.addEventListener('click', this.handleClick.bind(this));
+        this.container.parentElement.addEventListener('click', this.handleClick.bind(this));
 
-        this.container.addEventListener("row-created", e => {
+        this.container.parentElement.addEventListener("row-created", e => {
             const {term, descr, id} = e.detail;
 
-            divplaceholder.add(term, 'term');
-            divplaceholder.add(descr, 'description');
-            editableDiv.add(term);
-            editableDiv.add(descr);
+            divplaceholder.show(term);
+            divplaceholder.show(descr);
+            // divplaceholder.add(term, 'term');
+            // divplaceholder.add(descr, 'description');
+            // editableDiv.add(term);
+            // editableDiv.add(descr);
             setForm.add(term, descr, id);
             api.add(term, descr);
 
@@ -998,8 +1024,18 @@ class TermController {
         console.log('handleClick');
         const target = event.target;
 
-        if (target.id === "add_term_button") {
+
+        // if (target.id === "add_term_button") {
+        if (target.closest('#add_term_button')) {
             this.addTerm();
+            return;
+        }
+
+        const plusBtn = target.closest('[data-plus-btn]');
+        if (plusBtn) {
+            console.log(plusBtn.closest('[data-term-row-container]'));
+
+            this.addTerm(null, false, plusBtn.closest('[data-term-row-container]'));
             return;
         }
 
@@ -1025,7 +1061,8 @@ class TermController {
                 return;
             }
         }
-        termRow.remove();
+        const termRowContainer = termRow.closest('[data-term-row-container]');
+        termRowContainer.remove();
         this.updateNumbers();
     }
     deleteDraft() {
@@ -1040,7 +1077,7 @@ class TermController {
     getTermIndex() {
         return ++this.lastIndex;
     }
-    addTerm(obj = null, first = false) {
+    addTerm(obj = null, first = false, target = null) {
         const row = new TermRow(
             this.getTermIndex(), obj, first,
             {
@@ -1055,7 +1092,12 @@ class TermController {
             this.textNormalization
             );
         const el = row.getElement();
-        this.container.appendChild(el);
+        console.log(target);
+        if (target) {
+            target.after(el);
+        } else {
+            this.container.appendChild(el);
+        }
         this.updateNumbers();
 
         el.dispatchEvent(new CustomEvent('row-created', {
@@ -1333,7 +1375,7 @@ class AutoSave {
             this.saveSet(el, el.name);
         }
     }
-    init(container, form, s_d_Id, draft = false, errorField){
+    init(form, s_d_Id, draft = false, errorField){
         if (Number(s_d_Id) < 1 )
             return false;
 
@@ -1685,15 +1727,21 @@ const textNormalization = new TextNormalization();
 
 
 document.addEventListener('DOMContentLoaded', function () {
+    const termsDescriptionAreaEl = document.getElementById('terms-description-area');
+    divplaceholder.init(termsDescriptionAreaEl);
+    editableDiv.init(termsDescriptionAreaEl);
+
+
     termController.init(
-        document.getElementById('terms-description-area'),
+        termsDescriptionAreaEl,
         autoSave,
         divplaceholder,
-        editableDiv,
         setForm,
         textNormalization);
-    termController.addAddTermButtonOnClick(document.getElementById('add_term_button'));
+    // termController.addAddTermButtonOnClick(document.getElementById('add_term_button'));
     termController.addAddDeleteDraftButtonOnClick(document.getElementById('deleteDraftButton'));
+
+
 
     document.querySelectorAll('.language-button').forEach(el => {
         languageMenu1.addButton(el, el.dataset.language);
@@ -1715,12 +1763,12 @@ document.addEventListener('DOMContentLoaded', function () {
     let descr = document.getElementById('description'+i);
     // let deleteButton = document.getElementById('delete-term-row-button'+i);
     while (term && descr) {
-        divplaceholder.add(term, 'term');
-        divplaceholder.add(descr, 'description');
-        editableDiv.add(term);
-        editableDiv.add(descr);
-        textNormalization.add(term);
-        textNormalization.add(descr);
+        // divplaceholder.add(term, 'term');
+        // divplaceholder.add(descr, 'description');
+        // editableDiv.add(term);
+        // editableDiv.add(descr);
+        // textNormalization.add(term);
+        // textNormalization.add(descr);
         autoSave.add(term, descr);
         setForm.add(term, descr, term.closest('[data-term-row]').dataset.id);
 
@@ -1757,7 +1805,6 @@ document.addEventListener('DOMContentLoaded', function () {
     // const importButton = document.getElementById('overlay_import_button');
     //autoSave.init(((importButton && importButton.dataset != null && importButton.dataset.draftId !=null) ? importButton.dataset.draftId : 0));
     autoSave.init(
-        termController.getTermContainer(),
         setForm.form,
         fieldId ? fieldId.value : 0,
         fieldId?.dataset.draft === "true",
@@ -1765,60 +1812,3 @@ document.addEventListener('DOMContentLoaded', function () {
     );
 });
 
-//console.log(event.target.classList);
-// addTermDepr(obj, first){
-//     let term = document.createElement('div');
-//     term.className='term-input term-placeholder';
-//     term.setAttribute('data-base-placeholder', this.dataBasePlaceholder);
-//     term.setAttribute('data-placeholder', this.dataTermPlaceholder);
-//     term.setAttribute('data-placeholder-class',"term-placeholder");
-//     term.contentEditable='true';
-//     term.innerHTML = textNormalization.norm(obj.term);
-//
-//     let containerLeftRight = document.createElement('div');
-//     containerLeftRight.innerHTML='<span class="term">' + this.dataTermText + '</span>'
-//         + (first ? '<span><span data-language="term" id="language-button-term" class="language-button">'+this.dataLanguageText+'</span></span>' : '');
-//
-//     let termBlock = document.createElement('div');
-//     termBlock.className='term-block';
-//     termBlock.appendChild(term);
-//     termBlock.appendChild(document.createElement('hr'));
-//     termBlock.appendChild(containerLeftRight);
-//
-//     let descr = document.createElement('div');
-//     descr.className='term-input description-placeholder';
-//     descr.setAttribute('data-base-placeholder', this.dataBasePlaceholder);
-//     descr.setAttribute('data-placeholder', this.dataDescriptionPlaceholder);
-//     descr.setAttribute('data-placeholder-class',"description-placeholder");
-//     descr.contentEditable='true';
-//     descr.innerHTML = textNormalization.norm(obj.description);
-//
-//     containerLeftRight = document.createElement('div');
-//     containerLeftRight.innerHTML='<span class="term">' + this.dataDescrText + '</span>'
-//         + (first ? '<span><span data-language="description" id="language-button-description" class="language-button">'+this.dataLanguageText+'</span></span>' : '');
-//
-//     let descrBlock = document.createElement('div');
-//     descrBlock.className='term-block';
-//     descrBlock.appendChild(descr);
-//     descrBlock.appendChild(document.createElement('hr'));
-//     descrBlock.appendChild(containerLeftRight);
-//
-//     let containerLeftRightBlueRow = document.createElement('div');
-//     containerLeftRightBlueRow.className='container-left-right blue-row';
-//     containerLeftRightBlueRow.appendChild(termBlock);
-//     containerLeftRightBlueRow.appendChild(descrBlock);
-//
-//     let div = document.createElement('div');
-//     div.appendChild(containerLeftRightBlueRow);
-//
-//     setForm.add(term, descr, obj.id);
-//     divplaceholder.add(term, 'term');
-//     divplaceholder.add(descr, 'description');
-//     editableDiv.add(term);
-//     editableDiv.add(descr);
-//
-//     // textNormalization.add(term);
-//     // textNormalization.add(descr);
-//
-//     return div;
-// }

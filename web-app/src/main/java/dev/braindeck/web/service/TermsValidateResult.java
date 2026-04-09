@@ -8,7 +8,7 @@ public class TermsValidateResult<T> {
 
     private final Map<String, Object> modelAttributes;
     private final Map<String, String> errors;
-    private final Map<Integer, Map<String, String>> termErrors;
+    private final Map<Integer, Map<String, String>> termsErrors;
     private final List<T> terms;
 
     public static <T> TermsValidateResult<T> generalError(String message) {
@@ -19,13 +19,13 @@ public class TermsValidateResult<T> {
         );
     }
 
-    public static <T> TermsValidateResult<T> termErrors(
+    public static <T> TermsValidateResult<T> termsErrors(
             List<T> terms,
-            Map<Integer, Map<String, String>> termErrors
+            Map<Integer, Map<String, String>> termsErrors
     ) {
         return new TermsValidateResult<>(
                 Map.of(),
-                termErrors,
+                termsErrors,
                 terms
         );
     }
@@ -40,19 +40,19 @@ public class TermsValidateResult<T> {
 
     private TermsValidateResult(
             Map<String, String> errors,
-            Map<Integer, Map<String, String>> termErrors,
+            Map<Integer, Map<String, String>> termsErrors,
             List<T> terms
     ) {
         this.errors = errors;
-        this.termErrors = termErrors;
+        this.termsErrors = termsErrors;
         this.terms = terms;
 
         Map<String, Object> attrs = new HashMap<>();
         if (!errors.isEmpty()) {
             attrs.put("errors", errors);
         }
-        if (!termErrors.isEmpty()) {
-            attrs.put("termErrors", termErrors);
+        if (!termsErrors.isEmpty()) {
+            attrs.put("termsErrors", termsErrors);
         }
         if (!terms.isEmpty()) {
             attrs.put("terms", terms);
@@ -62,7 +62,7 @@ public class TermsValidateResult<T> {
     }
 
     public boolean hasErrors() {
-        return !errors.isEmpty() || !termErrors.isEmpty();
+        return !errors.isEmpty() || !termsErrors.isEmpty();
     }
 
     public Map<String, Object> getModelAttributes() {

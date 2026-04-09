@@ -18,9 +18,9 @@ public class SetFormService {
         try {
             TermParser.ParseResult<T> parseResult = termParser.parse(payloadTerms, clazz);
             if (parseResult.hasErrors()) {
-                return TermsValidateResult.termErrors(
+                return TermsValidateResult.termsErrors(
                         parseResult.getTerms(),
-                        parseResult.getTermErrors());
+                        parseResult.getTermsErrors());
             }
             return TermsValidateResult.success(parseResult.getTerms());
         } catch (IllegalArgumentException e) {

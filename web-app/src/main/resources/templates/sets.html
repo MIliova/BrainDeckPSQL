@@ -8,31 +8,34 @@
     </head>
 <body>
     <div class="main">
-        <div class="main-left">&nbsp;</div>
+        <aside class="main-left"></aside>
         <div class="main-center">
-            <div th:insert="~{fragments/fragment::header-menu}"></div>
-            <div><h1 th:text="#{messages.sets}">My Library</h1></div>
-            <div>
+            <div th:replace="~{fragments/header-menu::header-menu}"></div>
+            <header><h1 th:text="#{messages.sets}">My Library</h1></header>
+            <main>
                 <div id="field-error" class="field-error display-none"> </div>
-                <div class="blue-row blue-row-margin blue-row-sets" th:each="set: ${sets}">
-                    <div class="set-pre-title">
-                        <span th:text="|${set.termCount} #{messages.set.terms}|"></span>
-                        &nbsp;&nbsp;|&nbsp;&nbsp;
-                        <img class="circle_image" src="/images/avatar.jpg" th:alt="${set.userName}" />
-                        <a th:href="@{/user/{userId}/sets(userId=${set.userId})}" th:text="${set.userName}">Unknown User</a>
-                        &nbsp;&nbsp;|&nbsp;&nbsp;
-                        <span th:text="|${set.updatedAt}|"></span>
-                    </div>
-                    <div><h2><a th:href="@{/user/{userId}/set/{setId}(
-                           userId=${set.userId},
-                           setId=${set.id}
-                           )}"
-                                th:text="${set.title}"></a></h2></div>
-                    <div th:text="${set.description}"></div>
-                </div>
-            </div>
+                <section class="sets-list">
+                    <article class="blue-row blue-row-margin blue-row-sets" th:each="set: ${sets}">
+                        <div class="set-pre-title">
+                            <span th:text="|${set.termCount} #{messages.set.terms}|"></span>
+                            &nbsp;&nbsp;|&nbsp;&nbsp;
+                            <img class="circle_image" src="/images/avatar.jpg" th:alt="${set.userName}" />
+                            <a th:href="@{/user/{userId}/sets(userId=${set.userId})}" th:text="${set.userName}">Unknown User</a>
+                            &nbsp;&nbsp;|&nbsp;&nbsp;
+                            <span th:text="|${set.updatedAt}|"></span>
+                        </div>
+                        <h2><a th:href="@{/set/{setId}(setId=${set.id})}"
+                               th:text="${set.title}"></a></h2>
+                        <p th:text="${set.description}"></p>
+                    </article>
+                </section>
+            </main>
+            <footer>
+                © 2026
+            </footer>
         </div>
-        <div class="main-right">&nbsp;</div>
+        <aside class="main-right"></aside>
     </div>
+
 </body>
 </html>

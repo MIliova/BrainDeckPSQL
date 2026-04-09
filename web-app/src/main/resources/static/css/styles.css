@@ -24,6 +24,10 @@ body {
 .no-style {
     all: unset;
 }
+.set-actions {
+    display: flex;
+    /*gap: 10px;*/
+}
 .textarea-description {
     display: flex;
     background-color: #244f73;
@@ -133,7 +137,7 @@ hr {
     background-color: #EE82EE;
 }
 .field-error {
-    border: 2px solid crimson;
+    /*border: 2px solid crimson;*/
     padding: 20px;
     color: crimson;
     margin: 20px 0;
@@ -152,10 +156,7 @@ hr {
     display: flex;
     justify-content: flex-end;
 }
-.blue-row-err {
-    border-bottom: 2px solid crimson;
-    border-radius: 9px;
-}
+
 
 .is-invalid {
     border: 1px solid crimson;
@@ -190,6 +191,38 @@ hr {
 .blue-row-margin {
     margin-top: 15px;
     margin-bottom: 15px;
+}
+.blue-row-err {
+    border-bottom: 2px solid crimson;
+    border-radius: 9px;
+}
+.term-row {
+
+}
+.plus-btn {
+    border-radius: 50%;
+    background-color: #244f73;
+    border: 0;
+    font-size: 28px;
+    padding: 1px 10px 5px 10px;
+    color: white;
+    tab-index: -1;
+    opacity: 0;
+    transform: scale(0.8);
+    transition: all 0.6s ease;
+}
+.row-plus-btn {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 28px;
+}
+.row-plus-btn:hover .plus-btn {
+    opacity: 1;
+    transform: scale(1.1);
+}
+.term-row-container:last-child .plus-btn {
+    display: none;
 }
 /*.blue-row-margin {*/
 /*    margin-top: 15px;*/
@@ -233,14 +266,20 @@ select {
     font-size: 100%;
     /*font-weight: bold;*/
     text-transform: uppercase;
-
-
     /*text-transform: uppercase;*/
     /*font-size: 100%;*/
     /*font-weight: bold;*/
     /*margin: 9px 5px;*/
-
-
+}
+.blue-row-button2 {
+    background-color: #244f73;
+    border: none;
+    color: white;
+    cursor: pointer;
+    font-size: 100%;
+    text-transform: uppercase;
+    padding: 10px 15px;
+    border-radius: 30px;
 
 }
 .blue-row-button-img {
@@ -281,6 +320,7 @@ select {
 .separator {
     color: #072748;
     font-size: 200% !important;
+    margin: 0 10px;
 }
 .blue-row-sets {
     /*margin-left:10px;*/
@@ -316,22 +356,33 @@ select {
     margin-top: 10px;
 }
 
-.term-placeholder:empty::before {
-     content: attr(data-placeholder);
-     color: gray !important;
-     pointer-events: none;
- }
-.description-placeholder:empty::before {
+/*.term-placeholder:empty::before {*/
+/*     content: attr(data-placeholder);*/
+/*     color: gray !important;*/
+/*     pointer-events: none;*/
+/* }*/
+/*.description-placeholder:empty::before {*/
+/*    content: attr(data-placeholder);*/
+/*    color: gray !important;*/
+/*    pointer-events: none;*/
+/*}*/
+/*.term-placeholder{*/
+/*    color: gray !important;*/
+/*}*/
+/*.description-placeholder{*/
+/*    color: gray !important;*/
+/*}*/
+
+.placeholder {
+    /*min-height: 40px;*/
+    outline: none;
+}
+.placeholder.empty::before {
     content: attr(data-placeholder);
-    color: gray !important;
+    color: #aaa;
     pointer-events: none;
 }
-.term-placeholder{
-    color: gray !important;
-}
-.description-placeholder{
-    color: gray !important;
-}
+
 .textarea-import {
     /*display: flex;*/
     /*background-color: #244f73;*/

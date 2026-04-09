@@ -10,13 +10,13 @@
 
 <body>
     <div class="main">
-        <div class="main-left">&nbsp;</div>
+        <aside class="main-left"></aside>
         <div class="main-center">
-            <div th:insert="~{fragments/fragment::header-menu}"></div>
-            <div>
+            <div th:replace="~{fragments/header-menu::header-menu}"></div>
+            <header>
                 <div class="container-left-right">
-                    <div><h1 th:text="${set.title}"></h1></div>
-                    <div style="display: flex">
+                    <h1 th:text="${set.title}"></h1>
+                    <div class="set-actions">
                         <div class="blue-row margin-left">
                             <a class="blue-row-a-img" th:href="@{/set/{id}/edit(id=${set.id})}">
                                 <img width="20" src="/images/edit-set.png" th:alt="#{messages.set.es}" />[[#{messages.set.es}]]</a>
@@ -34,15 +34,21 @@
                        th:text="${set.userName}">Unknown User</a>
                 </div>
                 <div class="set-description" th:text="${set.description}"></div>
-
-                <div class="blue-row blue-row-set blue-row-margin" th:each="term: ${set.terms}">
-                    <div th:text="${term.term}"></div>
-                    <div class="separator">&nbsp;&nbsp;|&nbsp;&nbsp;</div>
-                    <div th:text="${term.description}"></div>
-                </div>
-            </div>
+            </header>
+            <main>
+                <section>
+                    <article class="blue-row blue-row-set blue-row-margin" th:each="term: ${set.terms}">
+                        <div th:text="${term.term}"></div>
+                        <div class="separator">|</div>
+                        <div th:text="${term.description}"></div>
+                    </article>
+                </section>
+            </main>
+            <footer>
+                © 2026
+            </footer>
         </div>
-        <div class="main-right">&nbsp;</div>
+        <aside class="main-right"></aside>
     </div>
 
 </body>
