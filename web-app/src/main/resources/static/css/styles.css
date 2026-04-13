@@ -9,6 +9,15 @@ body {
     font-size: 16px;
     color: white;
     font-weight: 300;
+    counter-reset: my-counter;
+}
+.term-index {
+    margin: 10px;
+    counter-increment: my-counter;
+}
+.term-index::before {
+    content: counter(my-counter);
+    font-weight: bold;
 }
 .main {
     display: grid;
@@ -59,13 +68,9 @@ body {
 .term {
     font-size: 70%;
 }
-.term-index {
-    font-weight: 700;
-    margin: 10px;
 
-}
 .language-button, .language-button-err{
-    display: none;
+    /*display: none;*/
     font-size: 80%;
     color: #EE82EE;
     cursor: pointer;
@@ -172,7 +177,11 @@ hr {
     justify-content: space-between; /* Прижимает элементы к разным сторонам */
     align-items: flex-start;
 }
-
+.container-left-right-bottom {
+    display: flex;
+    justify-content: space-between; /* Прижимает элементы к разным сторонам */
+    align-items: flex-end;
+}
 .container-center {
     display: flex;
     justify-content: center;

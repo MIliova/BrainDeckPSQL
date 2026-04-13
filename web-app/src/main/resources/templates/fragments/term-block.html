@@ -20,7 +20,7 @@
         ></div>
         <div data-delete-term-row-button th:data-error-id="'error-term-row' + ${index}" class="delete-term-row-button"><img width="30" src="/images/delete-term.png" th:alt="#{messages.term.delete}" /></div>
     </div>
-    <div class="container-left-right-top" >
+    <div class="container-left-right-bottom " >
         <div class="term-block">
             <div
                     contenteditable="true"
@@ -36,9 +36,9 @@
             ><p
                     th:if="${term != null}"
                     th:text="${term?.term}"><br></p></div><hr>
-            <div class="container-left-right">
+            <div class="container-left-right" data-span-container="term">
                 <span class="term" th:text="#{messages.set.create.te}">TERM</span>
-                <span th:if="${index == 0}"><span data-language="term"
+                <span th:if="${index == 0}"><span data-language-type="term"
                                                   id="language-button-term"
                                                   class="language-button"
                                                   th:data-error-class="language-button-err"
@@ -73,9 +73,9 @@
             ><p
                     th:if="${term != null}"
                     th:text="${term?.description}"><br></p></div><hr>
-            <div class="container-left-right">
+            <div class="container-left-right" data-span-container="description">
                 <span class="term" th:text="#{messages.set.create.de}">DESCRIPTION</span>
-                <span th:if="${index == 0}"><span data-language="description"
+                <span th:if="${index == 0}"><span data-language-type="description"
                                                   id="language-button-description"
                                                   class="language-button"
                                                   th:data-error-class="language-button-err"

@@ -1,3 +1,4 @@
+
 class DivPlaceholder {
     constructor() {
         this.TYPE = {
@@ -6,12 +7,14 @@ class DivPlaceholder {
         };
         this.handleFocus = this.handleFocus.bind(this);
         this.handleBlur = this.handleBlur.bind(this);
+        this.handleLanguageChange = this.handleLanguageChange.bind(this);
     }
     init(container) {
         this.container = container;
         // container.addEventListener('input', this.handleFocus);
         container.addEventListener('focusin', this.handleFocus);
         container.addEventListener('focusout', this.handleBlur);
+        container.addEventListener("languageOnchange", this.handleLanguageChange);
 
         const elements = container.querySelectorAll('[contenteditable]');
         elements.forEach(el => {
@@ -41,7 +44,13 @@ class DivPlaceholder {
         let el = this.el(event);
         this.show(el);
     }
-    update(type, text){
+    async handleLanguageChange(e) {
+        if (!e.detail) return;
+
+        const { type, text } = e.detail;
+
+        if (!type) return;
+
         if (type !== this.TYPE.TERM && type !== this.TYPE.DESCRIPTION)
             return;
         const elements = this.container.querySelectorAll('[data-type="' + type + '"]');
@@ -50,25 +59,25 @@ class DivPlaceholder {
             el.dataset.placeholder = el.dataset.basePlaceholder + " " + text;
         })
     }
+
     isActive(el) {
         return el.textContent.trim() === "";
     }
 }
 
 class EditableDiv {
-    constructor() {
+    constructor(container) {
         this.handleKeydown = this.handleKeydown.bind(this);
         this.handleBeforeinput = this.handleBeforeinput.bind(this);
         this.handleInput = this.handleInput.bind(this);
         this.handleBlur = this.handleBlur.bind(this);
-    }
-    init(container) {
-        console.log('EditableDiv' + container);
+
         container.addEventListener('keydown', this.handleKeydown);
         container.addEventListener('beforeinput', this.handleBeforeinput);
         container.addEventListener('input', this.handleInput);
         container.addEventListener('blur', this.handleBlur);
     }
+
     el(event) {
         return event.target.closest('[contenteditable]');
     }
@@ -131,7 +140,7 @@ class EditableDiv {
     ensureParagraphStructure(el) {
         if (!el.querySelector('p')) {
             const p = document.createElement('p');
-            p.innerHTML = '<br>';
+            // p.innerHTML = '<br>';
 
             // переносим ВСЁ содержимое
             while (el.firstChild) {
@@ -168,18 +177,77 @@ class EditableDiv {
         //     }
         // });
     }
-
     insertParagraphAfterCurrent(el) {
+        const selection = window.getSelection();
+        if (!selection.rangeCount) return;
+
+        const range = selection.getRangeAt(0);
+        const currentP = this.getCurrentParagraph(el);
+        if (!currentP) return;
+
+        const newP = document.createElement('p');
+
+        // гарантируем, что работаем с текстом внутри p
+        let node = range.startContainer;
+        let offset = range.startOffset;
+
+        // если курсор не в text node — fallback
+        if (node.nodeType !== Node.TEXT_NODE) {
+            // создаём пустой p
+            newP.appendChild(document.createElement('br'));
+            currentP.parentNode.insertBefore(newP, currentP.nextSibling);
+
+            const newRange = document.createRange();
+            newRange.setStart(newP, 0);
+            newRange.collapse(true);
+
+            selection.removeAllRanges();
+            selection.addRange(newRange);
+            return;
+        }
+
+        const text = node.textContent;
+
+        //  split текста
+        const before = text.slice(0, offset);
+        const after = text.slice(offset);
+
+        // обновляем текущий p
+        node.textContent = before;
+
+        // новый p
+        if (after.length > 0) {
+            newP.textContent = after;
+        } else {
+            newP.appendChild(document.createElement('br'));
+        }
+
+        // вставка
+        currentP.parentNode.insertBefore(newP, currentP.nextSibling);
+
+        // курсор в новый p
+        const newRange = document.createRange();
+        newRange.setStart(newP, 0);
+        newRange.collapse(true);
+
+        selection.removeAllRanges();
+        selection.addRange(newRange);
+    }
+
+    insertParagraphAfterCurrentOld(el) {
         const selection = window.getSelection();
         if (!selection.rangeCount) return null;
 
         const range = selection.getRangeAt(0);
         let currentP = this.getCurrentParagraph(el);
 
+        // console.log("currentP="+currentP);
         // Если <p> нет — создаём и ставим курсор
         if (!currentP) {
+            // console.log("!currentP=");
+
             const p = document.createElement('p');
-            p.innerHTML = '<br>';
+            // p.innerHTML = '<br>';
             el.appendChild(p);
 
             const newRange = document.createRange();
@@ -192,7 +260,7 @@ class EditableDiv {
 
         // Разбиваем абзац
         const newP = document.createElement('p');
-        newP.innerHTML = '<br>';
+        // newP.innerHTML = '<br>';
 
         // Внутри форматированных тегов → клонируем структуру
         let afterFragment = null;
@@ -211,6 +279,8 @@ class EditableDiv {
             startNode = range.endContainer;
         }
 
+
+
         //Удаляем хвост после курсора из currentP
         const walker = document.createTreeWalker(currentP, NodeFilter.SHOW_TEXT, null);
         let textNode;
@@ -224,7 +294,7 @@ class EditableDiv {
 
         // Заполняем новый <p>
         if (afterFragment && afterFragment.textContent.trim() !== '') {
-            newP.innerHTML = '';
+            // newP.innerHTML = '';
             newP.appendChild(afterFragment);
         }
 
@@ -234,7 +304,8 @@ class EditableDiv {
         // Ставим курсор в начало нового абзаца
         const newRange = document.createRange();
 //!!!
-        newRange.setStart(newP.firstChild || newP, 0);// newRange.setStart(newP, 0);//!!!
+//         newRange.setStart(newP.firstChild || newP, 0);//
+        newRange.setStart(newP, 0);//!!!
 //!!!
         newRange.collapse(true);
         selection.removeAllRanges();
@@ -270,7 +341,7 @@ class EditableDiv {
             }
         });
         if (node.innerHTML.trim() === '') {
-            node.innerHTML = '<br>';
+            // node.innerHTML = '<br>';
         }
     }
 
@@ -290,7 +361,7 @@ class EditableDiv {
             });
 
             if (p.innerHTML.trim() === '') {
-                p.innerHTML = '<br>';
+                // p.innerHTML = '<br>';
             }
         });
     }
@@ -302,154 +373,168 @@ class EditableDiv {
 }
 
 class TextNormalization {
-    // constructor() {
-    //     this.els = [];
-    // }
-    add(el) {
-        //this.els.push(el);
-        this.initEl(el)
+    init(container) {
+        // this.container = container;
+
+        const elements = container.querySelectorAll('[contenteditable]');
+        elements.forEach(el => {
+            this.byEl(el);
+        });
     }
-    initEl(el) {
-        if (el.dataset._tn_inited)
-            return;
-        el.dataset._tn_inited = "1";
-        el.innerHTML = this.normalizeText(el.textContent);
-    }
-    // init () {
-    //     this.els.forEach(el => {
-    //         el.innerHTML = this.norm(el.textContent);
-    //     });
+    // add(el) {
+    //     //this.els.push(el);
+    //     this.initEl(el)
     // }
-    normalizeText(text) {
+    // initEl(el) {
+    //     if (el.dataset._tn_inited)
+    //         return;
+    //     el.dataset._tn_inited = "1";
+    //     el.innerHTML = this.normalizeText(el.textContent);
+    // }
+    byEl(el) {
+        if (el.textContent !== "")
+            el.innerHTML = this.getHtmlByText(el.textContent);
+    }
+    getHtmlByText(text) {
         return text.trim()
             .split('\n')
             .map(p => `<p>${p || '<br>'}</p>`)
             .join('');
     }
-    normalizeObj(obj) {
-        return Array.from(obj.querySelectorAll("p"))
+    getTextByEl(el) {
+        return Array.from(el.querySelectorAll("p"))
                 .map(p => p.textContent)
                 .join("\n").trim();
     }
 }
 
+class LanguageSpan {
+    constructor(inputsContainer, inputsClosest, spans, querySelector) {
+        this.inputsClosest = inputsClosest;
+        this.spans = spans;
+        this.querySelector = querySelector;
+
+        this.handleFocus = this.handleFocus.bind(this);
+        inputsContainer.addEventListener('focusin', this.handleFocus);
+    }
+    async handleFocus(event) {
+        const el = this.el(event);
+        if (!el || !el.dataset.type) return;
+
+        const row = el.closest('[data-term-row-container]');
+        if (!row) return;
+
+        const inpts = row.querySelectorAll('[contenteditable]');
+        if (!inpts) return;
+
+        inpts.forEach(el => {
+
+            const sp = this.span(el.dataset.type);
+            if (!sp) return;
+
+            const spContainer = el.parentElement.querySelector(this.querySelector);
+            if (!spContainer) return;
+
+            sp.input = el;
+            spContainer.appendChild(sp);
+
+        });
+    }
+    el(event) {
+        return event.target.closest(this.inputsClosest);
+    }
+    span(type) {
+        return this.spans[type];
+    }
+}
 class LanguageMenu {
-    constructor(divplaceholder) {
-        this.divplaceholder = divplaceholder;
+    constructor(container, spans, inputs) {
+        this.inputs = inputs;
 
-        this.inputs = {};
-        this.buttons = [];
-        this.options = [];
-        this.languageMenu = null;
-        this.owner = null;
-        this.inited = false;
+        this.languageMenuDiv = container;
+        this.span = null;
 
-        // this._handleDocClick = this._handleDocClick.bind(this);
-    }
+        this.handleSpanClick = this.handleSpanClick.bind(this);
+        this.handleMenuClick = this.handleMenuClick.bind(this);
+        this.handleDocClick = this.handleDocClick.bind(this);
 
-    addInput(el, type) {
-        this.inputs[type] = el;
-    }
-    addButton(el, type) {
-        this.buttons.push({el:el, type: type});
-    }
-    addOption(el) {
-        this.options.push(el);
-    }
-    init(languageMenu){
-        this.languageMenu = languageMenu;
-        this._initButtons();
-        this._initOptions();
-
-        document.addEventListener('click', this._handleDocClick.bind(this));
-
-    }
-    _initButtons(){
-        if (this.inited) return;
-        this.inited = true;
-        this.buttons.forEach(obj => {
-            const el = obj.el;
-            el.style.display = 'block';
-            //lb.nextElementSibling.style.display = 'none';
-
-            const handler = (event) => {
-                event.stopPropagation();
-                this.owner = obj;
-                this.languageMenu.style.display = 'block';
-                const rect = el.getBoundingClientRect();
-                this.languageMenu.style.top = `${rect.bottom + window.scrollY}px`;
-                this.languageMenu.style.left = `${rect.left + window.scrollX}px`;
-            };
-
-            obj._clickHandler = handler; // сохраняем для removeEventListener
-
-            el.addEventListener('click', handler);
-
-        });
-    }
-    _initOptions() {
-        this.options.forEach(el => {
-            el.addEventListener('click', (event) => {
-                this.setLanguage(event.target.dataset.key, event.target.innerText)
-            });
-        });
-    }
-    _handleDocClick(event) {
-        if (!this.languageMenu) return;
-        // if (!this.languageMenu.contains(event.target) && !event.target.classList.contains('language-button')) {
-        //     this.languageMenu.style.display = 'none'; // Скрыть меню
-        // }
-        if (!event.target.closest(".language-button") &&
-            !this.languageMenu.contains(event.target)) {
-            this.languageMenu.style.display = 'none';
+        for(let key in spans) {
+            spans[key].addEventListener('click', this.handleSpanClick)
         }
+
+        container.addEventListener('click', this.handleMenuClick)
+        document.addEventListener('click', this.handleDocClick);
     }
-    setLanguage(id, text) {
-        if (!this.owner) return;
-        const type = this.owner.type;
-
-        this.inputs[type].value = id;
-        this.inputs[type].dispatchEvent(new Event("change", { bubbles: true }));
-
-        this.buttons.forEach(ob => {
-            if (ob.type === type) {
-                ob.el.innerText = text;
-                ob.el.className="language-button";
-            }
-        });
-
-        //this.owner.className="language-button";
-        //this.owner.innerText = text;
-
-        this.languageMenu.style.display = 'none';
-
-        this.divplaceholder.update(type, text);
+    async handleSpanClick(event) {
+        event.stopPropagation();
+        const el = event.target;
+        this.span = el;
+        this.languageMenuDiv.style.display = 'block';
+        const rect = el.getBoundingClientRect();
+        this.languageMenuDiv.style.top = `${rect.bottom + window.scrollY}px`;
+        this.languageMenuDiv.style.left = `${rect.left + window.scrollX}px`;
     }
-    reset(){
-        this.buttons.forEach(obj => {
-            if (obj._clickHandler) {
-                obj.el.removeEventListener('click', obj._clickHandler);
-            }
-        });
-        this.buttons = [];
+    async handleMenuClick(event) {
+        console.log('LanguageMenu handleMenuClick');
 
-        this.owner = null;
+        const el = this.el(event);
+        if (!el) return;
 
-        this.inited = false;
+        const text = el.innerText;
+        if(!el.dataset.key || !text) return;
 
-        //document.removeEventListener('click', this._handleDocClick);
+        if (!this.span) return;
+
+        const type = this.span.dataset.languageType;
+        if (!type) return;
+
+        const input = this.inputs[type];
+        if (!input) return;
+
+        this.inputs[type].value = el.dataset.key;
+        this.span.innerText = text;
+        input.dispatchEvent(new Event("change", { bubbles: true }));
+
+        this.languageMenuDiv.style.display = 'none';
+
+        const dataTermRow = this.span.closest('[data-term-row]');
+        if (!dataTermRow) return;
+
+        const contenteditableDivs = dataTermRow.querySelectorAll('[contenteditable]');
+        if (!contenteditableDivs) return;
+
+        const contenteditableDiv = [...contenteditableDivs].find(
+            cd => cd.dataset.type === type
+        );
+
+        if (!contenteditableDiv) return;
+
+        contenteditableDiv.dispatchEvent(
+            new CustomEvent("languageOnchange", {
+                bubbles: true,
+                detail: {
+                    type: type,
+                    text: text
+                }
+            })
+        );
+
     }
-    reInit(){
-        this._initButtons();
+    el(event) {
+        return event.target.closest('[language-menu-option]');
+    }
+    async handleDocClick(event) {
+        if (!this.languageMenuDiv) return;
+
+        if (!event.target.closest(".language-button") &&
+            !this.languageMenuDiv.contains(event.target)) {
+            this.languageMenuDiv.style.display = 'none';
+        }
     }
 }
 
 class Labels {
-    // constructor() {
-    //     this.els = [];
-    // }
     add(el) {
-        //this.els.push(el);
         el.addEventListener('keyup', (event) => {
             if (event.target.value.length > 0)
                 event.target.previousElementSibling.innerHTML = event.target.previousElementSibling.dataset.message;//"Title";
@@ -457,16 +542,6 @@ class Labels {
                 event.target.previousElementSibling.innerHTML="&nbsp;";
         });
     }
-    // init () {
-    //     this.els.forEach(el => {
-    //         el.addEventListener('keyup', (event) => {
-    //             if (event.target.value.length > 0)
-    //                 event.target.previousElementSibling.innerHTML = event.target.previousElementSibling.dataset.message;//"Title";
-    //             else
-    //                 event.target.previousElementSibling.innerHTML="&nbsp;";
-    //         });
-    //     });
-    // }
 }
 
 class Errors {
@@ -838,7 +913,7 @@ class TermRow {
         div.dataset.placeholder = placeholder;
         div.dataset.placeholderClass = `${type}-placeholder`;
         div.contentEditable = 'true';
-        div.innerHTML = this.textNormalization.normalizeText(text);
+        div.textContent = text;
 
         // if (text === "") {
         //     const p = document.createElement('p');
@@ -996,11 +1071,8 @@ class TermController {
         button.style.display = 'block';
     }
 
-    init(container, api, divplaceholder, setForm, textNormalization) {
+    init(container, divplaceholder, textNormalization, autosave, setForm) {
         this.container = container;
-        this.api = api;
-        this.textNormalization = textNormalization;
-
         this.container.parentElement.addEventListener('click', this.handleClick.bind(this));
 
         this.container.parentElement.addEventListener("row-created", e => {
@@ -1008,12 +1080,13 @@ class TermController {
 
             divplaceholder.show(term);
             divplaceholder.show(descr);
-            // divplaceholder.add(term, 'term');
-            // divplaceholder.add(descr, 'description');
-            // editableDiv.add(term);
-            // editableDiv.add(descr);
+            textNormalization.byEl(term);
+            textNormalization.byEl(descr);
+            autosave.add(term, descr);
+
+
+
             setForm.add(term, descr, id);
-            api.add(term, descr);
 
         });
 
@@ -1320,9 +1393,9 @@ class TermsImport {
 }
 
 class AutoSave {
-    constructor ({termIsEmpty} = {}, { onNormalizeObj } = {}, {showTermsFromImport = {}}) {
-        this.termIsEmpty = termIsEmpty || (() => false);
-        this.onNormalizeObj = onNormalizeObj || ((t) => t);
+    constructor (divplaceholder, textNormalization, {showTermsFromImport = {}}) {
+        this.divplaceholder = divplaceholder;
+        this.textNormalization = textNormalization;
         this.showTermsFromImport = showTermsFromImport || (() => {});
 
         this.s_d_Id = 0;
@@ -1349,7 +1422,7 @@ class AutoSave {
             target = target.parentElement;
         }
 
-        const el = target.closest('[data-term="true"], [data-description="true"]');
+        const el = target.closest('[contenteditable]');
         if (!el) return;
         this.saveTerm(el);
 
@@ -1365,11 +1438,11 @@ class AutoSave {
             target = target.parentElement;
         }
 
-        const el = target.closest('[data-term="true"], [data-description="true"]');
+        const el = target.closest('[contenteditable]');
         if (!el) return;
         this.saveTerm(el);
     }
-    handleLanguageChange (event) {
+    async handleLanguageChange (event) {
         const el = event.target;
         if (el.id === "field-term-language" || el.id === "field-description-language") {
             this.saveSet(el, el.name);
@@ -1467,7 +1540,7 @@ class AutoSave {
         if (this.s_d_Id === 0) return;
 
 
-        if (!el.dataset.term && !el.dataset.description)
+        if (el.dataset.type !== "term" && el.dataset.type !== "description")
             return;
 
         const termRow = el.closest('[data-term-row]')
@@ -1475,8 +1548,8 @@ class AutoSave {
             return;
 
         const id = termRow.dataset.id;
-        const term = termRow.querySelector('[data-term]');
-        const description = termRow.querySelector('[data-description]');
+        const term = termRow.querySelector('[data-type="term"]');
+        const description = termRow.querySelector('[data-type="description"]');
 
         if (!term || !description)
             return;
@@ -1484,8 +1557,8 @@ class AutoSave {
         if (!id && termRow.dataset.new !== 'true')
             return;
 
-        const termText = this.termIsEmpty(term) ? null : this.onNormalizeObj(term);
-        const descriptionText = this.termIsEmpty(description) ? null : this.onNormalizeObj(description);
+        const termText = this.divplaceholder.isActive(term) ? null : this.textNormalization.getTextByEl(term);
+        const descriptionText = this.divplaceholder.isActive(description) ? null : this.textNormalization.getTextByEl(description);
         const lastTermText = (term.dataset.last ?? '');
         const lastDescriptionText  = (description.dataset.last ?? '');
         const termTextHash = this.hashCode(termText);
@@ -1596,19 +1669,9 @@ class AutoSave {
     add(term, description) {
         if (!term || !description) return;
 
-        // if (id1 && !term.dataset.id) {
-        //     term.setAttribute("data-id", id1);
-        // }
+        term.dataset.last = String(this.hashCode(this.divplaceholder.isActive(term) ? '' : this.textNormalization.getTextByEl(term)));
+        description.dataset.last = String(this.hashCode(this.divplaceholder.isActive(description) ? '' : this.textNormalization.getTextByEl(description)));
 
-        term.dataset.last = String(this.hashCode(this.termIsEmpty(term) ? '' : this.onNormalizeObj(term)));
-        description.dataset.last = String(this.hashCode(this.termIsEmpty(description) ? '' : this.onNormalizeObj(description)));
-
-        // const saveHandler = () => this.saveTerm(term, description);
-        // const debouncedHandler = this.debounce(saveHandler, this.wait);
-        // [term, description].forEach(el => {
-        //     el.addEventListener('input', debouncedHandler);
-        //     el.addEventListener('blur', saveHandler);
-        // });
     }
 
     showErrors(errs) {
@@ -1681,21 +1744,12 @@ class AutoSave {
 }
 
 const divplaceholder= new DivPlaceholder();
-const editableDiv= new EditableDiv();
-const languageMenu1 = new LanguageMenu(divplaceholder);
+const textNormalization = new TextNormalization();
+
 const errors = new Errors();
 const termController = new TermController();
-const autoSave = new AutoSave(
-    {
-        termIsEmpty(el) {
-            return divplaceholder.isActive(el);
-        }
-    },
-    {
-        onNormalizeObj(html) {
-            return textNormalization.normalizeObj(html)
-        }
-    },
+const autoSave = new AutoSave(divplaceholder, textNormalization,
+
     {
         showTermsFromImport(terms) {
             termController.addTerms(terms);
@@ -1723,52 +1777,54 @@ const termsImport = new TermsImport(
         }
     });
 const overlay = new Overlay(() => termsImport.onHide(), () => termsImport.onShow());
-const textNormalization = new TextNormalization();
 
 
 document.addEventListener('DOMContentLoaded', function () {
-    const termsDescriptionAreaEl = document.getElementById('terms-description-area');
-    divplaceholder.init(termsDescriptionAreaEl);
-    editableDiv.init(termsDescriptionAreaEl);
 
+    const termsDescriptionAreaEl = document.getElementById('terms-description-area');
+
+    divplaceholder.init(termsDescriptionAreaEl);
+    const editableDiv = new EditableDiv(termsDescriptionAreaEl);
+    textNormalization.init(termsDescriptionAreaEl);
+
+    const languageSpans = {
+        term:document.getElementById('language-button-term'),
+        description:document.getElementById('language-button-description')
+    };
+    const languageSpan = new LanguageSpan(
+        termsDescriptionAreaEl,
+        '[contenteditable]',
+        languageSpans,
+        '[data-span-container]'
+    );
+    const languageMenu = new LanguageMenu(
+        document.getElementById("language-menu"),
+        languageSpans,
+    {
+            term:document.getElementById('field-term-language'),
+            description:document.getElementById('field-description-language')
+        }
+    );
 
     termController.init(
         termsDescriptionAreaEl,
-        autoSave,
         divplaceholder,
-        setForm,
-        textNormalization);
+        textNormalization,
+        autoSave,
+        setForm
+    );
     // termController.addAddTermButtonOnClick(document.getElementById('add_term_button'));
     termController.addAddDeleteDraftButtonOnClick(document.getElementById('deleteDraftButton'));
-
-
-
-    document.querySelectorAll('.language-button').forEach(el => {
-        languageMenu1.addButton(el, el.dataset.language);
-    });
-    languageMenu1.addInput(document.getElementById('field-term-language'), 'term');
-    languageMenu1.addInput(document.getElementById('field-description-language'), 'description');
-    document.querySelectorAll('.language-select-option').forEach(el => {
-        languageMenu1.addOption(el);
-    });
-    languageMenu1.init(document.querySelector('.language-menu-outer'));
 
     const labels = new Labels();
     labels.add(document.getElementById('field-title'));
     labels.add(document.getElementById('field-description'));
-    // labels.init();
 
     let i = 0;
     let term = document.getElementById('term'+i);
     let descr = document.getElementById('description'+i);
     // let deleteButton = document.getElementById('delete-term-row-button'+i);
     while (term && descr) {
-        // divplaceholder.add(term, 'term');
-        // divplaceholder.add(descr, 'description');
-        // editableDiv.add(term);
-        // editableDiv.add(descr);
-        // textNormalization.add(term);
-        // textNormalization.add(descr);
         autoSave.add(term, descr);
         setForm.add(term, descr, term.closest('[data-term-row]').dataset.id);
 
