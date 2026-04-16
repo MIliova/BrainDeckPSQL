@@ -439,31 +439,57 @@ select {
     justify-content: flex-end;
 }
 .overlay {
-    display: block;
+    /*display: block; //flex*/
     position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: #072748;
 
-    /*background-color: rgba(0, 0, 0, 0.5); !* полупрозрачный фон *!*/
+    /*top: 0;*/
+    /*left: 0;*/
+    /*width: 100%;*/
+    /*height: 100%;*/
+
+    inset: 0;
+    background-color: #072748;
     color: white;
-    justify-content: center;
-    align-items: center;
+
+    /*justify-content: center;*/
+    /*align-items: center;*/
+
     z-index: 1000; /* гарантирует, что элемент будет поверх всего */
-    visibility: hidden; /* скрываем по умолчанию */
+
+    opacity: 0;
+    transform: scale(0.98);
+    pointer-events: none;
+
+    transition: opacity 200ms, transform 200ms;
+
+    overflow-y: auto;
+    overscroll-behavior: contain;
+}
+
+.overlay.show {
+    opacity: 1;
+    transform: scale(1);
+    pointer-events: auto;
 }
 .overlay textarea {
-    height: 200px;
+    min-height: 200px;
+    width: 100%;
 }
 .overlay .content {
-    text-align: center; /* выравнивание текста по центру */
+    max-width: 60%;
+    width: 100%;
+    margin: auto; /* центр по горизонтали */
+
     padding: 20px;
     border-radius: 10px;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
-}
 
+    text-align: center; /* выравнивание текста по центру */
+
+    background: rgba(255,255,255,0.05); /* 👈 чтобы читалось */
+    backdrop-filter: blur(10px);
+
+    box-shadow: 0 0 20px rgba(0,0,0,0.5);
+}
 .overlay input {
     margin: 10px;
     background-color: #244f73;

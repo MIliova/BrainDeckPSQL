@@ -8,10 +8,17 @@ class DivPlaceholder {
         this.handleFocus = this.handleFocus.bind(this);
         this.handleBlur = this.handleBlur.bind(this);
         this.handleLanguageChange = this.handleLanguageChange.bind(this);
+        this.container = null;
     }
     init(container) {
+        if (!container) return;
+
         this.container = container;
         // container.addEventListener('input', this.handleFocus);
+        container.removeEventListener('focusin', this.handleFocus);
+        container.removeEventListener('focusout', this.handleBlur);
+        container.removeEventListener("languageOnchange", this.handleLanguageChange);
+
         container.addEventListener('focusin', this.handleFocus);
         container.addEventListener('focusout', this.handleBlur);
         container.addEventListener("languageOnchange", this.handleLanguageChange);
@@ -32,7 +39,7 @@ class DivPlaceholder {
     }
 
     el(event) {
-        return event.target.closest('[contenteditable]');
+        return event.target.closest('[contenteditable]') || null;
     }
     async handleFocus(event) {
         console.log('DivPlaceholder handleFocus');
@@ -67,6 +74,9 @@ class DivPlaceholder {
 
 class EditableDiv {
     constructor(container) {
+        if (!(container instanceof HTMLElement)) {
+            throw new Error("container must be HTMLElement");
+        }
         this.handleKeydown = this.handleKeydown.bind(this);
         this.handleBeforeinput = this.handleBeforeinput.bind(this);
         this.handleInput = this.handleInput.bind(this);
@@ -79,7 +89,7 @@ class EditableDiv {
     }
 
     el(event) {
-        return event.target.closest('[contenteditable]');
+        return event.target.closest('[contenteditable]') || null;
     }
     async handleKeydown(event) {
         console.log('EditableDiv handleKeydown');
@@ -373,8 +383,9 @@ class EditableDiv {
 }
 
 class TextNormalization {
+
     init(container) {
-        // this.container = container;
+        if (!(container instanceof HTMLElement)) return;
 
         const elements = container.querySelectorAll('[contenteditable]');
         elements.forEach(el => {
@@ -392,6 +403,10 @@ class TextNormalization {
     //     el.innerHTML = this.normalizeText(el.textContent);
     // }
     byEl(el) {
+        if (el.dataset.tnNormalized) return;
+
+        el.dataset.tnNormalized = "1";
+
         if (el.textContent !== "")
             el.innerHTML = this.getHtmlByText(el.textContent);
     }
@@ -410,6 +425,8 @@ class TextNormalization {
 
 class LanguageSpan {
     constructor(inputsContainer, inputsClosest, spans, querySelector) {
+        if (!(inputsContainer instanceof HTMLElement)) throw new Error("inputsContainer must be HTMLElement");
+
         this.inputsClosest = inputsClosest;
         this.spans = spans;
         this.querySelector = querySelector;
@@ -441,16 +458,19 @@ class LanguageSpan {
         });
     }
     el(event) {
-        return event.target.closest(this.inputsClosest);
+        return event.target.closest(this.inputsClosest) || null;
     }
     span(type) {
-        return this.spans[type];
+        const span = this.spans[type];
+        if (!(span instanceof HTMLElement)) return null;
+        return span;
     }
 }
 class LanguageMenu {
     constructor(container, spans, inputs) {
-        this.inputs = inputs;
+        if (!(container instanceof HTMLElement)) throw new Error("container must be HTMLElement");
 
+        this.inputs = inputs;
         this.languageMenuDiv = container;
         this.span = null;
 
@@ -459,10 +479,12 @@ class LanguageMenu {
         this.handleDocClick = this.handleDocClick.bind(this);
 
         for(let key in spans) {
-            spans[key].addEventListener('click', this.handleSpanClick)
+            let span = spans[key];
+            if (!(span instanceof HTMLElement)) continue;
+            span.addEventListener('click', this.handleSpanClick);
         }
 
-        container.addEventListener('click', this.handleMenuClick)
+        container.removeEventListener('click', this.handleMenuClick);
         document.addEventListener('click', this.handleDocClick);
     }
     async handleSpanClick(event) {
@@ -521,7 +543,7 @@ class LanguageMenu {
 
     }
     el(event) {
-        return event.target.closest('[language-menu-option]');
+        return event.target.closest('[language-menu-option]') || null;
     }
     async handleDocClick(event) {
         if (!this.languageMenuDiv) return;
@@ -534,13 +556,33 @@ class LanguageMenu {
 }
 
 class Labels {
+    constructor() {
+        this.handleKeyup = this.handleKeyup.bind(this);
+
+    }
     add(el) {
-        el.addEventListener('keyup', (event) => {
-            if (event.target.value.length > 0)
-                event.target.previousElementSibling.innerHTML = event.target.previousElementSibling.dataset.message;//"Title";
-            else
-                event.target.previousElementSibling.innerHTML="&nbsp;";
-        });
+        if (!(el instanceof HTMLElement)) return;
+        if (el.dataset.labelsBound) return;
+        el.dataset.labelsBound = "1";
+
+        el.addEventListener('keyup', this.handleKeyup);
+    }
+    // handleKeyup(event) {
+    //     if (event.target.value.length > 0)
+    //         event.target.previousElementSibling.innerHTML = event.target.previousElementSibling.dataset.message;//"Title";
+    //     else
+    //         event.target.previousElementSibling.innerHTML="&nbsp;";
+    // }
+    handleKeyup(event) {
+        const input = event.target;
+        const key = input.dataset.label;
+
+        const label = input.parentElement.querySelector(`[data-for="${key}"]`);
+        if (!label) return;
+
+        label.textContent = input.value.length
+            ? input.dataset.message
+            : "";//&nbsp;
     }
 }
 
@@ -563,307 +605,281 @@ class Errors {
     }
 }
 
-class SetForm {
-    constructor({ termIsEmpty } = {}, {autosaved} = {}, submitType = "", test = false) {
-        this.minTermsCnt = 3;
-        this.termIsEmpty = termIsEmpty || (() => false);
-        this.autosaved = autosaved || (() => false);
-        this.submitType = submitType;
-        this.test = test;
+class Overlay {
+    constructor(el) {
+        if (!(el instanceof HTMLElement))
+            throw new Error("el must be HTMLElement");
+
+        this.el = el;
+        this.state = "closed";
+        this.handleOpenClick = this.open.bind(this);
+        this.handleCloseClick = this.close.bind(this);
+        this._transitionId = 0;
+
+        document.addEventListener("keydown", this.handleKeydown);
+    }
+    bindButtons(showButton, hideButton) {
+        if (showButton instanceof HTMLElement) {
+            showButton.removeEventListener('click', this.handleOpenClick);
+            showButton.addEventListener('click', this.handleOpenClick);
+        }
+
+        if (hideButton instanceof HTMLElement) {
+            hideButton.removeEventListener('click', this.handleCloseClick);
+            hideButton.addEventListener('click', this.handleCloseClick);
+        }
+    }
+    is(state) {
+        return this.state === state;
+    }
+    waitTransition() {
+        return new Promise(resolve => {
+            const handler = (e) => {
+                if (e.target !== this.el) return;
+
+                this.el.removeEventListener("transitionend", handler);
+                resolve();
+            };
+
+            this.el.addEventListener("transitionend", handler);
+        });
+    }
+    async open() {
+        if (this.state === "open" || this.state === "opening") return;
+
+        this.state = "opening";
+        this.el.classList.add("show");
+
+        this.el.dispatchEvent(new CustomEvent("overlay:open-start"));
+
+        const id = ++this._transitionId;
+        await this.waitTransition();
+        if (id !== this._transitionId) return;
+
+        this.state = "open";
+        this.el.dispatchEvent(new CustomEvent("overlay:open"));
+    }
+    async close() {
+        if (this.state === "closed" || this.state === "closing") return;
+
+        this.state = "closing";
+        this.el.classList.remove("show");
+
+        this.el.dispatchEvent(new CustomEvent("overlay:close-start"));
+
+        const id = ++this._transitionId;
+        await this.waitTransition();
+        if (id !== this._transitionId) return;
+
+        this.state = "closed";
+        this.el.dispatchEvent(new CustomEvent("overlay:close"));
+    }
+    toggle() {
+        if (this.state === "open" || this.state === "opening") {
+            return this.close();
+        } else {
+            return this.open();
+        }
+    }
+    handleKeydown = (e) => {
+        if (e.key === "Escape") {
+            this.close();
+        }
+    }
+}
+
+class TermsImport {
+    constructor({ createTermsFromImport } = {}, termsController) {
+        this.termsController = termsController;
+        this.createTermsFromImport = createTermsFromImport || (()=>{});
         this.inited = false;
-        this.termsObjs = [];
-        this.form = document.getElementById('set-form');
+        this.rowTemplate = document.createElement('template');
+        this.rowTemplate.innerHTML = `
+<div class="blue-row-margin">
+    <div class="container-left-right-top blue-row">
+        <div class="numberH"><span></span></div>
+        <div class="number"></div>
+        <div class="term-block">
+            <div class="term-input"></div>
+            <hr>
+            <div class="container-left-right"><span class="term"></span></div>
+        </div>
+        <div class="term-block">
+            <div class="term-input"></div>
+            <hr>
+            <div class="container-left-right"><span class="term"></span></div>
+        </div>
+    </div>
+</div>`;
     }
-    add(term, description, id) {
-        this.termsObjs.push({t:term, d:description, id:id});
-    }
-    init (autosave = false) {
+    init (textarea, importButton, clearButton, errorDiv, previewDiv) {
         if (this.inited) return;
         this.inited = true;
-
-        document.getElementById('submitButton').addEventListener("click", (event) => {
-
-                if (!this.validate())
-                    return false;
-
-                switch (this.submitType) {
-                    case 'Data':
-                        this.submitFormData(event);
-                        break;
-                    case 'JSON':
-                        this.submitFormJSON();
-                        break;
-                    default:
-                        const termsDto = this.getTerms();
-
-                        document.getElementById("field-terms").value = JSON.stringify(termsDto);
-
-                        this.form.submit();
-
-                        break
-                }
-            });
-    }
-    errorMark(field, add = true) {
-        const wrapper = field.closest('[data-error-class]');
-        if (!wrapper) return;
-        if (add) {
-            wrapper.classList.add(wrapper.dataset.errorClass);
-        } else {
-            wrapper.classList.remove(wrapper.dataset.errorClass);
-        }
-    }
-    errorShow(field, txt) {
-        if (!field.dataset.errorId)
+        if (!textarea || !importButton || !clearButton || !errorDiv || !previewDiv)
             return;
-        const errorField = document.getElementById(field.dataset.errorId);
-        if (!errorField)
-            return;
-        errorField.style.display = "block";
-        errorField.innerHTML = txt;
-    }
-    errorHide(field) {
-        if (!field.dataset.errorId)
-            return;
-        const errorField = document.getElementById(field.dataset.errorId);
-        if (!errorField)
-            return;
-        errorField.style.display = "none";
-        errorField.innerHTML = "";
-    }
-    checkField(fieldId) {
-        const field = document.getElementById(fieldId);
+        this.textarea = textarea;
+        this.errorDiv = errorDiv;
+        this.previewDiv = previewDiv;
 
-        if (field.value.trim() === "") {
-            this.errorMark(field);
-            this.errorShow(field, field.dataset.message);
-            return field.dataset.message;
-        } else {
-            this.errorMark(field, false);
-            this.errorHide(field);
-            return null;
-        }
-    }
-    checkLanguage(fieldId, fieldId2) {
-        const field = document.getElementById(fieldId);
 
-        if (field.value.trim() === "") {
-            this.errorMark(document.getElementById(fieldId2));
-            this.errorShow(field, field.dataset.message);
-            return field.dataset.message;
-        } else {
-            this.errorMark(document.getElementById(fieldId2), false);
-            this.errorHide(field);
-            return null;
-        }
-    }
-    errorTermsShow(type, i, txt) {
-        const errorField = document.getElementById("error-" + type + "-" + i);
-        if (!errorField)
-            return;
-        errorField.style.display = "block";
-        errorField.innerHTML = txt;
+        this.colSeparator = this.textarea.form.elements['col-separator'];
+        this.rowSeparator = this.textarea.form.elements['row-separator'];
+        this.colCustom = this.textarea.form.elements['col-custom'];
+        this.rowCustom = this.textarea.form.elements['row-custom'];
 
-    }
-    errorTermsHide(type, i) {
-        const errorField = document.getElementById("error-" + type + "-" + i);
-        if (!errorField)
-            return;
-        errorField.style.display = "none";
-        errorField.innerHTML = "";
+        this.placeholderText = this.textarea.placeholder
+            .split("\n")
+            .map(r => r.split("\t"));
 
-    }
-    validate(){
-        const errors = [];
-        ["field-title", "field-description"].forEach(id => {
-            const err = this.checkField(id);
-            if (err) errors.push(err);
+        this.data = null;
+
+        textarea.addEventListener('input', () => this.importText());
+        importButton.addEventListener('click', () => this.saveTerms());
+        clearButton.addEventListener('click', () => this.clear());
+
+        // const sepInputs = [
+        //     // ...document.querySelectorAll('input[name="col-separator"]'),
+        //     // ...document.querySelectorAll('input[name="row-separator"]'),
+        //         ...this.colSeparator,
+        //         ...this.rowSeparator,
+        //         this.colCustom,
+        //         this.rowCustom
+        // ];
+        const sepInputs = [
+            ...Array.from(this.colSeparator instanceof RadioNodeList ? this.colSeparator : [this.colSeparator]),
+            ...Array.from(this.rowSeparator instanceof RadioNodeList ? this.rowSeparator : [this.rowSeparator]),
+            this.colCustom,
+            this.rowCustom
+        ];
+
+        sepInputs.forEach(el => {
+            const event = el.tagName === 'INPUT' && el.type === 'text' ? 'input' : 'click';
+            el.addEventListener(event, () => this.placeholderTextChange());
         });
-        [['field-term-language', 'language-button-term'], ['field-description-language', 'language-button-description']].forEach(ids => {
-            const err = this.checkLanguage(ids[0],ids[1]);
-            if (err) errors.push(err);
+    }
+    onHide () {
+        this.clear();
+    }
+    onShow () {
+        this.textarea.focus();
+    }
+    clear () {
+        this.clearPreview();
+        this.textarea.value = '';
+        this.colSeparator.value = 'tab';
+        this.rowSeparator.value = 'newline';
+        this.onShow();
+    }
+    clearPreview() {
+        this.data = null;
+        this.previewDiv.innerHTML = '';
+        this.errorDiv.style.display = "none";
+    }
+    placeholderTextChange() {
+        const colSep = this.colSeparator.value === 'tab' ? '\t'
+            : this.colSeparator.value === 'comma' ? ','
+                : this.colCustom.value;
+
+        const rowSep = this.rowSeparator.value === 'newline' ? '\n'
+            : this.rowSeparator.value === 'semicolon' ? ';'
+                : this.rowCustom.value;
+
+        let newPlaceholderText=[];
+        this.placeholderText.forEach(r => {
+            newPlaceholderText.push(r.join(colSep));
         });
-
-        let goodTermsCnt = 0;
-        for (let i = 0; i < this.termsObjs.length; i++) {
-            const termEmpty = !this.termsObjs[i].t.textContent.trim() || this.termIsEmpty(this.termsObjs[i].t);
-            if (!termEmpty)
-                goodTermsCnt++;
+        this.textarea.placeholder = newPlaceholderText.join(rowSep);
+        if (this.textarea.value !== '') {
+            this.importText();
         }
-        for (let i = 0; i < this.termsObjs.length; i++) {
-            const termEmpty = !this.termsObjs[i].t.textContent.trim() || this.termIsEmpty(this.termsObjs[i].t);
-            const descEmpty = !this.termsObjs[i].d.textContent.trim() || this.termIsEmpty(this.termsObjs[i].d);
-
-            let isError = false;
-            if (termEmpty && (!descEmpty || i < 3 && goodTermsCnt < 3)) {
-                isError = true;
-                if (!descEmpty) {
-                    this.errorTermsShow("term", i, document.getElementById('field-terms').dataset.messageNotBlankTerm);
-                } else {
-                    this.errorTermsShow("term", i, document.getElementById('field-terms').dataset.messageMinThreeTerms);
-                }
-                this.errorMark(this.termsObjs[i].t);
-                errors.push(document.getElementById('field-terms').dataset.messageMinThreeTerms); //errors.push("add at least three terms");
-            } else {
-                this.errorMark(this.termsObjs[i].t, false);
-                this.errorTermsHide("term", i);
-            }
-            if (!descEmpty && this.termsObjs[i].d.textContent.trim().length > 950) {
-                this.errorMark(this.termsObjs[i].t);
-                this.errorTermsShow("description", i, document.getElementById('field-terms').dataset.messageDescriptionUp);
-            } else if (!isError) {
-                this.errorMark(this.termsObjs[i].t, false);
-                this.errorTermsHide("description", i);
-            }
-        }
-
+    }
+    showErrors(errors) {
         if (errors.length > 0) {
-            //this.showErrors(errors.join(", "));
-            if (this.test !== true) {
-                return false;
-            }
+            this.errorDiv.innerHTML = errors;
+            this.errorDiv.style.display = "block";
         }
-        return true;
     }
-    showErrors (text) {
-        const fieldError = document.getElementById('field-error');
-        fieldError.innerHTML = fieldError.dataset.message + " " + text;
-        fieldError.style.display = 'block';
-    }
-    submitFormData(event){
 
-        event.preventDefault();
+    importText(){
+        this.clearPreview();
 
-        const formData = new FormData();
-        formData.append("title", document.getElementById('field-title').value);
-        formData.append("description", document.getElementById('field-description').value);
-        formData.append("termLanguageId", document.getElementById('field-term-language').value);
-        formData.append("descriptionLanguageId", document.getElementById('field-description-language').value);
-
-        const termsDto = this.getTerms();
-        //const termsField = document.getElementById("field-terms");
-        //termsField.value = JSON.stringify(newTerms);
-        formData.append('terms', new Blob([JSON.stringify(termsDto)], { type: 'application/json' }));
-        //formData.append("terms", JSON.stringify(newTerms));
-
-        fetch(document.getElementById('set-form').action,{
-            method: "POST",
-            body:formData
-        })
-            .then(response => response.json())
-            .then(data => console.log("Ответ сервера", data))
-            .catch(error => console.error("Ошибка", error));
-    }
-    submitFormJSON(){
         const jsonData = {
-            title: document.getElementById('field-title').value,
-            description: document.getElementById('field-description').value,
-            termLanguageId: document.getElementById('field-term-language').value,
-            descriptionLanguageId: document.getElementById('field-description-language').value,
-            terms: this.getTerms()
+            text: this.textarea.value,
+            colSeparator: this.colSeparator.value,
+            rowSeparator: this.rowSeparator.value,
+            colCustom:null,
+            rowCustom:null
         };
+        if (this.colSeparator.value === 'custom') {
+            jsonData['colCustom']  = this.colCustom.value;//.elements['col-custom'];
+        }
+        if (this.rowSeparator.value === 'custom') {
+            jsonData['rowCustom']  = this.rowCustom.value//form.elements['row-custom'];
+        }
 
-        fetch('/api/sets/create',{
-            method: "POST",
+        fetch('http://localhost:8081/api/import/terms/preview', {
+            method: 'POST',
             headers: {
                 "Content-Type": "application/json"
             },
             body: JSON.stringify(jsonData)
         })
-            .then(response => {
-                return response.text().then(text=>{
-                    console.log("Ответ сервера text", text);
-                    return JSON.parse(text);
-                })
-            })
+            .then(response => response.json())
             .then(data => {
-                if (data.errors) {
-                    //console.log("Ответ сервера errors", Object.values( data.errors).join(', '));
-                    this.showErrors(Object.values( data.errors).join(', '));
+                console.log('Ответ:', data);
+
+                if (data.errors && typeof data.errors === 'object') {
+                    this.showErrors(errors.getError(data.errors));
+                } else {
+                    this.data = data;
+                    const fragment = document.createDocumentFragment();
+
+                    data.forEach( (d, i) => {
+                        const index = i + 1;
+                        const clone = this.rowTemplate.content.cloneNode(true);
+                        clone.querySelector('.numberH span').textContent = index;
+                        clone.querySelector('.number').textContent = index;
+                        const termInputs = clone.querySelectorAll('.term-input');
+                        termInputs[0].textContent = d.term;
+                        termInputs[1].textContent = d.description;
+                        const termLabels = clone.querySelectorAll('.term');
+                        termLabels[0].textContent = this.previewDiv.dataset.term;
+                        termLabels[1].textContent = this.previewDiv.dataset.description;
+
+                        fragment.appendChild(clone);
+
+                        // rowDiv.innerHTML=
+                        //     '<div class="container-left-right blue-row">' +
+                        //         '<div class="numberH"><span>'+(++i)+'</span></div><div class="number">'+i+'</div>' +
+                        //         '<div class="term-block"><div class="term-input">'+d.term+'</div>' +
+                        //             '<hr><div class="container-left-right"><span class="term">'+this.previewDiv.dataset.term+'</span></div></div>' +
+                        //         '<div class="term-block"><div class="term-input">'+d.description+'</div>' +
+                        //             '<hr><div class="container-left-right"><span class="term">'+this.previewDiv.dataset.description+'</span></div></div>' +
+                        //     '</div>';
+
+                    })
+                    this.previewDiv.appendChild(fragment);
                 }
-                console.log("Ответ сервера data", data);
             })
             .catch(error => {
-                console.error("Ответ сервера Ошибка", error);
-
+                this.showErrors(['Ошибка при импорте данных. Попробуйте позже.']);
+                console.error('Ошибка:', error);
             });
     }
-    getTerms() {
-        const termsDto = [];
-        const setIdField = document.getElementById('field-id');
-        const setId= setIdField ? setIdField.value : 0;
 
-        let term = '';
-        let description = '';
-
-        for (let i = 0; i < (this.autosaved() ? this.minTermsCnt : this.termsObjs.length); i++) {
-            term = '';
-
-            if (!this.termIsEmpty(this.termsObjs[i].t)) {
-                term = Array.from(this.termsObjs[i].t.querySelectorAll("p"))
-                    .map(p => p.textContent)
-                    .join("\n").trim();
-            }
-
-            description = '';
-            if (!this.termIsEmpty(this.termsObjs[i].d)) {
-                description = Array.from(this.termsObjs[i].d.querySelectorAll("p"))
-                    .map(p => p.textContent)
-                    .join("\n").trim();
-            }
-            if (term !== "" || description !== "") {
-                termsDto.push({
-                    term: term,
-                    description: description,
-                    id: this.termsObjs[i].id
-                });
-                if (this.termsObjs[i].id) {
-                    // termsDto[termsDto.length - 1].id = this.termsObjs[i].id;
-                    termsDto[termsDto.length - 1].setId = setId;
-                }
-            }
+    async saveTerms() {
+        if (this.data && Array.isArray(this.data) && this.data.length > 0) {
+            // this.data.forEach((d) => {
+            //     this.termsController.addTerm(d);
+            // })
+            await this.createTermsFromImport(this.data);
         }
+        this.onHide();
+        //this.overlay.hide();
 
-        return termsDto;
-    }
-    deleteTerms(){
-        this.termsObjs = [];
     }
 }
 
-class Overlay {
-    constructor (onHide, onShow) {
-        this.onHide = onHide;
-        this.onShow = onShow;
-        this.inited = false;
-    }
-    init(overlay, showButton, hideButton) {
-        if (this.inited) return;
-        this.inited = true;
-        if (!(overlay instanceof HTMLElement) || !(showButton instanceof HTMLElement)) return;
-        if (!(hideButton instanceof HTMLElement)) {
-            showButton.style.visibility = "hidden";
-            return;
-        }
-        this.overlay = overlay;
-        showButton.addEventListener('click', () => {
-            this.show();
-        });
-        hideButton.addEventListener('click', () => {
-            this.hide();
-        });
-    }
-    show() {
-        this.overlay.style.visibility = "visible";
-        //if (this.onShow) this.onShow.onShow();
-        if (typeof this.onShow === 'function') this.onShow();
-    }
-    hide() {
-        this.overlay.style.visibility = "hidden";
-        //if (this.onHide) this.onHide.onHide();
-        if (typeof this.onHide === 'function') this.onHide();
-    }
-}
 
 class TermRow {
     constructor(
@@ -1199,198 +1215,6 @@ class TermController {
 
 }
 
-class TermsImport {
-    constructor({ createTermsFromImport } = {}, termsController) {
-        this.termsController = termsController;
-        this.createTermsFromImport = createTermsFromImport || (()=>{});
-        this.inited = false;
-        this.rowTemplate = document.createElement('template');
-        this.rowTemplate.innerHTML = `
-<div class="blue-row-margin">
-    <div class="container-left-right-top blue-row">
-        <div class="numberH"><span></span></div>
-        <div class="number"></div>
-        <div class="term-block">
-            <div class="term-input"></div>
-            <hr>
-            <div class="container-left-right"><span class="term"></span></div>
-        </div>
-        <div class="term-block">
-            <div class="term-input"></div>
-            <hr>
-            <div class="container-left-right"><span class="term"></span></div>
-        </div>
-    </div>
-</div>`;
-    }
-    init (textarea, importButton, clearButton, errorDiv, previewDiv, overlay) {
-        if (this.inited) return;
-        this.inited = true;
-        if (!textarea || !importButton || !clearButton || !errorDiv || !previewDiv)
-            return;
-        this.textarea = textarea;
-        this.errorDiv = errorDiv;
-        this.previewDiv = previewDiv;
-
-        this.overlay = overlay
-
-        this.colSeparator = this.textarea.form.elements['col-separator'];
-        this.rowSeparator = this.textarea.form.elements['row-separator'];
-        this.colCustom = this.textarea.form.elements['col-custom'];
-        this.rowCustom = this.textarea.form.elements['row-custom'];
-
-        this.placeholderText = this.textarea.placeholder
-            .split("\n")
-            .map(r => r.split("\t"));
-
-        this.data = null;
-
-        textarea.addEventListener('input', () => this.importText());
-        importButton.addEventListener('click', () => this.saveTerms());
-        clearButton.addEventListener('click', () => this.clear());
-
-        // const sepInputs = [
-        //     // ...document.querySelectorAll('input[name="col-separator"]'),
-        //     // ...document.querySelectorAll('input[name="row-separator"]'),
-        //         ...this.colSeparator,
-        //         ...this.rowSeparator,
-        //         this.colCustom,
-        //         this.rowCustom
-        // ];
-        const sepInputs = [
-            ...Array.from(this.colSeparator instanceof RadioNodeList ? this.colSeparator : [this.colSeparator]),
-            ...Array.from(this.rowSeparator instanceof RadioNodeList ? this.rowSeparator : [this.rowSeparator]),
-            this.colCustom,
-            this.rowCustom
-        ];
-
-        sepInputs.forEach(el => {
-            const event = el.tagName === 'INPUT' && el.type === 'text' ? 'input' : 'click';
-            el.addEventListener(event, () => this.placeholderTextChange());
-        });
-    }
-    onHide () {
-        this.clear();
-    }
-    onShow () {
-        this.textarea.focus();
-    }
-    clear () {
-        this.clearPreview();
-        this.textarea.value = '';
-        this.colSeparator.value = 'tab';
-        this.rowSeparator.value = 'newline';
-        this.onShow();
-    }
-    clearPreview() {
-        this.data = null;
-        this.previewDiv.innerHTML = '';
-        this.errorDiv.style.display = "none";
-    }
-    placeholderTextChange() {
-        const colSep = this.colSeparator.value === 'tab' ? '\t'
-            : this.colSeparator.value === 'comma' ? ','
-                : this.colCustom.value;
-
-        const rowSep = this.rowSeparator.value === 'newline' ? '\n'
-            : this.rowSeparator.value === 'semicolon' ? ';'
-                : this.rowCustom.value;
-
-        let newPlaceholderText=[];
-        this.placeholderText.forEach(r => {
-            newPlaceholderText.push(r.join(colSep));
-        });
-        this.textarea.placeholder = newPlaceholderText.join(rowSep);
-        if (this.textarea.value !== '') {
-            this.importText();
-        }
-    }
-    showErrors(errors) {
-        if (errors.length > 0) {
-            this.errorDiv.innerHTML = errors;
-            this.errorDiv.style.display = "block";
-        }
-    }
-
-    importText(){
-        this.clearPreview();
-
-        const jsonData = {
-            text: this.textarea.value,
-            colSeparator: this.colSeparator.value,
-            rowSeparator: this.rowSeparator.value,
-            colCustom:null,
-            rowCustom:null
-        };
-        if (this.colSeparator.value === 'custom') {
-            jsonData['colCustom']  = this.colCustom.value;//.elements['col-custom'];
-        }
-        if (this.rowSeparator.value === 'custom') {
-            jsonData['rowCustom']  = this.rowCustom.value//form.elements['row-custom'];
-        }
-
-        fetch('http://localhost:8081/api/import/terms/preview', {
-            method: 'POST',
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify(jsonData)
-        })
-            .then(response => response.json())
-            .then(data => {
-                console.log('Ответ:', data);
-
-                if (data.errors && typeof data.errors === 'object') {
-                    this.showErrors(errors.getError(data.errors));
-                } else {
-                    this.data = data;
-                    const fragment = document.createDocumentFragment();
-
-                    data.forEach( (d, i) => {
-                        const index = i + 1;
-                        const clone = this.rowTemplate.content.cloneNode(true);
-                        clone.querySelector('.numberH span').textContent = index;
-                        clone.querySelector('.number').textContent = index;
-                        const termInputs = clone.querySelectorAll('.term-input');
-                        termInputs[0].textContent = d.term;
-                        termInputs[1].textContent = d.description;
-                        const termLabels = clone.querySelectorAll('.term');
-                        termLabels[0].textContent = this.previewDiv.dataset.term;
-                        termLabels[1].textContent = this.previewDiv.dataset.description;
-
-                        fragment.appendChild(clone);
-
-                        // rowDiv.innerHTML=
-                        //     '<div class="container-left-right blue-row">' +
-                        //         '<div class="numberH"><span>'+(++i)+'</span></div><div class="number">'+i+'</div>' +
-                        //         '<div class="term-block"><div class="term-input">'+d.term+'</div>' +
-                        //             '<hr><div class="container-left-right"><span class="term">'+this.previewDiv.dataset.term+'</span></div></div>' +
-                        //         '<div class="term-block"><div class="term-input">'+d.description+'</div>' +
-                        //             '<hr><div class="container-left-right"><span class="term">'+this.previewDiv.dataset.description+'</span></div></div>' +
-                        //     '</div>';
-
-                    })
-                    this.previewDiv.appendChild(fragment);
-                }
-            })
-            .catch(error => {
-                this.showErrors(['Ошибка при импорте данных. Попробуйте позже.']);
-                console.error('Ошибка:', error);
-            });
-    }
-
-    async saveTerms() {
-        if (this.data && Array.isArray(this.data) && this.data.length > 0) {
-            // this.data.forEach((d) => {
-            //     this.termsController.addTerm(d);
-            // })
-            await this.createTermsFromImport(this.data);
-        }
-        this.onHide();
-        this.overlay.hide();
-
-    }
-}
 
 class AutoSave {
     constructor (divplaceholder, textNormalization, {showTermsFromImport = {}}) {
@@ -1743,6 +1567,275 @@ class AutoSave {
 
 }
 
+class SetForm {
+    constructor({ termIsEmpty } = {}, {autosaved} = {}, submitType = "", test = false) {
+        this.minTermsCnt = 3;
+        this.termIsEmpty = termIsEmpty || (() => false);
+        this.autosaved = autosaved || (() => false);
+        this.submitType = submitType;
+        this.test = test;
+        this.inited = false;
+        this.termsObjs = [];
+        this.form = document.getElementById('set-form');
+    }
+    add(term, description, id) {
+        this.termsObjs.push({t:term, d:description, id:id});
+    }
+    init (autosave = false) {
+        if (this.inited) return;
+        this.inited = true;
+
+        document.getElementById('submitButton').addEventListener("click", (event) => {
+
+            if (!this.validate())
+                return false;
+
+            switch (this.submitType) {
+                case 'Data':
+                    this.submitFormData(event);
+                    break;
+                case 'JSON':
+                    this.submitFormJSON();
+                    break;
+                default:
+                    const termsDto = this.getTerms();
+
+                    document.getElementById("field-terms").value = JSON.stringify(termsDto);
+
+                    this.form.submit();
+
+                    break
+            }
+        });
+    }
+    errorMark(field, add = true) {
+        const wrapper = field.closest('[data-error-class]');
+        if (!wrapper) return;
+        if (add) {
+            wrapper.classList.add(wrapper.dataset.errorClass);
+        } else {
+            wrapper.classList.remove(wrapper.dataset.errorClass);
+        }
+    }
+    errorShow(field, txt) {
+        if (!field.dataset.errorId)
+            return;
+        const errorField = document.getElementById(field.dataset.errorId);
+        if (!errorField)
+            return;
+        errorField.style.display = "block";
+        errorField.innerHTML = txt;
+    }
+    errorHide(field) {
+        if (!field.dataset.errorId)
+            return;
+        const errorField = document.getElementById(field.dataset.errorId);
+        if (!errorField)
+            return;
+        errorField.style.display = "none";
+        errorField.innerHTML = "";
+    }
+    checkField(fieldId) {
+        const field = document.getElementById(fieldId);
+
+        if (field.value.trim() === "") {
+            this.errorMark(field);
+            this.errorShow(field, field.dataset.message);
+            return field.dataset.message;
+        } else {
+            this.errorMark(field, false);
+            this.errorHide(field);
+            return null;
+        }
+    }
+    checkLanguage(fieldId, fieldId2) {
+        const field = document.getElementById(fieldId);
+
+        if (field.value.trim() === "") {
+            this.errorMark(document.getElementById(fieldId2));
+            this.errorShow(field, field.dataset.message);
+            return field.dataset.message;
+        } else {
+            this.errorMark(document.getElementById(fieldId2), false);
+            this.errorHide(field);
+            return null;
+        }
+    }
+    errorTermsShow(type, i, txt) {
+        const errorField = document.getElementById("error-" + type + "-" + i);
+        if (!errorField)
+            return;
+        errorField.style.display = "block";
+        errorField.innerHTML = txt;
+
+    }
+    errorTermsHide(type, i) {
+        const errorField = document.getElementById("error-" + type + "-" + i);
+        if (!errorField)
+            return;
+        errorField.style.display = "none";
+        errorField.innerHTML = "";
+
+    }
+    validate(){
+        const errors = [];
+        ["field-title", "field-description"].forEach(id => {
+            const err = this.checkField(id);
+            if (err) errors.push(err);
+        });
+        [['field-term-language', 'language-button-term'], ['field-description-language', 'language-button-description']].forEach(ids => {
+            const err = this.checkLanguage(ids[0],ids[1]);
+            if (err) errors.push(err);
+        });
+
+        let goodTermsCnt = 0;
+        for (let i = 0; i < this.termsObjs.length; i++) {
+            const termEmpty = !this.termsObjs[i].t.textContent.trim() || this.termIsEmpty(this.termsObjs[i].t);
+            if (!termEmpty)
+                goodTermsCnt++;
+        }
+        for (let i = 0; i < this.termsObjs.length; i++) {
+            const termEmpty = !this.termsObjs[i].t.textContent.trim() || this.termIsEmpty(this.termsObjs[i].t);
+            const descEmpty = !this.termsObjs[i].d.textContent.trim() || this.termIsEmpty(this.termsObjs[i].d);
+
+            let isError = false;
+            if (termEmpty && (!descEmpty || i < 3 && goodTermsCnt < 3)) {
+                isError = true;
+                if (!descEmpty) {
+                    this.errorTermsShow("term", i, document.getElementById('field-terms').dataset.messageNotBlankTerm);
+                } else {
+                    this.errorTermsShow("term", i, document.getElementById('field-terms').dataset.messageMinThreeTerms);
+                }
+                this.errorMark(this.termsObjs[i].t);
+                errors.push(document.getElementById('field-terms').dataset.messageMinThreeTerms); //errors.push("add at least three terms");
+            } else {
+                this.errorMark(this.termsObjs[i].t, false);
+                this.errorTermsHide("term", i);
+            }
+            if (!descEmpty && this.termsObjs[i].d.textContent.trim().length > 950) {
+                this.errorMark(this.termsObjs[i].t);
+                this.errorTermsShow("description", i, document.getElementById('field-terms').dataset.messageDescriptionUp);
+            } else if (!isError) {
+                this.errorMark(this.termsObjs[i].t, false);
+                this.errorTermsHide("description", i);
+            }
+        }
+
+        if (errors.length > 0) {
+            //this.showErrors(errors.join(", "));
+            if (this.test !== true) {
+                return false;
+            }
+        }
+        return true;
+    }
+    showErrors (text) {
+        const fieldError = document.getElementById('field-error');
+        fieldError.innerHTML = fieldError.dataset.message + " " + text;
+        fieldError.style.display = 'block';
+    }
+    submitFormData(event){
+
+        event.preventDefault();
+
+        const formData = new FormData();
+        formData.append("title", document.getElementById('field-title').value);
+        formData.append("description", document.getElementById('field-description').value);
+        formData.append("termLanguageId", document.getElementById('field-term-language').value);
+        formData.append("descriptionLanguageId", document.getElementById('field-description-language').value);
+
+        const termsDto = this.getTerms();
+        //const termsField = document.getElementById("field-terms");
+        //termsField.value = JSON.stringify(newTerms);
+        formData.append('terms', new Blob([JSON.stringify(termsDto)], { type: 'application/json' }));
+        //formData.append("terms", JSON.stringify(newTerms));
+
+        fetch(document.getElementById('set-form').action,{
+            method: "POST",
+            body:formData
+        })
+            .then(response => response.json())
+            .then(data => console.log("Ответ сервера", data))
+            .catch(error => console.error("Ошибка", error));
+    }
+    submitFormJSON(){
+        const jsonData = {
+            title: document.getElementById('field-title').value,
+            description: document.getElementById('field-description').value,
+            termLanguageId: document.getElementById('field-term-language').value,
+            descriptionLanguageId: document.getElementById('field-description-language').value,
+            terms: this.getTerms()
+        };
+
+        fetch('/api/sets/create',{
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(jsonData)
+        })
+            .then(response => {
+                return response.text().then(text=>{
+                    console.log("Ответ сервера text", text);
+                    return JSON.parse(text);
+                })
+            })
+            .then(data => {
+                if (data.errors) {
+                    //console.log("Ответ сервера errors", Object.values( data.errors).join(', '));
+                    this.showErrors(Object.values( data.errors).join(', '));
+                }
+                console.log("Ответ сервера data", data);
+            })
+            .catch(error => {
+                console.error("Ответ сервера Ошибка", error);
+
+            });
+    }
+    getTerms() {
+        const termsDto = [];
+        const setIdField = document.getElementById('field-id');
+        const setId= setIdField ? setIdField.value : 0;
+
+        let term = '';
+        let description = '';
+
+        for (let i = 0; i < (this.autosaved() ? this.minTermsCnt : this.termsObjs.length); i++) {
+            term = '';
+
+            if (!this.termIsEmpty(this.termsObjs[i].t)) {
+                term = Array.from(this.termsObjs[i].t.querySelectorAll("p"))
+                    .map(p => p.textContent)
+                    .join("\n").trim();
+            }
+
+            description = '';
+            if (!this.termIsEmpty(this.termsObjs[i].d)) {
+                description = Array.from(this.termsObjs[i].d.querySelectorAll("p"))
+                    .map(p => p.textContent)
+                    .join("\n").trim();
+            }
+            if (term !== "" || description !== "") {
+                termsDto.push({
+                    term: term,
+                    description: description,
+                    id: this.termsObjs[i].id
+                });
+                if (this.termsObjs[i].id) {
+                    // termsDto[termsDto.length - 1].id = this.termsObjs[i].id;
+                    termsDto[termsDto.length - 1].setId = setId;
+                }
+            }
+        }
+
+        return termsDto;
+    }
+    deleteTerms(){
+        this.termsObjs = [];
+    }
+}
+
+
 const divplaceholder= new DivPlaceholder();
 const textNormalization = new TextNormalization();
 
@@ -1776,7 +1869,6 @@ const termsImport = new TermsImport(
             return autoSave.createTerms(data);
         }
     });
-const overlay = new Overlay(() => termsImport.onHide(), () => termsImport.onShow());
 
 
 document.addEventListener('DOMContentLoaded', function () {
@@ -1784,20 +1876,20 @@ document.addEventListener('DOMContentLoaded', function () {
     const termsDescriptionAreaEl = document.getElementById('terms-description-area');
 
     divplaceholder.init(termsDescriptionAreaEl);
-    const editableDiv = new EditableDiv(termsDescriptionAreaEl);
+    new EditableDiv(termsDescriptionAreaEl);
     textNormalization.init(termsDescriptionAreaEl);
 
     const languageSpans = {
         term:document.getElementById('language-button-term'),
         description:document.getElementById('language-button-description')
     };
-    const languageSpan = new LanguageSpan(
+    new LanguageSpan(
         termsDescriptionAreaEl,
         '[contenteditable]',
         languageSpans,
         '[data-span-container]'
     );
-    const languageMenu = new LanguageMenu(
+    new LanguageMenu(
         document.getElementById("language-menu"),
         languageSpans,
     {
@@ -1805,6 +1897,30 @@ document.addEventListener('DOMContentLoaded', function () {
             description:document.getElementById('field-description-language')
         }
     );
+
+
+    const importAreaEl= document.getElementById("overlay");
+    new Overlay(importAreaEl).bindButtons(
+        document.getElementById("overlay_show_button"),
+        document.getElementById("overlay_hide_button"));
+
+    importAreaEl.addEventListener("overlay:open-start", () => {
+        termsImport.onShow()
+    });
+
+    importAreaEl.addEventListener("overlay:open", () => {
+        console.log("уже открыт");
+    });
+
+    importAreaEl.addEventListener("overlay:close-start", () => {
+        console.log("закрывается");
+    });
+
+    importAreaEl.addEventListener("overlay:close", () => {
+        termsImport.onHide();
+    });
+
+
 
     termController.init(
         termsDescriptionAreaEl,
@@ -1843,18 +1959,14 @@ document.addEventListener('DOMContentLoaded', function () {
     //textNormalization.init();
     const fieldId = document.getElementById("field-id");
     setForm.init(fieldId?.dataset.draft === "true",);
-    overlay.init(
-        document.getElementById("overlay"),
-        document.getElementById("overlay_show_button"),
-        document.getElementById("overlay_hide_button"));
+
 
     termsImport.init(
         document.getElementById("field-import"),
         document.getElementById('overlay_import_button'),
         document.getElementById('overlay_clear_button'),
         document.getElementById("field-import-error"),
-        document.getElementById("field-import-preview"),
-        overlay
+        document.getElementById("field-import-preview")
         );
 
 

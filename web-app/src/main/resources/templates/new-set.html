@@ -45,14 +45,12 @@
                         <div th:data-error-class="blue-row-err"
                              th:classappend="${#fields.hasErrors('title')} ? 'blue-row-err'">
                             <div class="textarea-description">
-                        <span
-                                th:if="${payload?.title != null && payload?.title != ''}"
-                                th:text="#{messages.set.create.t}"
-                                th:data-message="#{messages.set.create.t}">&nbsp</span>
                                 <span
-                                        th:if="${payload?.title == null || payload?.title == ''}"
+                                        th:data-for="title"
+                                        th:text="${#strings.isEmpty(payload?.title)} ? #{messages.set.create.t} "
                                         th:data-message="#{messages.set.create.t}">&nbsp</span>
                                 <input type="text"
+                                       th:data-label="title"
                                        th:id="field-title"
                                        th:field="*{title}"
                                        th:placeholder="#{messages.set.create.et}"
@@ -70,14 +68,12 @@
                         <div th:data-error-class="blue-row-err"
                              th:classappend="${#fields.hasErrors('description')} ? 'blue-row-err'">
                             <div class="textarea-description">
-                        <span
-                                th:if="${payload?.description != null && payload?.description != ''}"
-                                th:text="#{messages.set.create.d}"
-                                th:data-message="#{messages.set.create.d}">&nbsp;</span>
                                 <span
-                                        th:if="${payload?.description == null || payload?.description == ''}"
-                                        th:data-message="#{messages.set.create.d}">&nbsp;</span>
+                                        th:data-for="description"
+                                        th:text="${#strings.isEmpty(payload?.description)} ? #{messages.set.create.d}"
+                                        th:data-message="#{messages.set.create.d}"></span>
                                 <textarea
+                                        th:data-label="description"
                                         th:id="field-description"
                                         th:field="*{description}"
                                         th:placeholder="#{messages.set.create.ed}"
