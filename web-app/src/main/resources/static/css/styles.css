@@ -522,9 +522,9 @@ select {
     align-items: center;
     text-align:center;
     width: 20px;
-    position: absolute;
-    top: 0;
-    bottom: 0;
+    /*position: absolute;*/
+    /*top: 0;*/
+    /*bottom: 0;*/
 }
 .number {
     margin-left: -7px;

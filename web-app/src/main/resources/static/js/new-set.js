@@ -1,6 +1,13 @@
 
 class DivPlaceholder {
     constructor() {
+
+        if (DivPlaceholder.instance) {
+            return DivPlaceholder.instance;
+        }
+        DivPlaceholder.instance = this;
+
+
         this.TYPE = {
             TERM: 'term',
             DESCRIPTION: 'description'
@@ -13,15 +20,14 @@ class DivPlaceholder {
     init(container) {
         if (!container) return;
 
+        if (this.container) {
+            this.destroy();
+        }
         this.container = container;
         // container.addEventListener('input', this.handleFocus);
-        container.removeEventListener('focusin', this.handleFocus);
-        container.removeEventListener('focusout', this.handleBlur);
-        container.removeEventListener("languageOnchange", this.handleLanguageChange);
-
         container.addEventListener('focusin', this.handleFocus);
         container.addEventListener('focusout', this.handleBlur);
-        container.addEventListener("languageOnchange", this.handleLanguageChange);
+        container.addEventListener("language:onchange", this.handleLanguageChange);
 
         const elements = container.querySelectorAll('[contenteditable]');
         elements.forEach(el => {
@@ -70,24 +76,51 @@ class DivPlaceholder {
     isActive(el) {
         return el.textContent.trim() === "";
     }
+    destroy() {
+        if (!this.container) return;
+
+        this.container.removeEventListener('focusin', this.handleFocus);
+        this.container.removeEventListener('focusout', this.handleBlur);
+        this.container.removeEventListener("language:onchange", this.handleLanguageChange);
+
+        this.container = null;
+    }
 }
 
 class EditableDiv {
     constructor(container) {
+
+        if (EditableDiv.instance) {
+            return EditableDiv.instance;
+        }
+        EditableDiv.instance = this;
+
+
         if (!(container instanceof HTMLElement)) {
             throw new Error("container must be HTMLElement");
         }
+
         this.handleKeydown = this.handleKeydown.bind(this);
         this.handleBeforeinput = this.handleBeforeinput.bind(this);
         this.handleInput = this.handleInput.bind(this);
         this.handleBlur = this.handleBlur.bind(this);
+
+        this.init(container);
+    }
+    init(container) {
+        if (!container) return;
+
+        if (this.container) {
+            this.destroy();
+        }
+
+        this.container = container;
 
         container.addEventListener('keydown', this.handleKeydown);
         container.addEventListener('beforeinput', this.handleBeforeinput);
         container.addEventListener('input', this.handleInput);
         container.addEventListener('blur', this.handleBlur);
     }
-
     el(event) {
         return event.target.closest('[contenteditable]') || null;
     }
@@ -380,10 +413,27 @@ class EditableDiv {
         el.style.height = 'auto';
         el.style.height = el.scrollHeight + 'px';
     }
+    destroy() {
+        if (!this.container) return;
+
+        this.container.removeEventListener('keydown', this.handleKeydown);
+        this.container.removeEventListener('beforeinput', this.handleBeforeinput);
+        this.container.removeEventListener('input', this.handleInput);
+        this.container.removeEventListener('blur', this.handleBlur);
+
+        this.container = null;
+    }
 }
 
 class TextNormalization {
+    constructor() {
 
+        if (TextNormalization.instance) {
+            return TextNormalization.instance;
+        }
+        TextNormalization.instance = this;
+
+    }
     init(container) {
         if (!(container instanceof HTMLElement)) return;
 
@@ -403,12 +453,14 @@ class TextNormalization {
     //     el.innerHTML = this.normalizeText(el.textContent);
     // }
     byEl(el) {
-        if (el.dataset.tnNormalized) return;
+        const text = this.getTextByEl(el);
 
-        el.dataset.tnNormalized = "1";
+        const newHtml = this.getHtmlByText(text);
 
-        if (el.textContent !== "")
-            el.innerHTML = this.getHtmlByText(el.textContent);
+        if (el.innerHTML !== newHtml) {
+            el.innerHTML = newHtml;
+        }
+        // el.dataset.tnNormalized = "1";
     }
     getHtmlByText(text) {
         return text.trim()
@@ -417,26 +469,54 @@ class TextNormalization {
             .join('');
     }
     getTextByEl(el) {
-        return Array.from(el.querySelectorAll("p"))
-                .map(p => p.textContent)
-                .join("\n").trim();
+        const ps = el.querySelectorAll("p");
+
+        if (!ps.length) {
+            return el.textContent.replace(/\u00A0/g, ' ').trim();
+        }
+
+        return Array.from(ps)
+            .map(p => p.textContent.replace(/\u00A0/g, ' '))
+            .join("\n")
+            .trim();
     }
 }
 
 class LanguageSpan {
     constructor(inputsContainer, inputsClosest, spans, querySelector) {
+
+        if (LanguageSpan.instance) return LanguageSpan.instance;
+        LanguageSpan.instance = this;
+
+
         if (!(inputsContainer instanceof HTMLElement)) throw new Error("inputsContainer must be HTMLElement");
 
+        this.activeEl = null;
         this.inputsClosest = inputsClosest;
         this.spans = spans;
         this.querySelector = querySelector;
 
         this.handleFocus = this.handleFocus.bind(this);
+        this.init(inputsContainer);
+    }
+    init(inputsContainer) {
+        if (!inputsContainer) return;
+
+        if (this.inputsContainer) {
+            this.destroy();
+        }
+
+        this.inputsContainer = inputsContainer;
+
         inputsContainer.addEventListener('focusin', this.handleFocus);
     }
     async handleFocus(event) {
         const el = this.el(event);
         if (!el || !el.dataset.type) return;
+
+        if (this.activeEl === el) return;
+
+        this.activeEl = el;
 
         const row = el.closest('[data-term-row-container]');
         if (!row) return;
@@ -452,6 +532,10 @@ class LanguageSpan {
             const spContainer = el.parentElement.querySelector(this.querySelector);
             if (!spContainer) return;
 
+            if (sp.parentElement) {
+                sp.parentElement.removeChild(sp);
+            }
+
             sp.input = el;
             spContainer.appendChild(sp);
 
@@ -465,27 +549,52 @@ class LanguageSpan {
         if (!(span instanceof HTMLElement)) return null;
         return span;
     }
+    destroy() {
+        if (!this.inputsContainer) return;
+
+        this.inputsContainer.removeEventListener('focusin', this.handleFocus);
+
+        this.inputsContainer = null;
+    }
 }
+
 class LanguageMenu {
     constructor(container, spans, inputs) {
+
+        if (LanguageMenu.instance) return LanguageMenu.instance;
+        LanguageMenu.instance = this;
+
+
         if (!(container instanceof HTMLElement)) throw new Error("container must be HTMLElement");
 
-        this.inputs = inputs;
-        this.languageMenuDiv = container;
+        this.languageMenuDiv = null;
         this.span = null;
+        this.inputs = inputs;
+        this.spans = spans;
 
         this.handleSpanClick = this.handleSpanClick.bind(this);
         this.handleMenuClick = this.handleMenuClick.bind(this);
         this.handleDocClick = this.handleDocClick.bind(this);
 
-        for(let key in spans) {
-            let span = spans[key];
+        this.init(container);
+    }
+    init(container){
+        if (!container) return;
+
+        if (this.languageMenuDiv) {
+            this.destroy();
+        }
+
+        this.languageMenuDiv = container;
+
+        container.addEventListener('click', this.handleMenuClick);
+        document.addEventListener('click', this.handleDocClick);
+
+        for(let key in this.spans) {
+            let span = this.spans[key];
             if (!(span instanceof HTMLElement)) continue;
             span.addEventListener('click', this.handleSpanClick);
         }
-
-        container.removeEventListener('click', this.handleMenuClick);
-        document.addEventListener('click', this.handleDocClick);
     }
     async handleSpanClick(event) {
         event.stopPropagation();
@@ -515,7 +624,7 @@ class LanguageMenu {
 
         this.inputs[type].value = el.dataset.key;
         this.span.innerText = text;
-        input.dispatchEvent(new Event("change", { bubbles: true }));
+        input.dispatchEvent(new CustomEvent("language:change", { bubbles: true }));
 
         this.languageMenuDiv.style.display = 'none';
 
@@ -532,7 +641,7 @@ class LanguageMenu {
         if (!contenteditableDiv) return;
 
         contenteditableDiv.dispatchEvent(
-            new CustomEvent("languageOnchange", {
+            new CustomEvent("language:onchange", {
                 bubbles: true,
                 detail: {
                     type: type,
@@ -553,19 +662,39 @@ class LanguageMenu {
             this.languageMenuDiv.style.display = 'none';
         }
     }
+    destroy() {
+        if (!this.languageMenuDiv) return;
+
+        document.removeEventListener('click', this.handleDocClick);
+        this.languageMenuDiv.removeEventListener('click', this.handleMenuClick);
+
+        if (this.spans) {
+            for (let key in this.spans) {
+                let span = this.spans[key];
+                if (!(span instanceof HTMLElement)) continue;
+                span.removeEventListener('click', this.handleSpanClick);
+            }
+        }
+
+        this.languageMenuDiv = null;
+    }
 }
 
 class Labels {
     constructor() {
-        this.handleKeyup = this.handleKeyup.bind(this);
 
+        if (Labels.instance) return Labels.instance;
+        Labels.instance = this;
+
+
+        this.handleKeyup = this.handleKeyup.bind(this);
     }
     add(el) {
         if (!(el instanceof HTMLElement)) return;
         if (el.dataset.labelsBound) return;
+        el.addEventListener('keyup', this.handleKeyup);
         el.dataset.labelsBound = "1";
 
-        el.addEventListener('keyup', this.handleKeyup);
     }
     // handleKeyup(event) {
     //     if (event.target.value.length > 0)
@@ -607,6 +736,11 @@ class Errors {
 
 class Overlay {
     constructor(el) {
+
+        if (Overlay.instance) return Overlay.instance;
+        Overlay.instance = this;
+
+
         if (!(el instanceof HTMLElement))
             throw new Error("el must be HTMLElement");
 
@@ -614,9 +748,12 @@ class Overlay {
         this.state = "closed";
         this.handleOpenClick = this.open.bind(this);
         this.handleCloseClick = this.close.bind(this);
+
         this._transitionId = 0;
 
         document.addEventListener("keydown", this.handleKeydown);
+        document.addEventListener("term-controller:terms-created",this.handleCloseClick);
+
     }
     bindButtons(showButton, hideButton) {
         if (showButton instanceof HTMLElement) {
@@ -689,14 +826,19 @@ class Overlay {
 }
 
 class TermsImport {
-    constructor({ createTermsFromImport } = {}, termsController) {
-        this.termsController = termsController;
-        this.createTermsFromImport = createTermsFromImport || (()=>{});
+    constructor() {
+
+        if (TermsImport.instance) return TermsImport.instance;
+        TermsImport.instance = this;
+
+
         this.inited = false;
         this.rowTemplate = document.createElement('template');
+
         this.rowTemplate.innerHTML = `
 <div class="blue-row-margin">
     <div class="container-left-right-top blue-row">
+        <div class="term-index numberH"></div>
         <div class="numberH"><span></span></div>
         <div class="number"></div>
         <div class="term-block">
@@ -711,16 +853,34 @@ class TermsImport {
         </div>
     </div>
 </div>`;
+
+        this.handleTextareaInput = this.onTextareaInput.bind(this);
+        this.handleImportButtonClick = this.saveTerms.bind(this);
+        this.handleClearButtonClick = this.clear.bind(this);
+        this.handleInputsClick = this.placeholderTextChange.bind(this);
+        this.handleTermsCreated = this.clear.bind(this);
+
+        // document.removeEventListener("term-controller:terms-created",this.handleTermsCreated);
+        document.addEventListener("term-controller:terms-created",this.handleTermsCreated);
+
     }
     init (textarea, importButton, clearButton, errorDiv, previewDiv) {
-        if (this.inited) return;
-        this.inited = true;
         if (!textarea || !importButton || !clearButton || !errorDiv || !previewDiv)
             return;
+
+        if (this.inited) {
+            this.destroy();
+        }
+
+        this.inited = true;
+
+        this.data = null;
+
         this.textarea = textarea;
         this.errorDiv = errorDiv;
         this.previewDiv = previewDiv;
-
+        this.importButton = importButton;
+        this.clearButton = clearButton;
 
         this.colSeparator = this.textarea.form.elements['col-separator'];
         this.rowSeparator = this.textarea.form.elements['row-separator'];
@@ -728,80 +888,38 @@ class TermsImport {
         this.rowCustom = this.textarea.form.elements['row-custom'];
 
         this.placeholderText = this.textarea.placeholder
-            .split("\n")
-            .map(r => r.split("\t"));
+            ? this.textarea.placeholder.split("\n").map(r => r.split("\t"))
+            : [];
 
-        this.data = null;
-
-        textarea.addEventListener('input', () => this.importText());
-        importButton.addEventListener('click', () => this.saveTerms());
-        clearButton.addEventListener('click', () => this.clear());
-
-        // const sepInputs = [
-        //     // ...document.querySelectorAll('input[name="col-separator"]'),
-        //     // ...document.querySelectorAll('input[name="row-separator"]'),
-        //         ...this.colSeparator,
-        //         ...this.rowSeparator,
-        //         this.colCustom,
-        //         this.rowCustom
-        // ];
-        const sepInputs = [
+        this.sepInputs = [
             ...Array.from(this.colSeparator instanceof RadioNodeList ? this.colSeparator : [this.colSeparator]),
             ...Array.from(this.rowSeparator instanceof RadioNodeList ? this.rowSeparator : [this.rowSeparator]),
             this.colCustom,
             this.rowCustom
         ];
 
-        sepInputs.forEach(el => {
+        this.textarea.addEventListener('input', this.handleTextareaInput);
+        this.importButton.addEventListener('click', this.handleImportButtonClick);
+        this.clearButton.addEventListener('click', this.handleClearButtonClick);
+
+        this.sepInputs.forEach(el => {
             const event = el.tagName === 'INPUT' && el.type === 'text' ? 'input' : 'click';
-            el.addEventListener(event, () => this.placeholderTextChange());
+            el.addEventListener(event, this.handleInputsClick);
         });
-    }
-    onHide () {
+
         this.clear();
     }
-    onShow () {
-        this.textarea.focus();
-    }
-    clear () {
-        this.clearPreview();
-        this.textarea.value = '';
-        this.colSeparator.value = 'tab';
-        this.rowSeparator.value = 'newline';
-        this.onShow();
-    }
-    clearPreview() {
-        this.data = null;
-        this.previewDiv.innerHTML = '';
-        this.errorDiv.style.display = "none";
-    }
-    placeholderTextChange() {
-        const colSep = this.colSeparator.value === 'tab' ? '\t'
-            : this.colSeparator.value === 'comma' ? ','
-                : this.colCustom.value;
-
-        const rowSep = this.rowSeparator.value === 'newline' ? '\n'
-            : this.rowSeparator.value === 'semicolon' ? ';'
-                : this.rowCustom.value;
-
-        let newPlaceholderText=[];
-        this.placeholderText.forEach(r => {
-            newPlaceholderText.push(r.join(colSep));
-        });
-        this.textarea.placeholder = newPlaceholderText.join(rowSep);
-        if (this.textarea.value !== '') {
+    onTextareaInput() {
+        clearTimeout(this._debounce);
+        this._debounce = setTimeout(() => {
             this.importText();
-        }
+        }, 300);
     }
-    showErrors(errors) {
-        if (errors.length > 0) {
-            this.errorDiv.innerHTML = errors;
-            this.errorDiv.style.display = "block";
-        }
-    }
-
     importText(){
         this.clearPreview();
+
+        this.abortController?.abort();
+        this.abortController = new AbortController();
 
         const jsonData = {
             text: this.textarea.value,
@@ -822,7 +940,8 @@ class TermsImport {
             headers: {
                 "Content-Type": "application/json"
             },
-            body: JSON.stringify(jsonData)
+            body: JSON.stringify(jsonData),
+            signal: this.abortController.signal
         })
             .then(response => response.json())
             .then(data => {
@@ -835,10 +954,10 @@ class TermsImport {
                     const fragment = document.createDocumentFragment();
 
                     data.forEach( (d, i) => {
-                        const index = i + 1;
+                        // const index = i + 1;
                         const clone = this.rowTemplate.content.cloneNode(true);
-                        clone.querySelector('.numberH span').textContent = index;
-                        clone.querySelector('.number').textContent = index;
+                        // clone.querySelector('.numberH span').textContent = index;
+                        // clone.querySelector('.number').textContent = index;
                         const termInputs = clone.querySelectorAll('.term-input');
                         termInputs[0].textContent = d.term;
                         termInputs[1].textContent = d.description;
@@ -862,22 +981,117 @@ class TermsImport {
                 }
             })
             .catch(error => {
+                if (error.name === "AbortError") return;
                 this.showErrors(['Ошибка при импорте данных. Попробуйте позже.']);
                 console.error('Ошибка:', error);
             });
     }
-
+    clearPreview() {
+        this.data = null;
+        this.previewDiv.innerHTML = '';
+        this.errorDiv.style.display = "none";
+    }
+    showErrors(errors) {
+        if (errors.length > 0) {
+            this.errorDiv.textContent = errors.join('\n');
+            this.errorDiv.style.display = "block";
+        }
+    }
     async saveTerms() {
         if (this.data && Array.isArray(this.data) && this.data.length > 0) {
-            // this.data.forEach((d) => {
-            //     this.termsController.addTerm(d);
-            // })
-            await this.createTermsFromImport(this.data);
+            document.dispatchEvent(
+                new CustomEvent("terms-import:create", {
+                    bubbles: true,
+                    detail: this.data
+                })
+            );
+// !!!
+//             await this.createTermsFromImport(this.data);
+        } else {
+            // this.clear();
         }
-        this.onHide();
         //this.overlay.hide();
-
     }
+
+    onShow () {
+        this.textarea.focus();
+    }
+    clear () {
+        this.clearPreview();
+        this.textarea.value = '';
+        this.colSeparator.value = 'tab';
+        this.rowSeparator.value = 'newline';
+        this.textarea.focus();
+    }
+
+    placeholderTextChange() {
+        const colSep = this.colSeparator.value === 'tab' ? '\t'
+            : this.colSeparator.value === 'comma' ? ','
+                : this.colCustom.value;
+
+        const rowSep = this.rowSeparator.value === 'newline' ? '\n'
+            : this.rowSeparator.value === 'semicolon' ? ';'
+                : this.rowCustom.value;
+
+        let newPlaceholderText=[];
+        this.placeholderText.forEach(r => {
+            newPlaceholderText.push(r.join(colSep));
+        });
+        this.textarea.placeholder = newPlaceholderText.join(rowSep);
+        if (this.textarea.value !== '') {
+            this.importText();
+        }
+    }
+
+    destroy() {
+        if (!this.inited) return;
+
+        // input debounce
+        clearTimeout(this._debounce);
+
+        // textarea input
+        this.textarea?.removeEventListener('input', this.handleTextareaInput);
+
+        // buttons
+        this.importButton?.removeEventListener('click', this.handleImportButtonClick);
+        this.clearButton?.removeEventListener('click', this.handleClearButtonClick);
+
+        // separator inputs
+        this.sepInputs?.forEach(el => {
+            if (!el) return;
+            const event = el.tagName === 'INPUT' && el.type === 'text'
+                ? 'input'
+                : 'click';
+
+            el.removeEventListener(event, this.handleInputsClick);
+        });
+
+        // global event
+        document.removeEventListener(
+            "term-controller:terms-created",
+            this.handleTermsCreated
+        );
+
+        // abort fetch
+        this.abortController?.abort();
+
+        // reset state
+        this.data = null;
+
+        this.textarea = null;
+        this.errorDiv = null;
+        this.previewDiv = null;
+        this.importButton = null;
+        this.clearButton = null;
+        this.colSeparator = null;
+        this.rowSeparator = null;
+        this.colCustom = null;
+        this.rowCustom = null;
+        this.sepInputs = null;
+
+        this.inited = false;
+    }
+
 }
 
 
@@ -1068,6 +1282,11 @@ class TermRow {
 }
 
 class TermController {
+    constructor() {
+        this.handleTermsCreated = this.termsCreated.bind(this);
+        document.addEventListener("terms-import:created", this.handleTermsCreated);
+
+    }
 //     constructor(addTermButtonId, deleteDraftButtonId) {
 //         this.addTermButtonId = addTermButtonId;
 //         this.deleteDraftButtonId = deleteDraftButtonId;
@@ -1091,7 +1310,7 @@ class TermController {
         this.container = container;
         this.container.parentElement.addEventListener('click', this.handleClick.bind(this));
 
-        this.container.parentElement.addEventListener("row-created", e => {
+        this.container.parentElement.addEventListener("term-controller:new-term-row", e => {
             const {term, descr, id} = e.detail;
 
             divplaceholder.show(term);
@@ -1108,6 +1327,51 @@ class TermController {
 
         this.lastIndex = 0;
     }
+    async termsCreated(e){
+        if (!e.detail) return;
+        this.addTerms(e.detail);
+        document.dispatchEvent(new CustomEvent("term-controller:terms-created"));
+    }
+    addTerms(data){
+        if (data && Array.isArray(data) && data.length > 0) {
+            data.forEach((d) => {
+                this.addTerm(d);
+            })
+        }
+    }
+    addTerm(obj = null, first = false, target = null) {
+        const row = new TermRow(
+            this.getTermIndex(), obj, first,
+            {
+                dataBasePlaceholder: this.container.dataset.basePlaceholder,
+                dataTermPlaceholder: this.container.dataset.termPlaceholder,
+                dataDescriptionPlaceholder: this.container.dataset.descriptionPlaceholder,
+                dataTermText: this.container.dataset.termText,
+                dataDescrText: this.container.dataset.descrText,
+                dataLanguageText: this.container.dataset.languageText,
+                dataTermDeleteText: this.container.dataset.termDeleteText
+            },
+            this.textNormalization
+        );
+        const el = row.getElement();
+        console.log(target);
+        if (target) {
+            target.after(el);
+        } else {
+            this.container.appendChild(el);
+        }
+        this.updateNumbers();
+
+        el.dispatchEvent(new CustomEvent('term-controller:new-term-row', {
+            detail: {
+                term: row.term,
+                descr: row.descr,
+                id: row.obj.id
+            },
+            bubbles: true
+        }));
+    }
+
 
     async handleClick(event) {
         console.log('handleClick');
@@ -1166,45 +1430,6 @@ class TermController {
     getTermIndex() {
         return ++this.lastIndex;
     }
-    addTerm(obj = null, first = false, target = null) {
-        const row = new TermRow(
-            this.getTermIndex(), obj, first,
-            {
-                dataBasePlaceholder: this.container.dataset.basePlaceholder,
-                dataTermPlaceholder: this.container.dataset.termPlaceholder,
-                dataDescriptionPlaceholder: this.container.dataset.descriptionPlaceholder,
-                dataTermText: this.container.dataset.termText,
-                dataDescrText: this.container.dataset.descrText,
-                dataLanguageText: this.container.dataset.languageText,
-                dataTermDeleteText: this.container.dataset.termDeleteText
-            },
-            this.textNormalization
-            );
-        const el = row.getElement();
-        console.log(target);
-        if (target) {
-            target.after(el);
-        } else {
-            this.container.appendChild(el);
-        }
-        this.updateNumbers();
-
-        el.dispatchEvent(new CustomEvent('row-created', {
-            detail: {
-                term: row.term,
-                descr: row.descr,
-                id: row.obj.id
-            },
-            bubbles: true
-        }));
-    }
-    addTerms(data){
-        if (data && Array.isArray(data) && data.length > 0) {
-            data.forEach((d) => {
-                this.addTerm(d);
-            })
-        }
-    }
     updateNumbers() {
         const divs = this.container.querySelectorAll('.term-index');
         divs.forEach((div, index) => {
@@ -1217,10 +1442,9 @@ class TermController {
 
 
 class AutoSave {
-    constructor (divplaceholder, textNormalization, {showTermsFromImport = {}}) {
+    constructor (divplaceholder, textNormalization) {
         this.divplaceholder = divplaceholder;
         this.textNormalization = textNormalization;
-        this.showTermsFromImport = showTermsFromImport || (() => {});
 
         this.s_d_Id = 0;
         this.on = null;
@@ -1229,6 +1453,95 @@ class AutoSave {
         // this.onInput = this.handleFormInput.bind(this);
         this.onFocusOut = this.handleFormFocusOut.bind(this);
         this.onChange = this.handleLanguageChange.bind(this);
+        this.onTermsCreate = this.handleTermsCreate.bind(this);
+        document.addEventListener("terms-import:create", this.onTermsCreate);
+
+    }
+    init(form, s_d_Id, draft = false, errorField){
+        if (Number(s_d_Id) < 1 )
+            return false;
+
+        this.s_d_Id = s_d_Id;
+
+        if (errorField) {
+            this.errorField = errorField;
+        }
+
+        // if (deleteDraftButton) {
+        //     deleteDraftButton.addEventListener('click', () => {
+        //         this.deleteDraft();
+        //     });
+        // }
+
+        // form.addEventListener("focusout", this.onInput);
+        // container.addEventListener('input', this.onInput);
+        form.addEventListener("focusout", this.onFocusOut);
+        form.addEventListener("language:change", this.onChange);
+
+
+        if (draft) {
+            this.updateSetURI   = "http://localhost:8081/api/me/draft/" + this.s_d_Id;
+            this.deleteDraftURI = "http://localhost:8081/api/me/draft/" + this.s_d_Id;
+
+            this.createTermURI  = "http://localhost:8081/api/me/draft/" + this.s_d_Id + "/terms";
+            this.updateTermURI  = "http://localhost:8081/api/me/draft/" + this.s_d_Id + "/terms/";
+            this.createTermsURI = "http://localhost:8081/api/me/draft/" + this.s_d_Id + "/terms/batch";
+
+            this.deleteTermURI  = "http://localhost:8081/api/me/draft/" + this.s_d_Id + "/terms/";
+
+        } else {
+            this.updateSetURI   = "http://localhost:8081/api/me/set/" + this.s_d_Id + "/autosave";
+
+            this.createTermURI  = "http://localhost:8081/api/me/set/" + this.s_d_Id + "/terms";
+            this.updateTermURI  = "http://localhost:8081/api/me/set/" + this.s_d_Id + "/terms/";
+            this.createTermsURI = "http://localhost:8081/api/me/set/" + this.s_d_Id + "/terms/batch";
+
+            this.deleteTermURI  = "http://localhost:8081/api/me/set/" + this.s_d_Id + "/terms/";
+
+        }
+
+    }
+    async handleTermsCreate (e) {
+        if (!e.detail) return;
+        const terms  = e.detail;
+        this.createTerms(terms);
+
+    }
+    createTerms(terms){
+        if (this.s_d_Id === 0) return false;
+
+        return this.request(this.createTermsURI, {
+            method: "POST",
+            body: JSON.stringify(terms)
+        })
+            .then(data => {
+                console.log('Ответ:', data);
+
+                if (!data) return null;
+
+                if (data?.errors && typeof data.errors === 'object') {
+                    this.showErrors(data.errors);
+                } else {
+
+                    // this.s_d_Id = data.id;
+                    // this.showTermsFromImport(data);
+
+                    document.dispatchEvent(
+                        new CustomEvent("terms-import:created", {
+                            bubbles: true,
+                            detail: data
+                        })
+                    );
+
+                }
+
+                return true;
+            })
+            .catch(error => {
+                this.turnOff();
+                console.error('Ошибка createTerms:', error);
+                return false;
+            });
     }
 
     debounce(fn, delay) {
@@ -1271,49 +1584,6 @@ class AutoSave {
         if (el.id === "field-term-language" || el.id === "field-description-language") {
             this.saveSet(el, el.name);
         }
-    }
-    init(form, s_d_Id, draft = false, errorField){
-        if (Number(s_d_Id) < 1 )
-            return false;
-
-        this.s_d_Id = s_d_Id;
-
-        if (errorField) {
-            this.errorField = errorField;
-        }
-
-        // if (deleteDraftButton) {
-        //     deleteDraftButton.addEventListener('click', () => {
-        //         this.deleteDraft();
-        //     });
-        // }
-
-        // form.addEventListener("focusout", this.onInput);
-        // container.addEventListener('input', this.onInput);
-        form.addEventListener("focusout", this.onFocusOut);
-        form.addEventListener("change", this.onChange);
-
-        if (draft) {
-            this.updateSetURI   = "http://localhost:8081/api/me/draft/" + this.s_d_Id;
-            this.deleteDraftURI = "http://localhost:8081/api/me/draft/" + this.s_d_Id;
-
-            this.createTermURI  = "http://localhost:8081/api/me/draft/" + this.s_d_Id + "/terms";
-            this.updateTermURI  = "http://localhost:8081/api/me/draft/" + this.s_d_Id + "/terms/";
-            this.createTermsURI = "http://localhost:8081/api/me/draft/" + this.s_d_Id + "/terms/batch";
-
-            this.deleteTermURI  = "http://localhost:8081/api/me/draft/" + this.s_d_Id + "/terms/";
-
-        } else {
-            this.updateSetURI   = "http://localhost:8081/api/me/set/" + this.s_d_Id + "/autosave";
-
-            this.createTermURI  = "http://localhost:8081/api/me/set/" + this.s_d_Id + "/terms";
-            this.updateTermURI  = "http://localhost:8081/api/me/set/" + this.s_d_Id + "/terms/";
-            this.createTermsURI = "http://localhost:8081/api/me/set/" + this.s_d_Id + "/terms/batch";
-
-            this.deleteTermURI  = "http://localhost:8081/api/me/set/" + this.s_d_Id + "/terms/";
-
-        }
-
     }
     hashCode(str) {
         str = str ?? '';
@@ -1501,34 +1771,6 @@ class AutoSave {
     showErrors(errs) {
         this.errorField.innerHTML = errors.getError(errs);
         this.errorField.style.display = 'block';
-    }
-    createTerms(terms){
-        if (this.s_d_Id === 0) return;
-
-        return this.request(this.createTermsURI, {
-            method: "POST",
-            body: JSON.stringify(terms)
-        })
-            .then(data => {
-                console.log('Ответ:', data);
-
-                if (!data) return null;
-
-                if (data?.errors && typeof data.errors === 'object') {
-                    this.showErrors(data.errors);
-
-                } else {
-                    // this.s_d_Id = data.id;
-                    this.showTermsFromImport(data);
-                }
-
-                return data;
-            })
-            .catch(error => {
-                this.turnOff();
-                console.error('Ошибка createTerms:', error);
-                return null;
-            });
     }
     deleteDraft() {
         return this.request(this.deleteDraftURI, {
@@ -1841,14 +2083,7 @@ const textNormalization = new TextNormalization();
 
 const errors = new Errors();
 const termController = new TermController();
-const autoSave = new AutoSave(divplaceholder, textNormalization,
-
-    {
-        showTermsFromImport(terms) {
-            termController.addTerms(terms);
-        }
-    }
-);
+const autoSave = new AutoSave(divplaceholder, textNormalization);
 
 
 const setForm = new SetForm(
@@ -1863,12 +2098,7 @@ const setForm = new SetForm(
         }
     }
 );
-const termsImport = new TermsImport(
-    {
-        createTermsFromImport(data) {
-            return autoSave.createTerms(data);
-        }
-    });
+
 
 
 document.addEventListener('DOMContentLoaded', function () {
@@ -1898,6 +2128,8 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     );
 
+    const termsImport = new TermsImport();
+
 
     const importAreaEl= document.getElementById("overlay");
     new Overlay(importAreaEl).bindButtons(
@@ -1917,7 +2149,7 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     importAreaEl.addEventListener("overlay:close", () => {
-        termsImport.onHide();
+        termsImport.clear();
     });
 
 
