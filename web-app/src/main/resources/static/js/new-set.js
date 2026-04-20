@@ -1,7 +1,6 @@
 
 class DivPlaceholder {
     constructor() {
-
         if (DivPlaceholder.instance) {
             return DivPlaceholder.instance;
         }
@@ -12,13 +11,14 @@ class DivPlaceholder {
             TERM: 'term',
             DESCRIPTION: 'description'
         };
-        this.handleFocus = this.handleFocus.bind(this);
-        this.handleBlur = this.handleBlur.bind(this);
-        this.handleLanguageChange = this.handleLanguageChange.bind(this);
+        this.handleFocus = this.onFocus.bind(this);
+        this.handleBlur = this.onBlur.bind(this);
+        this.handleLanguageChange = this.onLanguageChange.bind(this);
+        this.handleTermRowCreated = this.onTermRowCreated.bind(this);
         this.container = null;
     }
     init(container) {
-        if (!container) return;
+        if (!(container instanceof HTMLElement)) return;
 
         if (this.container) {
             this.destroy();
@@ -28,36 +28,42 @@ class DivPlaceholder {
         container.addEventListener('focusin', this.handleFocus);
         container.addEventListener('focusout', this.handleBlur);
         container.addEventListener("language:onchange", this.handleLanguageChange);
+        container.addEventListener("term-controller:new-term-row",this.handleTermRowCreated);
+
 
         const elements = container.querySelectorAll('[contenteditable]');
         elements.forEach(el => {
             this.show(el);
         });
     }
+    onTermRowCreated(e){
+        const {term, descr, id} = e.detail;
+        this.show(term);
+        this.show(descr);
+    }
     show(el) {
-        if (!el) return;
+        if (!(el instanceof HTMLElement)) return;
         const isEmpty = el.textContent.trim() === "";
         el.classList.toggle('empty', isEmpty);
     }
     hide(el) {
-        if (!el) return;
+        if (!(el instanceof HTMLElement)) return;
         el.classList.toggle('empty', false);
     }
-
     el(event) {
         return event.target.closest('[contenteditable]') || null;
     }
-    async handleFocus(event) {
+    onFocus(event) {
         console.log('DivPlaceholder handleFocus');
         let el = this.el(event);
         this.hide(el);
     }
-    async handleBlur(event) {
+    onBlur(event) {
         console.log('DivPlaceholder handleBlur');
         let el = this.el(event);
         this.show(el);
     }
-    async handleLanguageChange(e) {
+    onLanguageChange(e) {
         if (!e.detail) return;
 
         const { type, text } = e.detail;
@@ -72,8 +78,8 @@ class DivPlaceholder {
             el.dataset.placeholder = el.dataset.basePlaceholder + " " + text;
         })
     }
-
     isActive(el) {
+        if (!(el instanceof HTMLElement)) return false;
         return el.textContent.trim() === "";
     }
     destroy() {
@@ -82,6 +88,7 @@ class DivPlaceholder {
         this.container.removeEventListener('focusin', this.handleFocus);
         this.container.removeEventListener('focusout', this.handleBlur);
         this.container.removeEventListener("language:onchange", this.handleLanguageChange);
+        this.container.removeEventListener("term-controller:new-term-row",this.handleTermRowCreated.bind(this));
 
         this.container = null;
     }
@@ -96,19 +103,17 @@ class EditableDiv {
         EditableDiv.instance = this;
 
 
-        if (!(container instanceof HTMLElement)) {
-            throw new Error("container must be HTMLElement");
-        }
+        if (!(container instanceof HTMLElement)) throw new Error("container must be HTMLElement");
 
-        this.handleKeydown = this.handleKeydown.bind(this);
-        this.handleBeforeinput = this.handleBeforeinput.bind(this);
-        this.handleInput = this.handleInput.bind(this);
-        this.handleBlur = this.handleBlur.bind(this);
+        this.handleKeydown = this.onKeydown.bind(this);
+        this.handleBeforeinput = this.onBeforeinput.bind(this);
+        this.handleInput = this.onInput.bind(this);
+        this.handleBlur = this.onBlur.bind(this);
 
         this.init(container);
     }
     init(container) {
-        if (!container) return;
+        if (!(container instanceof HTMLElement)) return;
 
         if (this.container) {
             this.destroy();
@@ -124,7 +129,7 @@ class EditableDiv {
     el(event) {
         return event.target.closest('[contenteditable]') || null;
     }
-    async handleKeydown(event) {
+    onKeydown(event) {
         console.log('EditableDiv handleKeydown');
         let el = this.el(event);
         if (!el) return;
@@ -135,7 +140,7 @@ class EditableDiv {
             this.autoResizeDiv(el);
         }
     }
-    async handleBeforeinput(event) {
+    onBeforeinput(event) {
         console.log('EditableDiv handleBeforeinput');
         let el = this.el(event);
         if (!el) return;
@@ -157,8 +162,7 @@ class EditableDiv {
             sel.addRange(range);
         }
     }
-
-    async handleInput(event) {
+    onInput(event) {
         console.log('EditableDiv handleInput');
         let el = this.el(event);
         if (!el) return;
@@ -167,20 +171,19 @@ class EditableDiv {
         this.removeExtraBreaks(el);
         this.autoResizeDiv(el);
     }
-
-    async handleBlur(event) {
+    onBlur(event) {
         console.log('EditableDiv handleBlur');
         let el = this.el(event);
         if (!el) return;
 
         this.keepTopOnBlur(el);
     }
-
     keepTopOnBlur (el) {
+        if (!(el instanceof HTMLElement)) return;
         el.scrollTop = 0;
     }
-
     ensureParagraphStructure(el) {
+        if (!(el instanceof HTMLElement)) return;
         if (!el.querySelector('p')) {
             const p = document.createElement('p');
             // p.innerHTML = '<br>';
@@ -221,6 +224,7 @@ class EditableDiv {
         // });
     }
     insertParagraphAfterCurrent(el) {
+        if (!(el instanceof HTMLElement)) return;
         const selection = window.getSelection();
         if (!selection.rangeCount) return;
 
@@ -276,7 +280,6 @@ class EditableDiv {
         selection.removeAllRanges();
         selection.addRange(newRange);
     }
-
     insertParagraphAfterCurrentOld(el) {
         const selection = window.getSelection();
         if (!selection.rangeCount) return null;
@@ -354,8 +357,8 @@ class EditableDiv {
         selection.removeAllRanges();
         selection.addRange(newRange);
     }
-
     getCurrentParagraph(el) {
+        if (!(el instanceof HTMLElement)) return;
         const selection = window.getSelection();
         if (!selection.rangeCount) return null;
 
@@ -373,7 +376,6 @@ class EditableDiv {
 
         return (node && node.tagName === 'P') ? node : null;
     }
-
     trimEmptyNodes(node) {
         [...node.childNodes].forEach(n => {
             if (n.nodeType === Node.TEXT_NODE && n.textContent === '') {
@@ -387,8 +389,8 @@ class EditableDiv {
             // node.innerHTML = '<br>';
         }
     }
-
     removeExtraBreaks(el) {
+        if (!(el instanceof HTMLElement)) return;
         // Удаляем <br> на верхнем уровне
         [...el.childNodes].forEach(n => {
             if (n.nodeName === 'BR') n.remove();
@@ -408,8 +410,8 @@ class EditableDiv {
             }
         });
     }
-
     autoResizeDiv(el) {
+        if (!(el instanceof HTMLElement)) return;
         el.style.height = 'auto';
         el.style.height = el.scrollHeight + 'px';
     }
@@ -433,14 +435,37 @@ class TextNormalization {
         }
         TextNormalization.instance = this;
 
+        this.handleTermRowCreated = this.onTermRowCreated.bind(this);
+
     }
     init(container) {
         if (!(container instanceof HTMLElement)) return;
+
+        if (this.container) {
+            this.destroy();
+        }
+
+        this.container = container;
 
         const elements = container.querySelectorAll('[contenteditable]');
         elements.forEach(el => {
             this.byEl(el);
         });
+
+        this.container.addEventListener("term-controller:new-term-row",this.handleTermRowCreated.bind(this));
+
+    }
+    onTermRowCreated(e){
+        const {term, descr, id} = e.detail;
+        this.byEl(term);
+        this.byEl(descr);
+    }
+    destroy() {
+        if (!this.container) return;
+
+        this.container.removeEventListener("term-controller:new-term-row",this.handleTermRowCreated.bind(this));
+
+        this.container = null;
     }
     // add(el) {
     //     //this.els.push(el);
@@ -453,6 +478,8 @@ class TextNormalization {
     //     el.innerHTML = this.normalizeText(el.textContent);
     // }
     byEl(el) {
+        if (!(el instanceof HTMLElement)) return;
+
         const text = this.getTextByEl(el);
 
         const newHtml = this.getHtmlByText(text);
@@ -469,6 +496,8 @@ class TextNormalization {
             .join('');
     }
     getTextByEl(el) {
+        if (!(el instanceof HTMLElement)) return;
+
         const ps = el.querySelectorAll("p");
 
         if (!ps.length) {
@@ -492,25 +521,29 @@ class LanguageSpan {
         if (!(inputsContainer instanceof HTMLElement)) throw new Error("inputsContainer must be HTMLElement");
 
         this.activeEl = null;
-        this.inputsClosest = inputsClosest;
-        this.spans = spans;
-        this.querySelector = querySelector;
+        this.inputsContainer = null;
+        this.inputsClosest = null;
+        this.spans = null;
+        this.querySelector = null;
 
-        this.handleFocus = this.handleFocus.bind(this);
-        this.init(inputsContainer);
+        this.handleFocus = this.onFocus.bind(this);
+        this.init(inputsContainer, inputsClosest, spans, querySelector);
     }
-    init(inputsContainer) {
-        if (!inputsContainer) return;
+    init(inputsContainer, inputsClosest, spans, querySelector) {
+        if (!(inputsContainer instanceof HTMLElement)) return;
+
 
         if (this.inputsContainer) {
             this.destroy();
         }
 
         this.inputsContainer = inputsContainer;
-
+        this.inputsClosest = inputsClosest;
+        this.spans = spans;
+        this.querySelector = querySelector;
         inputsContainer.addEventListener('focusin', this.handleFocus);
     }
-    async handleFocus(event) {
+    onFocus(event) {
         const el = this.el(event);
         if (!el || !el.dataset.type) return;
 
@@ -555,6 +588,11 @@ class LanguageSpan {
         this.inputsContainer.removeEventListener('focusin', this.handleFocus);
 
         this.inputsContainer = null;
+        this.inputsClosest = null;
+        this.spans = null;
+        this.querySelector = null;
+
+        this.activeEl = null;
     }
 }
 
@@ -568,24 +606,27 @@ class LanguageMenu {
         if (!(container instanceof HTMLElement)) throw new Error("container must be HTMLElement");
 
         this.languageMenuDiv = null;
+        this.inputs = null;
+        this.spans = null;
+
         this.span = null;
-        this.inputs = inputs;
-        this.spans = spans;
 
-        this.handleSpanClick = this.handleSpanClick.bind(this);
-        this.handleMenuClick = this.handleMenuClick.bind(this);
-        this.handleDocClick = this.handleDocClick.bind(this);
+        this.handleSpanClick = this.onSpanClick.bind(this);
+        this.handleMenuClick = this.onMenuClick.bind(this);
+        this.handleDocClick = this.onDocClick.bind(this);
 
-        this.init(container);
+        this.init(container, spans, inputs);
     }
-    init(container){
-        if (!container) return;
+    init(container, spans, inputs){
+        if (!(container instanceof HTMLElement)) return;
 
         if (this.languageMenuDiv) {
             this.destroy();
         }
 
         this.languageMenuDiv = container;
+        this.inputs = inputs;
+        this.spans = spans;
 
         container.addEventListener('click', this.handleMenuClick);
         document.addEventListener('click', this.handleDocClick);
@@ -596,7 +637,7 @@ class LanguageMenu {
             span.addEventListener('click', this.handleSpanClick);
         }
     }
-    async handleSpanClick(event) {
+    onSpanClick(event) {
         event.stopPropagation();
         const el = event.target;
         this.span = el;
@@ -605,7 +646,7 @@ class LanguageMenu {
         this.languageMenuDiv.style.top = `${rect.bottom + window.scrollY}px`;
         this.languageMenuDiv.style.left = `${rect.left + window.scrollX}px`;
     }
-    async handleMenuClick(event) {
+    onMenuClick(event) {
         console.log('LanguageMenu handleMenuClick');
 
         const el = this.el(event);
@@ -654,7 +695,7 @@ class LanguageMenu {
     el(event) {
         return event.target.closest('[language-menu-option]') || null;
     }
-    async handleDocClick(event) {
+    onDocClick(event) {
         if (!this.languageMenuDiv) return;
 
         if (!event.target.closest(".language-button") &&
@@ -677,6 +718,10 @@ class LanguageMenu {
         }
 
         this.languageMenuDiv = null;
+        this.inputs = null;
+        this.spans = null;
+        this.span = null;
+
     }
 }
 
@@ -687,7 +732,7 @@ class Labels {
         Labels.instance = this;
 
 
-        this.handleKeyup = this.handleKeyup.bind(this);
+        this.handleKeyup = this.onKeyup.bind(this);
     }
     add(el) {
         if (!(el instanceof HTMLElement)) return;
@@ -702,7 +747,7 @@ class Labels {
     //     else
     //         event.target.previousElementSibling.innerHTML="&nbsp;";
     // }
-    handleKeyup(event) {
+    onKeyup(event) {
         const input = event.target;
         const key = input.dataset.label;
 
@@ -712,6 +757,19 @@ class Labels {
         label.textContent = input.value.length
             ? input.dataset.message
             : "";//&nbsp;
+    }
+    remove(el) {
+        if (!(el instanceof HTMLElement)) return;
+        if (!el.dataset.labelsBound) return;
+
+        el.removeEventListener('keyup', this.handleKeyup);
+        delete el.dataset.labelsBound;
+    }
+    destroy(container) {
+        if (!(container instanceof HTMLElement)) return;
+
+        const elements = container.querySelectorAll('[data-labels-bound]');
+        elements.forEach(el => this.remove(el));
     }
 }
 
@@ -735,25 +793,45 @@ class Errors {
 }
 
 class Overlay {
-    constructor(el) {
+    constructor(container) {
 
         if (Overlay.instance) return Overlay.instance;
         Overlay.instance = this;
 
-
-        if (!(el instanceof HTMLElement))
+        if (!(container instanceof HTMLElement))
             throw new Error("el must be HTMLElement");
 
-        this.el = el;
-        this.state = "closed";
-        this.handleOpenClick = this.open.bind(this);
-        this.handleCloseClick = this.close.bind(this);
+        this.handleOpenClick = this.onOpen.bind(this);
+        this.handleCloseClick = this.onClose.bind(this);
 
+        this.container = null;
+        this.state = "closed";
         this._transitionId = 0;
+
+        this.init(container);
+    }
+    init(container){
+        if (!(container instanceof HTMLElement))
+            return;
+
+        if (this.container) {
+            this.destroy();
+        }
+        this.container = container;
 
         document.addEventListener("keydown", this.handleKeydown);
         document.addEventListener("term-controller:terms-created",this.handleCloseClick);
 
+    }
+    destroy(){
+        if (!this.container) return;
+
+        document.removeEventListener("keydown", this.handleKeydown);
+        document.removeEventListener("term-controller:terms-created",this.handleCloseClick);
+
+        this.container = null;
+        this.state = "closed";
+        this._transitionId = 0;
     }
     bindButtons(showButton, hideButton) {
         if (showButton instanceof HTMLElement) {
@@ -772,44 +850,44 @@ class Overlay {
     waitTransition() {
         return new Promise(resolve => {
             const handler = (e) => {
-                if (e.target !== this.el) return;
+                if (e.target !== this.container) return;
 
-                this.el.removeEventListener("transitionend", handler);
+                this.container.removeEventListener("transitionend", handler);
                 resolve();
             };
 
-            this.el.addEventListener("transitionend", handler);
+            this.container.addEventListener("transitionend", handler);
         });
     }
-    async open() {
+    async onOpen() {
         if (this.state === "open" || this.state === "opening") return;
 
         this.state = "opening";
-        this.el.classList.add("show");
+        this.container.classList.add("show");
 
-        this.el.dispatchEvent(new CustomEvent("overlay:open-start"));
+        this.container.dispatchEvent(new CustomEvent("overlay:open-start"));
 
         const id = ++this._transitionId;
         await this.waitTransition();
         if (id !== this._transitionId) return;
 
         this.state = "open";
-        this.el.dispatchEvent(new CustomEvent("overlay:open"));
+        this.container.dispatchEvent(new CustomEvent("overlay:open"));
     }
-    async close() {
+    async onClose() {
         if (this.state === "closed" || this.state === "closing") return;
 
         this.state = "closing";
-        this.el.classList.remove("show");
+        this.container.classList.remove("show");
 
-        this.el.dispatchEvent(new CustomEvent("overlay:close-start"));
+        this.container.dispatchEvent(new CustomEvent("overlay:close-start"));
 
         const id = ++this._transitionId;
         await this.waitTransition();
         if (id !== this._transitionId) return;
 
         this.state = "closed";
-        this.el.dispatchEvent(new CustomEvent("overlay:close"));
+        this.container.dispatchEvent(new CustomEvent("overlay:close"));
     }
     toggle() {
         if (this.state === "open" || this.state === "opening") {
@@ -855,17 +933,20 @@ class TermsImport {
 </div>`;
 
         this.handleTextareaInput = this.onTextareaInput.bind(this);
-        this.handleImportButtonClick = this.saveTerms.bind(this);
-        this.handleClearButtonClick = this.clear.bind(this);
-        this.handleInputsClick = this.placeholderTextChange.bind(this);
-        this.handleTermsCreated = this.clear.bind(this);
+        this.handleImportButtonClick = this.onSaveTerms.bind(this);
+        this.handleClearButtonClick = this.onClear.bind(this);
+        this.handleInputsClick = this.onPlaceholderTextChange.bind(this);
+        this.handleTermsCreated = this.onClear.bind(this);
 
         // document.removeEventListener("term-controller:terms-created",this.handleTermsCreated);
         document.addEventListener("term-controller:terms-created",this.handleTermsCreated);
 
     }
-    init (textarea, importButton, clearButton, errorDiv, previewDiv) {
-        if (!textarea || !importButton || !clearButton || !errorDiv || !previewDiv)
+    init (textarea, importButton, clearButton, errorDiv, previewDiv, errors) {
+        if (!(textarea instanceof HTMLElement) || !(importButton instanceof HTMLElement) || !(clearButton instanceof HTMLElement) || !(errorDiv instanceof HTMLElement) || !(previewDiv instanceof HTMLElement))
+            return;
+
+        if(!errors)
             return;
 
         if (this.inited) {
@@ -874,13 +955,15 @@ class TermsImport {
 
         this.inited = true;
 
+        this.errors = errors;
+
         this.data = null;
 
         this.textarea = textarea;
-        this.errorDiv = errorDiv;
-        this.previewDiv = previewDiv;
         this.importButton = importButton;
         this.clearButton = clearButton;
+        this.errorDiv = errorDiv;
+        this.previewDiv = previewDiv;
 
         this.colSeparator = this.textarea.form.elements['col-separator'];
         this.rowSeparator = this.textarea.form.elements['row-separator'];
@@ -907,13 +990,53 @@ class TermsImport {
             el.addEventListener(event, this.handleInputsClick);
         });
 
-        this.clear();
+        this.onClear();
     }
     onTextareaInput() {
         clearTimeout(this._debounce);
         this._debounce = setTimeout(() => {
             this.importText();
         }, 300);
+    }
+    onSaveTerms() {
+        if (this.data && Array.isArray(this.data) && this.data.length > 0) {
+            document.dispatchEvent(
+                new CustomEvent("terms-import:create", {
+                    bubbles: true,
+                    detail: this.data
+                })
+            );
+// !!!
+//             await this.createTermsFromImport(this.data);
+        } else {
+            // this.clear();
+        }
+        //this.overlay.hide();
+    }
+    onClear () {
+        this.clearPreview();
+        this.textarea.value = '';
+        this.colSeparator.value = 'tab';
+        this.rowSeparator.value = 'newline';
+        this.textarea.focus();
+    }
+    onPlaceholderTextChange() {
+        const colSep = this.colSeparator.value === 'tab' ? '\t'
+            : this.colSeparator.value === 'comma' ? ','
+                : this.colCustom.value;
+
+        const rowSep = this.rowSeparator.value === 'newline' ? '\n'
+            : this.rowSeparator.value === 'semicolon' ? ';'
+                : this.rowCustom.value;
+
+        let newPlaceholderText=[];
+        this.placeholderText.forEach(r => {
+            newPlaceholderText.push(r.join(colSep));
+        });
+        this.textarea.placeholder = newPlaceholderText.join(rowSep);
+        if (this.textarea.value !== '') {
+            this.importText();
+        }
     }
     importText(){
         this.clearPreview();
@@ -948,7 +1071,7 @@ class TermsImport {
                 console.log('Ответ:', data);
 
                 if (data.errors && typeof data.errors === 'object') {
-                    this.showErrors(errors.getError(data.errors));
+                    this.showErrors(this.errors.getError(data.errors));
                 } else {
                     this.data = data;
                     const fragment = document.createDocumentFragment();
@@ -997,52 +1120,9 @@ class TermsImport {
             this.errorDiv.style.display = "block";
         }
     }
-    async saveTerms() {
-        if (this.data && Array.isArray(this.data) && this.data.length > 0) {
-            document.dispatchEvent(
-                new CustomEvent("terms-import:create", {
-                    bubbles: true,
-                    detail: this.data
-                })
-            );
-// !!!
-//             await this.createTermsFromImport(this.data);
-        } else {
-            // this.clear();
-        }
-        //this.overlay.hide();
-    }
-
     onShow () {
         this.textarea.focus();
     }
-    clear () {
-        this.clearPreview();
-        this.textarea.value = '';
-        this.colSeparator.value = 'tab';
-        this.rowSeparator.value = 'newline';
-        this.textarea.focus();
-    }
-
-    placeholderTextChange() {
-        const colSep = this.colSeparator.value === 'tab' ? '\t'
-            : this.colSeparator.value === 'comma' ? ','
-                : this.colCustom.value;
-
-        const rowSep = this.rowSeparator.value === 'newline' ? '\n'
-            : this.rowSeparator.value === 'semicolon' ? ';'
-                : this.rowCustom.value;
-
-        let newPlaceholderText=[];
-        this.placeholderText.forEach(r => {
-            newPlaceholderText.push(r.join(colSep));
-        });
-        this.textarea.placeholder = newPlaceholderText.join(rowSep);
-        if (this.textarea.value !== '') {
-            this.importText();
-        }
-    }
-
     destroy() {
         if (!this.inited) return;
 
@@ -1091,33 +1171,21 @@ class TermsImport {
 
         this.inited = false;
     }
-
 }
 
-
 class TermRow {
-    constructor(
-        index,
-        obj = null,
-        first = false,
-        data,
-        textNormalization
-    ) {
+    constructor(index, obj = null, first = false, data) {
         this.index = index;
         this.obj = obj ?? {term: "", description: "", id: null};
         this.first = !!first;
 
         this.data = data ?? {};
 
-        this.textNormalization = textNormalization;
-
         this.buildRow();
     }
-
     getElement() {
         return this.root;
     }
-
     createWrapBloc(field, label, error) {
         const div = document.createElement('div');
         div.className = 'term-block';
@@ -1127,7 +1195,6 @@ class TermRow {
         div.appendChild(error);
         return div;
     }
-
     createField(placeholderClass, placeholder, type, text) {
         const div = document.createElement('div');
         div.className = `term-input ${placeholderClass}`;
@@ -1155,7 +1222,6 @@ class TermRow {
 
         return div;
     }
-
     createLabel(labelText, first, type) {
         const div = document.createElement('div');
         const span = document.createElement("span");
@@ -1174,14 +1240,12 @@ class TermRow {
         }
         return div;
     }
-
     createError(type) {
         const div = document.createElement('div');
         div.className = "field-error display-none";
         div.id = 'error-' + type + '-'+ this.index;
         return div;
     }
-
     buildRow() {
 
         let termIndex = document.createElement('div');
@@ -1282,52 +1346,131 @@ class TermRow {
 }
 
 class TermController {
-    constructor() {
-        this.handleTermsCreated = this.termsCreated.bind(this);
-        document.addEventListener("terms-import:created", this.handleTermsCreated);
+    constructor(container, api, errorField) {
 
+        if (TermController.instance) return TermController.instance;
+        TermController.instance = this;
+
+        if (!(container instanceof HTMLElement)) {
+            throw new Error("container must be HTMLElement");
+        }
+
+        if (!api) {
+            throw new Error("api is required");
+        }
+
+        if (!(errorField instanceof HTMLElement)) {
+            throw new Error("errorField must be HTMLElement");
+        }
+
+        this.handleTermsCreated = this.onTermsCreated.bind(this);
+        this.handleClick = this.onControllerClick.bind(this);
+        this.handleAddTermRow = this.onAddTermRow.bind(this);
+        this.handleDeleteDraft = this.onDeleteDraft.bind(this);
+
+        this.init(container, api, errorField);
     }
-//     constructor(addTermButtonId, deleteDraftButtonId) {
-//         this.addTermButtonId = addTermButtonId;
-//         this.deleteDraftButtonId = deleteDraftButtonId;
-//         "add_term_button"
-//
-// "delete-draft-button"
-//     }
-//     addAddTermButtonOnClick(button){
-//         if (!button) return;
-//         button.addEventListener('click', () => this.addTerm());
-//         button.style.display = 'block';
-//     }
 
-    addAddDeleteDraftButtonOnClick(button){
-        if (!button) return;
-        button.addEventListener('click', () => this.deleteDraft());
-        button.style.display = 'block';
-    }
+    init(container, api, errorField, errors) {
+        if (!(container instanceof HTMLElement))
+            return;
 
-    init(container, divplaceholder, textNormalization, autosave, setForm) {
+        if (!errors) return;
+        if (this.container) {
+            this.destroy();
+        }
+
         this.container = container;
-        this.container.parentElement.addEventListener('click', this.handleClick.bind(this));
-
-        this.container.parentElement.addEventListener("term-controller:new-term-row", e => {
-            const {term, descr, id} = e.detail;
-
-            divplaceholder.show(term);
-            divplaceholder.show(descr);
-            textNormalization.byEl(term);
-            textNormalization.byEl(descr);
-            autosave.add(term, descr);
+        this.api = api;
+        this.errorField = errorField;
+        this.errors = errors;
 
 
-
-            setForm.add(term, descr, id);
-
-        });
+        this.container.addEventListener("terms-import:created", this.handleTermsCreated);
+        this.container.addEventListener('click', this.handleClick);
 
         this.lastIndex = 0;
     }
-    async termsCreated(e){
+    destroy(){
+        if (!this.container) return;
+
+        this.container.removeEventListener("terms-import:created", this.handleTermsCreated);
+        this.container.removeEventListener('click', this.handleClick);
+
+        this.lastIndex = 0;
+        this.container = null;
+        this.api = null;
+        this.errorField = null;
+    }
+    termRowCreated(e){
+        const {term, descr, id} = e.detail;
+
+        // divplaceholder.show(term);
+        // divplaceholder.show(descr);
+        // textNormalization.byEl(term);
+        // textNormalization.byEl(descr);
+        // autosave.add(term, descr);
+        // setForm.add(term, descr, id);
+    }
+    setTermIndex(index) {
+        this.lastIndex = index;
+    }
+    bindButtons(deleteDraftButton, addTermButton) {
+        if (deleteDraftButton instanceof HTMLElement) {
+            deleteDraftButton.removeEventListener('click', this.handleDeleteDraft);
+            deleteDraftButton.addEventListener('click', this.handleDeleteDraft);
+            deleteDraftButton.style.display = 'block';
+        }
+
+        if (addTermButton instanceof HTMLElement) {
+            addTermButton.removeEventListener('click', this.handleAddTermRow);
+            addTermButton.addEventListener('click', this.handleAddTermRow);
+        }
+    }
+    async onDeleteDraft() {
+        try {
+            await this.api.deleteDraft();
+            location.reload();
+        } catch (err) {
+            console.error(err);
+            this.showErrors(err?.message || "Ошибка удаления черновика");
+        }
+    }
+    async deleteTerm(termRow) {
+        if (!(termRow instanceof HTMLElement))
+            return;
+
+        const container = termRow.closest('[data-term-row-container]');
+        if (!container) return;
+
+        const id = Number(termRow.dataset.id);
+        if (id > 0) {
+            try {
+                await this.api.deleteTerm(id);
+
+            } catch (err) {
+                console.error(err);
+                this.showErrors(err?.message || "Ошибка удаления терма");
+                return;
+            }
+        }
+        container.remove();
+        this.updateNumbers();
+    }
+    showErrors(errs) {
+        this.errorField.innerHTML = this.errors.getError(errs);
+        this.errorField.style.display = 'block';
+    }
+    onAddTermRow(event) {
+        console.log('addTermRow');
+        const target = event.target;
+
+        // if (target.id === "add_term_button") {
+        if (target.closest('#add_term_button')) {
+            this.addTerm();
+        }
+    }
+    onTermsCreated(e){
         if (!e.detail) return;
         this.addTerms(e.detail);
         document.dispatchEvent(new CustomEvent("term-controller:terms-created"));
@@ -1350,12 +1493,11 @@ class TermController {
                 dataDescrText: this.container.dataset.descrText,
                 dataLanguageText: this.container.dataset.languageText,
                 dataTermDeleteText: this.container.dataset.termDeleteText
-            },
-            this.textNormalization
+            }
         );
         const el = row.getElement();
         console.log(target);
-        if (target) {
+        if (target instanceof HTMLElement) {
             target.after(el);
         } else {
             this.container.appendChild(el);
@@ -1371,33 +1513,18 @@ class TermController {
             bubbles: true
         }));
     }
-
-
-    async handleClick(event) {
+    onControllerClick(event) {
         console.log('handleClick');
         const target = event.target;
 
-
-        // if (target.id === "add_term_button") {
-        if (target.closest('#add_term_button')) {
-            this.addTerm();
-            return;
-        }
-
         const plusBtn = target.closest('[data-plus-btn]');
         if (plusBtn) {
-            console.log(plusBtn.closest('[data-term-row-container]'));
-
-            this.addTerm(null, false, plusBtn.closest('[data-term-row-container]'));
+            const rowContainer = plusBtn.closest('[data-term-row-container]');
+            if (rowContainer) {
+                this.addTerm(null, false, rowContainer);
+            }
             return;
         }
-
-        if (target.id === "delete-draft-button") {
-            this.deleteDraft();
-            return;
-        }
-
-
 
         const button = target.closest('[data-delete-term-row-button]');
         if (!button)
@@ -1406,106 +1533,190 @@ class TermController {
         if (termRow === null)
             return;
 
-        const id = termRow.dataset.id;
-        if (id) {
-            try {
-                await this.api.deleteTerm(id, button);
-            } catch (e) {
-                return;
-            }
-        }
-        const termRowContainer = termRow.closest('[data-term-row-container]');
-        termRowContainer.remove();
-        this.updateNumbers();
-    }
-    deleteDraft() {
-        this.api.deleteDraft();
-    }
-    getTermContainer() {
-        return this.container;
-    }
-    setTermIndex(index) {
-        this.lastIndex = index;
+        this.deleteTerm(termRow);
     }
     getTermIndex() {
         return ++this.lastIndex;
     }
     updateNumbers() {
-        const divs = this.container.querySelectorAll('.term-index');
-        divs.forEach((div, index) => {
-            // div.dataset.number = index + 1;
-            div.textContent = `${index + 1}`;
-        });
+        // const divs = this.container.querySelectorAll('.term-index');
+        // divs.forEach((div, index) => {
+        //     // div.dataset.number = index + 1;
+        //     div.textContent = `${index + 1}`;
+        // });
     }
-
 }
-
-
-class AutoSave {
-    constructor (divplaceholder, textNormalization) {
-        this.divplaceholder = divplaceholder;
-        this.textNormalization = textNormalization;
+class Api {
+    constructor() {
+        if (Api.instance) return Api.instance;
+        Api.instance = this;
 
         this.s_d_Id = 0;
-        this.on = null;
-
-        // this.onInput = this.debounce(this.handleFormInput.bind(this), 500);
-        // this.onInput = this.handleFormInput.bind(this);
-        this.onFocusOut = this.handleFormFocusOut.bind(this);
-        this.onChange = this.handleLanguageChange.bind(this);
-        this.onTermsCreate = this.handleTermsCreate.bind(this);
-        document.addEventListener("terms-import:create", this.onTermsCreate);
-
     }
-    init(form, s_d_Id, draft = false, errorField){
-        if (Number(s_d_Id) < 1 )
-            return false;
+
+    init(s_d_Id, draft = false) {
+        if (Number(s_d_Id) < 1) return false;
 
         this.s_d_Id = s_d_Id;
 
-        if (errorField) {
-            this.errorField = errorField;
+        const base = draft
+            ? `http://localhost:8081/api/me/draft/${this.s_d_Id}`
+            : `http://localhost:8081/api/me/set/${this.s_d_Id}`;
+
+        this.deleteDraftURI = `${base}`;
+        this.deleteTermURI = `${base}/terms/`;
+
+        return true;
+    }
+
+    deleteDraft() {
+        return this.request(this.deleteDraftURI, {
+            method: "DELETE"
+        }).then(data => {
+            if (data?.errors) {
+                throw new Error(data.errors);
+            }
+            return data;
+        });
+    }
+
+    deleteTerm(id) {
+        if (this.s_d_Id === 0) {
+            return Promise.reject(new Error("No set id"));
         }
 
-        // if (deleteDraftButton) {
-        //     deleteDraftButton.addEventListener('click', () => {
-        //         this.deleteDraft();
-        //     });
-        // }
-
-        // form.addEventListener("focusout", this.onInput);
-        // container.addEventListener('input', this.onInput);
-        form.addEventListener("focusout", this.onFocusOut);
-        form.addEventListener("language:change", this.onChange);
-
-
-        if (draft) {
-            this.updateSetURI   = "http://localhost:8081/api/me/draft/" + this.s_d_Id;
-            this.deleteDraftURI = "http://localhost:8081/api/me/draft/" + this.s_d_Id;
-
-            this.createTermURI  = "http://localhost:8081/api/me/draft/" + this.s_d_Id + "/terms";
-            this.updateTermURI  = "http://localhost:8081/api/me/draft/" + this.s_d_Id + "/terms/";
-            this.createTermsURI = "http://localhost:8081/api/me/draft/" + this.s_d_Id + "/terms/batch";
-
-            this.deleteTermURI  = "http://localhost:8081/api/me/draft/" + this.s_d_Id + "/terms/";
-
-        } else {
-            this.updateSetURI   = "http://localhost:8081/api/me/set/" + this.s_d_Id + "/autosave";
-
-            this.createTermURI  = "http://localhost:8081/api/me/set/" + this.s_d_Id + "/terms";
-            this.updateTermURI  = "http://localhost:8081/api/me/set/" + this.s_d_Id + "/terms/";
-            this.createTermsURI = "http://localhost:8081/api/me/set/" + this.s_d_Id + "/terms/batch";
-
-            this.deleteTermURI  = "http://localhost:8081/api/me/set/" + this.s_d_Id + "/terms/";
-
+        if (Number(id) < 1) {
+            return Promise.reject(new Error("Invalid id"));
         }
+
+        return this.request(`${this.deleteTermURI}${id}`, {
+            method: "DELETE"
+        }).then(data => {
+            if (data?.errors) {
+                throw new Error(data.errors);
+            }
+            return true;
+        });
+    }
+
+    request(url, options = {}) {
+        return fetch(url, {
+            headers: {
+                "Content-Type": "application/json",
+                ...(options.headers || {})
+            },
+            ...options
+        }).then(async (response) => {
+            const text = await response.text();
+
+            let data = null;
+
+            try {
+                data = text?.trim() ? JSON.parse(text) : null;
+            } catch {
+                throw new Error("Invalid JSON");
+            }
+
+            if (!response.ok) {
+                throw new Error(data?.message || `HTTP ${response.status}`);
+            }
+
+            return data;
+        });
+    }
+}
+class AutoSave {
+    constructor (divplaceholder, textNormalization, errors) {
+
+        if (AutoSave.instance) return AutoSave.instance;
+        AutoSave.instance = this;
+
+        this.divplaceholder = divplaceholder;
+        this.textNormalization = textNormalization;
+        this.errors = errors;
+
+        this.s_d_Id = 0;
+        this.on = false;
+        this.container = null;
+        this.form = null;
+        this.errorField = null;
+
+        // this.onInput = this.debounce(this.handleFormInput.bind(this), 500);
+        // this.onInput = this.handleFormInput.bind(this);
+        this.handleFocusOut = this.onFormFocusOut.bind(this);
+        this.handleChange = this.onLanguageChange.bind(this);
+        this.handleTermsCreate = this.onTermsCreate.bind(this);
+        this.handleTermRowCreated = this.onTermRowCreated.bind(this);
+    }
+
+    init(container, form, s_d_Id, draft = false, errorField){
+        if (Number(s_d_Id) < 1) {
+            throw new Error("Invalid s_d_Id");
+        }
+
+        if (!(container instanceof HTMLElement) || !(form instanceof HTMLElement) || !(errorField instanceof HTMLElement))
+            return;
+
+        if (this.container) {
+            this.destroy();
+        }
+
+        this.s_d_Id = s_d_Id;
+        this.container = container;
+        this.form = form;
+        this.errorField = errorField;
+
+        document.addEventListener("terms-import:create", this.handleTermsCreate);
+        this.container.addEventListener("term-controller:new-term-row",this.handleTermRowCreated);
+
+        form.addEventListener("focusout", this.handleFocusOut);
+        form.addEventListener("language:change", this.handleChange);
+
+        this.baseUrl = `http://localhost:8081/api/me/${draft ? 'draft' : 'set'}/${this.s_d_Id}`;
+        this.updateSetURI   = draft ? this.baseUrl : `${this.baseUrl}/autosave`;
+        this.createTermURI  = `${this.baseUrl}/terms`;
+        this.updateTermURI  = `${this.baseUrl}/terms/`;
+        this.createTermsURI = `${this.baseUrl}/terms/batch`;
+
+        const elements = container.querySelectorAll('[contenteditable]');
+        elements.forEach(el => {
+            this.addHashCodeEl(el);
+        });
+    }
+    destroy(){
+        if (!this.container) return;
+
+        document.removeEventListener("terms-import:create", this.handleTermsCreate);
+        this.container.removeEventListener("term-controller:new-term-row",this.handleTermRowCreated);
+
+        this.form.removeEventListener("focusout", this.handleFocusOut);
+        this.form.removeEventListener("language:change", this.handleChange);
+
+        this.container = null;
+        this.form = null;
+        this.errorField = null;
+        this.s_d_Id = 0;
 
     }
-    async handleTermsCreate (e) {
+    onTermRowCreated (e) {
+        const {term, descr, id} = e.detail;
+        this.addHashCodeEl(term);
+        this.addHashCodeEl(descr);
+
+    }
+    addHashCode(term, description) {
+        if (!term || !description) return;
+        term.dataset.last = String(this.hashCode(this.divplaceholder.isActive(term) ? '' : this.textNormalization.getTextByEl(term)));
+        description.dataset.last = String(this.hashCode(this.divplaceholder.isActive(description) ? '' : this.textNormalization.getTextByEl(description)));
+    }
+    addHashCodeEl(el) {
+        if (!(el instanceof HTMLElement)) return;
+        el.dataset.last = String(this.hashCode(this.divplaceholder.isActive(el) ? '' : this.textNormalization.getTextByEl(el)));
+    }
+    onTermsCreate (e) {
         if (!e.detail) return;
         const terms  = e.detail;
         this.createTerms(terms);
-
     }
     createTerms(terms){
         if (this.s_d_Id === 0) return false;
@@ -1526,7 +1737,7 @@ class AutoSave {
                     // this.s_d_Id = data.id;
                     // this.showTermsFromImport(data);
 
-                    document.dispatchEvent(
+                    this.container.dispatchEvent(
                         new CustomEvent("terms-import:created", {
                             bubbles: true,
                             detail: data
@@ -1543,7 +1754,6 @@ class AutoSave {
                 return false;
             });
     }
-
     debounce(fn, delay) {
         let timeout;
 
@@ -1552,7 +1762,7 @@ class AutoSave {
             timeout = setTimeout(() => fn(...args), delay);
         };
     }
-    handleFormInput (event) {
+    onFormInput (event) {
         let target = event.target;
 
         if (target.nodeType === Node.TEXT_NODE) {
@@ -1564,7 +1774,7 @@ class AutoSave {
         this.saveTerm(el);
 
     }
-    handleFormFocusOut (event) {
+    onFormFocusOut (event) {
         let target = event.target;
         if (target.id === "field-title" || target.id === "field-description") {
             this.saveSet(target, target.name);
@@ -1579,61 +1789,12 @@ class AutoSave {
         if (!el) return;
         this.saveTerm(el);
     }
-    async handleLanguageChange (event) {
-        const el = event.target;
-        if (el.id === "field-term-language" || el.id === "field-description-language") {
-            this.saveSet(el, el.name);
-        }
-    }
-    hashCode(str) {
-        str = str ?? '';
-        let hash = 0;
-        for (let i = 0; i < str.length; i++) {
-            hash = ((hash << 5) - hash) + str.charCodeAt(i);
-            hash |= 0;
-        }
-        return String(hash);
-    }
-    saveSet(el, type) {
-
-        if (this.on === false) return;
-
-        if (this.s_d_Id === 0) return;
-
-        const text = el.value.trim();
-        const lastText = (el.dataset.last ?? '');
-        const textHash = this.hashCode(text);
-
-        if (lastText === textHash) return;
-
-        this.editSet({ [type]: text })
-            .then(data => {
-                if (data && data.errors) {
-                    this.showFieldError(el, data.errors[el.name] || '');
-                    return;
-                }
-                el.dataset.last = (textHash);
-            })
-            .catch(err => {
-                this.turnOff();
-                console.error('Ошибка saveSet:', err);
-            });
-    }
-
-    editSet(obj){
-        return this.request(this.updateSetURI, {
-            method: "PATCH",
-            body: JSON.stringify(obj)
-        });
-    }
     saveTerm(el){
         console.log("saveTerm");
 
         if (this.on === false) return;
-
         if (this.s_d_Id === 0) return;
-
-
+        if (!(el instanceof HTMLElement)) return;
         if (el.dataset.type !== "term" && el.dataset.type !== "description")
             return;
 
@@ -1648,7 +1809,8 @@ class AutoSave {
         if (!term || !description)
             return;
 
-        if (!id && termRow.dataset.new !== 'true')
+        const isNew = termRow.dataset.new === 'true';
+        if (!id && !isNew)
             return;
 
         const termText = this.divplaceholder.isActive(term) ? null : this.textNormalization.getTextByEl(term);
@@ -1673,21 +1835,21 @@ class AutoSave {
                     return false;
                 }
 
-                term.dataset.last = (termTextHash);
-                description.dataset.last = (descriptionTextHash);
+                term.dataset.last = termTextHash;
+                description.dataset.last = descriptionTextHash;
 
                 if (id)
                     return;
 
-                const termRow = term.closest('[data-term-row]');
-                if (termRow == null)
-                    return;
+                // const newRow = term.closest('[data-term-row]');
+                // if (newRow == null)
+                //     return;???
                 termRow.dataset.new = 'false';
 
                 if (!data)
                     return true;
 
-                termRow.dataset.id = data.id;
+                newRow.dataset.id = data.id;
 
                 return true;
             })
@@ -1696,6 +1858,52 @@ class AutoSave {
                 console.error('Ошибка saveTerm:', err);
                 return false;
             });
+    }
+    onLanguageChange (event) {
+        const el = event.target;
+        if (el.id === "field-term-language" || el.id === "field-description-language") {
+            this.saveSet(el, el.name);
+        }
+    }
+    saveSet(el, type) {
+        if (this.on === false) return;
+        if (this.s_d_Id === 0) return;
+        if (!(el instanceof HTMLElement)) return;
+        if (!('value' in el)) return;
+
+        const text = el.value.trim();
+        const lastText = (el.dataset.last ?? '');
+        const textHash = this.hashCode(text);
+
+        if (lastText === textHash) return;
+
+        this.editSet({ [type]: text })
+            .then(data => {
+                if (data && data.errors) {
+                    this.showFieldError(el, data.errors[el.name] || '');
+                    return;
+                }
+                el.dataset.last = (textHash);
+            })
+            .catch(err => {
+                this.turnOff();
+                console.error('Ошибка saveSet:', err);
+            });
+    }
+    hashCode(str) {
+        str = str ?? '';
+        let hash = 0;
+        for (let i = 0; i < str.length; i++) {
+            hash = ((hash << 5) - hash) + str.charCodeAt(i);
+            hash |= 0;
+        }
+        return String(hash);
+    }
+    editSet(obj){
+        return this.request(this.updateSetURI, {
+            method: "PATCH",
+            body: JSON.stringify(obj)
+        });
     }
     createTerm(term){
         return this.request(this.createTermURI, {
@@ -1718,21 +1926,29 @@ class AutoSave {
             },
             ...options
         })
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error(`HTTP ${response.status}`);
+            .then(async response => {
+                const text = await response.text();
+
+                let data = null;
+                try {
+                    data = text?.trim() ? JSON.parse(text) : null;
+                } catch {
+                    throw new Error("Invalid JSON");
                 }
-                return response.text();
+
+                if (!response.ok) {
+                    throw new Error(data?.message || `HTTP ${response.status}`);
+                }
+
+                return data;
             })
-            .then(text => text ? JSON.parse(text) : null)
-            .catch(error => {
+            .catch(err => {
                 this.turnOff();
-                console.error('Ошибка запроса:', error);
-                throw error;
+                throw err;
             });
     }
     showFieldError(el, message) {
-        if (!el) return;
+        if (!(el instanceof HTMLElement)) return;
         // const errorEl = el?.errorEl;
         const errorEl = document.getElementById(el?.dataset?.errorId);
         if (!errorEl) return;
@@ -1745,11 +1961,15 @@ class AutoSave {
         errorEl.style.display = 'block';
     }
     clearFieldError(el) {
-        if (!el) return;
+        if (!(el instanceof HTMLElement)) return;
         const errorEl = document.getElementById(el?.dataset?.errorId);
         if (!errorEl) return;
         errorEl.innerHTML = '';
         errorEl.style.display = 'none';
+    }
+    showErrors(errs) {
+        this.errorField.innerHTML = this.errors.getError(errs);
+        this.errorField.style.display = 'block';
     }
     saved() {
         return this.on === true;
@@ -1760,53 +1980,6 @@ class AutoSave {
     turnOff(){
         this.on = false;
     }
-    add(term, description) {
-        if (!term || !description) return;
-
-        term.dataset.last = String(this.hashCode(this.divplaceholder.isActive(term) ? '' : this.textNormalization.getTextByEl(term)));
-        description.dataset.last = String(this.hashCode(this.divplaceholder.isActive(description) ? '' : this.textNormalization.getTextByEl(description)));
-
-    }
-
-    showErrors(errs) {
-        this.errorField.innerHTML = errors.getError(errs);
-        this.errorField.style.display = 'block';
-    }
-    deleteDraft() {
-        return this.request(this.deleteDraftURI, {
-            method: "DELETE"
-        })
-            .then(data => {
-                console.log('Ответ:', data);
-
-                if (data?.errors && typeof data.errors === 'object') {
-                    this.showErrors(data.errors);
-                    return false;
-                }
-                location.reload(true);
-                return data;
-            })
-            .catch(error => {
-                console.error('Ошибка deleteDraft:', error);
-                // можно показать общий toast/alert
-                return false;
-            });
-    }
-    deleteTerm(id, el) {
-        if (this.s_d_Id === 0) return;
-
-        return this.request(`${this.deleteTermURI}${id}`, {
-            method: "DELETE"
-        })
-            .then(data => {
-                if (data?.errors) {
-                    this.showFieldError(el, data.errors);
-                    throw new Error(data.errors);
-                }
-                return true;
-            });
-    }
-
 }
 
 class SetForm {
@@ -1819,13 +1992,22 @@ class SetForm {
         this.inited = false;
         this.termsObjs = [];
         this.form = document.getElementById('set-form');
+        this.handleTermRowCreated = this.termRowCreated.bind(this);
+
     }
+
+
+
+
     add(term, description, id) {
         this.termsObjs.push({t:term, d:description, id:id});
     }
     init (autosave = false) {
         if (this.inited) return;
         this.inited = true;
+
+        this.form.addEventListener("term-controller:new-term-row",this.handleTermRowCreated);
+
 
         document.getElementById('submitButton').addEventListener("click", (event) => {
 
@@ -1849,6 +2031,10 @@ class SetForm {
                     break
             }
         });
+    }
+    termRowCreated(e){
+        const {term, descr, id} = e.detail;
+        this.add(term, descr, id);
     }
     errorMark(field, add = true) {
         const wrapper = field.closest('[data-error-class]');
@@ -2077,13 +2263,11 @@ class SetForm {
     }
 }
 
-
 const divplaceholder= new DivPlaceholder();
 const textNormalization = new TextNormalization();
-
 const errors = new Errors();
-const termController = new TermController();
-const autoSave = new AutoSave(divplaceholder, textNormalization);
+
+const autoSave = new AutoSave(divplaceholder, textNormalization, errors);
 
 
 const setForm = new SetForm(
@@ -2100,8 +2284,9 @@ const setForm = new SetForm(
 );
 
 
-
 document.addEventListener('DOMContentLoaded', function () {
+    const api = new Api();
+    api.init(fieldId ? fieldId.value : 0, fieldId?.dataset.draft === "true");
 
     const termsDescriptionAreaEl = document.getElementById('terms-description-area');
 
@@ -2129,51 +2314,56 @@ document.addEventListener('DOMContentLoaded', function () {
     );
 
     const termsImport = new TermsImport();
-
+    termsImport.init(
+        document.getElementById("field-import"),
+        document.getElementById('overlay_import_button'),
+        document.getElementById('overlay_clear_button'),
+        document.getElementById("field-import-error"),
+        document.getElementById("field-import-preview"),
+        errors
+    );
 
     const importAreaEl= document.getElementById("overlay");
+    importAreaEl.addEventListener("overlay:open-start", () => {
+        termsImport.onShow()
+    });
+    importAreaEl.addEventListener("overlay:open", () => {
+        console.log("уже открыт");
+    });
+    importAreaEl.addEventListener("overlay:close-start", () => {
+        console.log("закрывается");
+    });
+    importAreaEl.addEventListener("overlay:close", () => {
+        termsImport.onClear();
+    });
+
     new Overlay(importAreaEl).bindButtons(
         document.getElementById("overlay_show_button"),
         document.getElementById("overlay_hide_button"));
 
-    importAreaEl.addEventListener("overlay:open-start", () => {
-        termsImport.onShow()
-    });
-
-    importAreaEl.addEventListener("overlay:open", () => {
-        console.log("уже открыт");
-    });
-
-    importAreaEl.addEventListener("overlay:close-start", () => {
-        console.log("закрывается");
-    });
-
-    importAreaEl.addEventListener("overlay:close", () => {
-        termsImport.clear();
-    });
-
-
-
-    termController.init(
-        termsDescriptionAreaEl,
-        divplaceholder,
-        textNormalization,
-        autoSave,
-        setForm
-    );
-    // termController.addAddTermButtonOnClick(document.getElementById('add_term_button'));
-    termController.addAddDeleteDraftButtonOnClick(document.getElementById('deleteDraftButton'));
+    const termController = new TermController(termsDescriptionAreaEl, api, document.getElementById('field-error'), errors);
+    termController.bindButtons(document.getElementById('delete-draft-buttonButton'), document.getElementById('add_term_button'));
 
     const labels = new Labels();
     labels.add(document.getElementById('field-title'));
     labels.add(document.getElementById('field-description'));
+
+    autoSave.init(
+        termsDescriptionAreaEl,
+        setForm.form,
+        fieldId ? fieldId.value : 0,
+        fieldId?.dataset.draft === "true",
+        document.getElementById('field-error')
+    );
+
+
 
     let i = 0;
     let term = document.getElementById('term'+i);
     let descr = document.getElementById('description'+i);
     // let deleteButton = document.getElementById('delete-term-row-button'+i);
     while (term && descr) {
-        autoSave.add(term, descr);
+        // autoSave.addHashCode(term, descr);
         setForm.add(term, descr, term.closest('[data-term-row]').dataset.id);
 
         termController.setTermIndex(i);
@@ -2193,22 +2383,11 @@ document.addEventListener('DOMContentLoaded', function () {
     setForm.init(fieldId?.dataset.draft === "true",);
 
 
-    termsImport.init(
-        document.getElementById("field-import"),
-        document.getElementById('overlay_import_button'),
-        document.getElementById('overlay_clear_button'),
-        document.getElementById("field-import-error"),
-        document.getElementById("field-import-preview")
-        );
+
 
 
     // const importButton = document.getElementById('overlay_import_button');
     //autoSave.init(((importButton && importButton.dataset != null && importButton.dataset.draftId !=null) ? importButton.dataset.draftId : 0));
-    autoSave.init(
-        setForm.form,
-        fieldId ? fieldId.value : 0,
-        fieldId?.dataset.draft === "true",
-        document.getElementById('field-error')
-    );
+
 });
 
