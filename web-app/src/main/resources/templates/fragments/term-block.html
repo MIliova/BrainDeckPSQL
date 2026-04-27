@@ -14,9 +14,8 @@
 >
     <div class="container-left-right">
         <div class="term-index"></div>
-        <div class="field-error"
+        <div class="field-error display-none"
              th:id="'error-term-row' + ${index}"
-             style="display:none;"
         ></div>
         <div data-delete-term-row-button th:data-error-id="'error-term-row' + ${index}" class="delete-term-row-button"><img width="30" src="/images/delete-term.png" th:alt="#{messages.term.delete}" /></div>
     </div>
@@ -30,9 +29,9 @@
                     th:data-error-id="'error-term-' + ${index}"
                     data-type="term"
 
-                 th:id="'term'+${index}"
-                 th:classappend="${term == null || term?.term == ''} ? 'term-placeholder'"
-                 data-placeholder-class="term-placeholder"
+                    th:id="'term'+${index}"
+<!--                    th:classappend="${term == null || term?.term == ''} ? 'term-placeholder'"-->
+<!--                    data-placeholder-class="term-placeholder"-->
             ><p
                     th:if="${term != null}"
                     th:text="${term?.term}"><br></p></div><hr>
@@ -68,8 +67,8 @@
                     data-type="description"
 
                  th:id="'description'+${index}"
-                 th:classappend="${term == null || term?.description == ''} ? 'description-placeholder'"
-                 data-placeholder-class="description-placeholder"
+<!--                 th:classappend="${term == null || term?.description == ''} ? 'description-placeholder'"-->
+<!--                 data-placeholder-class="description-placeholder"-->
             ><p
                     th:if="${term != null}"
                     th:text="${term?.description}"><br></p></div><hr>

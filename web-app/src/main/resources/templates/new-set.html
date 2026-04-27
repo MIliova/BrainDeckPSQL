@@ -44,7 +44,7 @@
                     <section>
                         <div th:data-error-class="blue-row-err"
                              th:classappend="${#fields.hasErrors('title')} ? 'blue-row-err'">
-                            <div class="textarea-description">
+                            <div th:data-label-wrapper="title" class="textarea-description">
                                 <span
                                         th:data-for="title"
                                         th:text="${#strings.isEmpty(payload?.title)} ? #{messages.set.create.t} "
@@ -67,7 +67,7 @@
                         <br>
                         <div th:data-error-class="blue-row-err"
                              th:classappend="${#fields.hasErrors('description')} ? 'blue-row-err'">
-                            <div class="textarea-description">
+                            <div th:data-label-wrapper="description" class="textarea-description">
                                 <span
                                         th:data-for="description"
                                         th:text="${#strings.isEmpty(payload?.description)} ? #{messages.set.create.d}"
@@ -102,7 +102,9 @@
                                th:id="field-terms"
                                th:data-message-min-three-terms="#{messages.set.create.j.ats}"
                                th:data-message-not-blank-term="#{error.set.term.not.blank}"
-                               th:data-message-description-up="#{error.set.term.description.size}">
+                               th:data-message-term-up="#{error.set.term.size}"
+                               th:data-message-description-up="#{error.set.term.description.size}"
+                        >
 
                         <input type="hidden"
                                th:if="*{id} != null"

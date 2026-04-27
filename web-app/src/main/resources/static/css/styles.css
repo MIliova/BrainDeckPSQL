@@ -539,4 +539,6 @@ select {
 .delete-term-row-button{
     cursor: pointer;
 }
-
+.error {
+    white-space: pre-line;
+}
