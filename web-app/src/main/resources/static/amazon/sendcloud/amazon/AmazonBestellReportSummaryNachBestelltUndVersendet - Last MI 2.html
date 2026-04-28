@@ -16,7 +16,7 @@
         let bestellt = []
         let pending = [];
         let canceled = [];
-        let kartons = {};
+        let kartons = [];
 
         let packs = new Map();
         let packSet = new Set();
@@ -27,16 +27,39 @@
         let purchaseDate = null;
 
 
-        $(document).ready(function() {
+        $(document).ready(function () {
+            const $infoBox = $('#infoBox');
+            const $text = $("#kartonsEinlesenText");
+
+            const messages = [];
+
             const localStorageKartons = localStorage.getItem("kartons");
             if (localStorageKartons) {
                 kartons = JSON.parse(localStorageKartons);
-                $("#kartonsEinlesenText").text("Kartons wurden aus dem Local Storage geladen", "green");
+                messages.push("Kartons wurden aus dem Local Storage geladen");
+            }
+
+            const localStoragePacks = localStorage.getItem("packs");
+            if (localStoragePacks) {
+                const saved = JSON.parse(localStorage.getItem("packs"));
+                packs = new Map(Object.entries(saved).map(([key, arr]) => [
+                        Number(key),
+                        arr
+                    ])
+                );
+
+                messages.push("Packs wurden aus dem Local Storage geladen");
+                packSet = new Set([...packs.values()].flat());
+            }
+
+            if (messages.length) {
+                $text
+                    .text(messages.join(" & "))
+                    .css("color", "green");
+
                 activateCSVRead();
             }
 
-            const $infoBox = $('#infoBox');
-            // Klickhandler
             $infoBox.find('.info-header').on('click', function () {
                 $infoBox.toggleClass('expanded');
             });
@@ -73,6 +96,7 @@
                 });
 
                 kartons = {};
+                packs = new Map();
                 jsonData.forEach(element => {
                     if (!kartons[element.KartonSku]) {
                         // Wenn der Karton noch nicht existiert, erstelle ihn
@@ -86,12 +110,33 @@
 
                     // Füge die SKU zum "productSKU"-Array hinzu
                     kartons[element.KartonSku].productSKU.push(element.Sku);
+
+                    const match = element.Sku.match(/-(\d)$/);
+                    if (match) {
+                        const groupKey = Number(match[1]);
+                        const baseSku = element.Sku.slice(0, -2);
+
+                        if (!packs.has(groupKey)) {
+                            packs.set(groupKey, []);
+                        }
+
+                        const arr = packs.get(groupKey);
+                        if (!arr.includes(baseSku)) {
+                            arr.push(baseSku);
+                        }
+                    }
                 });
 
-                kartons = Object.entries(kartons).map(([key, value]) => ({
-                    ...value
-                }));
+                // kartons = Object.entries(kartons).map(([key, value]) => ({
+                //     ...value
+                // }));
+
+                kartons = Object.values(kartons);
                 localStorage.setItem("kartons", JSON.stringify(kartons));
+
+                packs = new Map([...packs.entries()].sort((a, b) => Number(b[0]) - Number(a[0])));
+                localStorage.setItem("packs", JSON.stringify(Object.fromEntries(packs)));
+
                 activateCSVRead();
                 print("Kartons wurden eingelesen.", "green")
             };
@@ -149,7 +194,7 @@
                     order_number: orderNumber,
                     description,
                     kartonSKUs: kartonSKUs?.toString(),
-                    kartonQuantitys: kartonQuantitys?.toString(),
+                    kartonQuantitys: kartonQuantitys,
                     originalSKU: row['sku'],
 
                 };
@@ -247,62 +292,108 @@
             let kartonSkus = [];
             let kartonQuantities = [];
 
-            const addKarton = (index, sku, qty) => {
-                kartonSkus[index] = findKarton(sku);
-                kartonQuantities[index] = qty;
+            const addKartonSkuAndQty = (sku, qty) => {
+                kartonSkus.push(findKarton(sku));
+                kartonQuantities.push(qty);
             };
 
             // ✅ BoxR4,5
-            if (sku === '01.9012-2' && quantity > 1) {
-                const mapping = {
-                    3: [['01.9012-2', 1], ['01.9012-4', 1]],
-                    6: [['01.9012-2', 1], ['01.9012-4', 2]],
-                    8: [['01.9012-2', 1], ['01.9012-4', 3]]
-                };
-
-                if (mapping[quantity]) {
-                    mapping[quantity].forEach(([sku, qty], idx) => addKarton(idx, sku, qty));
-                } else {
-                    addKarton(0, '01.9012-4', Math.floor(quantity / 2));
-                }
-
-                return [kartonSkus, kartonQuantities];
-            }
+            // if (sku === '01.9012-2' && quantity > 1) {
+            //     const mapping = {
+            //         3: [['01.9012-2', 1], ['01.9012-4', 1]],
+            //         6: [['01.9012-2', 1], ['01.9012-4', 2]],
+            //         8: [['01.9012-2', 1], ['01.9012-4', 3]]
+            //     };
+            //
+            //     if (mapping[quantity]) {
+            //         mapping[quantity].forEach(([sku, qty], idx) => addKarton(idx, sku, qty));
+            //     } else {
+            //         addKarton(0, '01.9012-4', Math.floor(quantity / 2));
+            //     }
+            //
+            //     return [kartonSkus, kartonQuantities];
+            // }
 
             // ✅ WG16 (Mapping vereinfacht)
-            if (sku === '01.41001-16') {
-                const wg16Map = {
-                    1: '01.41001-16',
-                    2: '01.41001-32',
-                    3: '01.41001-48',
-                    4: '01.41001-64'
-                };
-                sku = wg16Map[quantity] || sku;
-                kartonSkus.push(findKarton(sku));
-                kartonQuantities.push(1);
-                return [kartonSkus, kartonQuantities];
-            }
+            // if (sku === '01.41001-16') {
+            //     const wg16Map = {
+            //         1: '01.41001-16',
+            //         2: '01.41001-16-2',
+            //         3: '01.41001-16-3',
+            //         4: '01.41001-16-4'
+            //     };
+            //
+            //     sku = wg16Map[quantity] || sku;
+            //     kartonSkus.push(findKarton(sku));
+            //     kartonQuantities.push(1);
+            //     return [kartonSkus, kartonQuantities];
+            // }
 
             // ✅ WG2, Ap2, HempF2 (2er Packungen)
-            if (['01.41001-60', '01.10013', '01.45014', '07.10124'].includes(sku) && quantity > 1) {
-                const baseSku = sku + '-2';
-                kartonSkus[0] = findKarton(baseSku);
-                kartonQuantities[0] = Math.floor(quantity / 2);
+            // if (['01.41001-60', '01.10013', '01.45014', '07.10124'].includes(sku) && quantity > 1) {
+            //     const baseSku = sku + '-2';
+            //     kartonSkus[0] = findKarton(baseSku);
+            //     kartonQuantities[0] = Math.floor(quantity / 2);
+            //
+            //     const rest = quantity % 2;
+            //     if (rest > 0) {
+            //         kartonSkus[1] = findKarton(sku);
+            //         kartonQuantities[1] = rest;
+            //     }
+            //     return [kartonSkus, kartonQuantities];
+            // }
 
-                const rest = quantity % 2;
-                if (rest > 0) {
-                    kartonSkus[1] = findKarton(sku);
-                    kartonQuantities[1] = rest;
+            let applied = false;
+            for (const [quantityKey, skus] of packs) {
+
+                if (!skus.includes(sku)) continue;
+
+                const qKey = Number(quantityKey);
+
+                if (quantity < qKey) continue;
+
+                const whole = Math.floor(quantity / qKey);
+                const remainder = quantity % qKey;
+
+                const baseSku = `${sku}-${qKey}`;
+
+                kartonSkus.push(findKarton(baseSku));
+                kartonQuantities.push(whole);
+
+                quantity = remainder;
+                applied = true;
+
+                if (quantity === 0) break;
+            }
+            if (applied) {
+                if (quantity > 0) {
+                    kartonSkus.push(findKarton(sku));
+                    kartonQuantities.push(quantity);
                 }
                 return [kartonSkus, kartonQuantities];
             }
 
-            // ✅ PL, PHs, EquiLin, Ameco 4er Pack
-            if (['02.10011F-4', '02.10002/s-4', '01.10095-4', '01.9101-4'].includes(sku)) {
-                sku = sku.slice(0, -2); // "-4" entfernen
-                kartonSkus.push(findKarton(sku));
-                kartonQuantities.push(quantity * 4);
-                return [kartonSkus, kartonQuantities];
+
+            // // ✅ PL, PHs, EquiLin, Ameco 4er Pack
+            // if (['02.10011F-4', '02.10002/s-4', '01.10095-4', '01.9101-4'].includes(sku)) {
+            //     sku = sku.slice(0, -2); // "-4" entfernen
+            //     kartonSkus.push(findKarton(sku));
+            //     kartonQuantities.push(quantity * 4);
+            //     return [kartonSkus, kartonQuantities];
+            // }
+
+            const match = sku.match(/-(\d)$/);
+            if (match) {
+                const factor = Number(match[1]);
+                const baseSku = sku.slice(0, -2);
+
+                if (!packSet.has(baseSku)) {
+
+                    kartonSkus.push(findKarton(baseSku));
+                    kartonQuantities.push(quantity * factor);
+
+                    return [kartonSkus, kartonQuantities];
+                }
             }
 
             // ✅ Standard-Fall
@@ -317,6 +408,7 @@
 
             return [kartonSkus, kartonQuantities];
         }
+
         function findKarton(sku) {
             for (const karton of kartons) {
                 // Standardfall: Suche nach passendem Karton
@@ -341,15 +433,12 @@
 
 
             // Tiefe Kopie, damit bigData NICHT verändert wird
-            const newVersendet = JSON.parse(JSON.stringify(versendet));
             const newBestellt = JSON.parse(JSON.stringify(bestellt));
             const newPending = JSON.parse(JSON.stringify(pending));
+            const newVersendet = JSON.parse(JSON.stringify(versendet));
+
 
             // Zusammenfassung nur bei Amazon, danach Sortierung
-            const [summarizedVersendet, summarizedVersendetKartons] = summarizeJson(newVersendet, true);
-            summarizedVersendet.sort((a, b) => a.sku.localeCompare(b.sku));
-            summarizedVersendetKartons.sort((a, b) => a.sku.localeCompare(b.sku));
-
             const [summarizedBestellt, summarizedBestelltKartons] = summarizeJson(newBestellt, true);
             summarizedBestellt.sort((a, b) => a.sku.localeCompare(b.sku));
             summarizedBestelltKartons.sort((a, b) => a.sku.localeCompare(b.sku));
@@ -358,14 +447,11 @@
             newPending.sort((a, b) => a.sku.localeCompare(b.sku));
             summarizedPendingKartons.sort((a, b) => a.sku.localeCompare(b.sku));
 
+            const [summarizedVersendet, summarizedVersendetKartons] = summarizeJson(newVersendet, true);
+            summarizedVersendet.sort((a, b) => a.sku.localeCompare(b.sku));
+            summarizedVersendetKartons.sort((a, b) => a.sku.localeCompare(b.sku));
 
             // Gesamtwert berechnen
-            let gesamtWertVersendet = 0;
-            summarizedVersendet.forEach(item => {
-                gesamtWertVersendet += item.quantity * (Number(item.value));
-            });
-            print(`Gesamtbetrag Versendet: ${gesamtWertVersendet.toFixed(2)} EUR`);
-
             let gesamtWertBestellt = 0;
             summarizedBestellt.forEach(item => {
                 gesamtWertBestellt += item.quantity * (Number(item.value));
@@ -380,6 +466,13 @@
             });
             print(`Gesamtbetrag Pending: ${gesamtWertPending.toFixed(2)} EUR`);
 
+            let gesamtWertVersendet = 0;
+            summarizedVersendet.forEach(item => {
+                gesamtWertVersendet += item.quantity * (Number(item.value));
+            });
+            print(`Gesamtbetrag Versendet: ${gesamtWertVersendet.toFixed(2)} EUR`);
+
+
             // Bei Amazon: order_number entfernen
             let gesProdukteBestellt = 0;
             summarizedBestellt.forEach(item => {
@@ -387,17 +480,16 @@
                 delete item.order_number;
                 delete item.kartonQuantitys;
             });
-            let gesProdukteVersendet = 0;
-            summarizedVersendet.forEach(item => {
-                gesProdukteVersendet += item.quantity;
+            let gesProduktePending = 0;
+            newPending.forEach(item => {
+                gesProduktePending += item.quantity;
                 delete item.order_number;
                 delete item.kartonQuantitys;
 
             });
-
-            let gesProduktePending = 0;
-            newPending.forEach(item => {
-                gesProduktePending += item.quantity;
+            let gesProdukteVersendet = 0;
+            summarizedVersendet.forEach(item => {
+                gesProdukteVersendet += item.quantity;
                 delete item.order_number;
                 delete item.kartonQuantitys;
 

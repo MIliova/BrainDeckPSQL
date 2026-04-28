@@ -46,12 +46,13 @@ class TextService {
 
 class DivPlaceholder {
     constructor(container) {
-        if (DivPlaceholder.instance) {
-            return DivPlaceholder.instance;
+        if (DivPlaceholder.instance) return DivPlaceholder.instance;
+
+        if (!(container instanceof HTMLElement)) {
+            throw new Error("container is required");
         }
+
         DivPlaceholder.instance = this;
-
-
         this.TYPE = {
             TERM: 'term',
             DESCRIPTION: 'description'
@@ -74,9 +75,8 @@ class DivPlaceholder {
         this.container = null;
     }
     init(container) {
-        if (!(container instanceof HTMLElement)) {
-            throw new Error("container is required");
-        }
+        if (!(container instanceof HTMLElement)) return;
+
 
         if (this.container) {
             this.destroy();
@@ -144,14 +144,11 @@ class DivPlaceholder {
 class EditableDiv {
     constructor(container) {
 
-        if (EditableDiv.instance) {
-            return EditableDiv.instance;
-        }
-        EditableDiv.instance = this;
-
+        if (EditableDiv.instance) return EditableDiv.instance;
 
         if (!(container instanceof HTMLElement)) throw new Error("container must be HTMLElement");
 
+        EditableDiv.instance = this;
         this.handleKeydown = this.onKeydown.bind(this);
         this.handleBeforeinput = this.onBeforeinput.bind(this);
         this.handleInput = this.onInput.bind(this);
@@ -476,13 +473,15 @@ class EditableDiv {
 
 class TextNormalization {
     constructor(container) {
+
+        if (TextNormalization.instance) return TextNormalization.instance;
+
+
         if (!(container instanceof HTMLElement)) {
             throw new Error("container is required");
         }
 
-        if (TextNormalization.instance) return TextNormalization.instance;
         TextNormalization.instance = this;
-
         const elements = container.querySelectorAll('[contenteditable]');
         elements.forEach(el => {
             const text = TextService.fromElement(el) ?? '';
@@ -495,11 +494,18 @@ class LanguageSpan {
     constructor(inputsContainer, inputsClosest, spans, querySelector) {
 
         if (LanguageSpan.instance) return LanguageSpan.instance;
-        LanguageSpan.instance = this;
 
 
         if (!(inputsContainer instanceof HTMLElement)) throw new Error("inputsContainer must be HTMLElement");
 
+
+        if (Object.prototype.toString.call(spans) !== '[object Object]' || Object.keys(spans).length === 0) throw new Error("spans must be Object");
+        Object.values(spans).forEach(el => {
+            if (!(el instanceof HTMLElement)) throw new Error("spans must contain HTMLElements");
+        });
+
+
+        LanguageSpan.instance = this;
         this.inputsContainer = null;
         this.inputsClosest = null;
         this.spans = null;
@@ -587,11 +593,22 @@ class LanguageMenu {
     constructor(container, spans, inputs) {
 
         if (LanguageMenu.instance) return LanguageMenu.instance;
-        LanguageMenu.instance = this;
 
 
         if (!(container instanceof HTMLElement)) throw new Error("container must be HTMLElement");
 
+        if (Object.prototype.toString.call(spans) !== '[object Object]' || Object.keys(spans).length === 0) throw new Error("spans must be Object");
+        Object.values(spans).forEach(el => {
+            if (!(el instanceof HTMLElement)) throw new Error("spans must contain HTMLElements");
+        });
+
+        if (Object.prototype.toString.call(inputs) !== '[object Object]' || Object.keys(inputs).length === 0) throw new Error("inputs must be Object");
+        Object.values(inputs).forEach(el => {
+            if (!(el instanceof HTMLElement)) throw new Error("inputs must contain HTMLElements");
+        });
+
+
+        LanguageMenu.instance = this;
         this.languageMenuDiv = null;
         this.inputs = null;
         this.spans = null;
@@ -718,8 +735,8 @@ class Labels {
     constructor() {
 
         if (Labels.instance) return Labels.instance;
-        Labels.instance = this;
 
+        Labels.instance = this;
         this.bound = new Set();
         this.handleKeyup = this.onKeyup.bind(this);
     }
@@ -778,11 +795,11 @@ class Overlay {
     constructor(container) {
 
         if (Overlay.instance) return Overlay.instance;
-        Overlay.instance = this;
 
         if (!(container instanceof HTMLElement))
             throw new Error("el must be HTMLElement");
 
+        Overlay.instance = this;
         this.handleOpenClick = this.onOpen.bind(this);
         this.handleCloseClick = this.onClose.bind(this);
         this.handleKeydown = this.onKeydown.bind(this);
@@ -917,11 +934,13 @@ class ApiError extends Error {
 }
 class Api {
     constructor(s_d_Id, draft = false) {
+
         if (Api.instance) return Api.instance;
+
+        if (Number(s_d_Id) < 1) throw new Error("s_d_Id must be Number");
+
         Api.instance = this;
-
         this.s_d_Id = 0;
-
         this.init(s_d_Id, draft);
     }
 
@@ -945,8 +964,6 @@ class Api {
         this.deleteTermURI = `${baseUrlMe}/terms/`;
 
         this.submitFormURI = `/api/sets/create`;
-
-
     }
 
     deleteDraft() {
@@ -1078,6 +1095,11 @@ class Api {
 
 class ErrorService {
     constructor(errorField) {
+
+        if (!(errorField instanceof HTMLElement)) {
+            throw new Error("errorField must be HTMLElement");
+        }
+
         this.errorField = errorField;
     }
 
@@ -1148,6 +1170,10 @@ class ErrorService {
 }
 class ErrorHandler {
     constructor(errorService) {
+
+        if (!(errorService instanceof ErrorService)) {
+            throw new Error("errorService must be ErrorService");
+        }
         this.errorService = errorService;
 
         this.handlers = {
@@ -1197,19 +1223,26 @@ class ErrorHandler {
 }
 
 class TermsImport {
-    constructor(api, errorHandler) {
+    constructor(api, errorHandler, textarea, previewDiv) {
 
         if (TermsImport.instance) return TermsImport.instance;
-        TermsImport.instance = this;
 
-        if (!api) {
+
+        if (!api || !(api instanceof Api)) {
             throw new Error("api is required");
         }
 
-        if (!errorHandler) {
+        if (!errorHandler || !(errorHandler instanceof ErrorHandler)) {
             throw new Error("errorHandler is required");
         }
 
+        if (!(textarea instanceof HTMLElement))
+            throw new Error("textarea is required");
+
+        if (!(previewDiv instanceof HTMLElement))
+            throw new Error("previewDiv is required");
+
+        TermsImport.instance = this;
         this.api = api;
         this.errorHandler = errorHandler;
 
@@ -1240,16 +1273,30 @@ class TermsImport {
         this.handleClearButtonClick = this.onClear.bind(this);
         this.handleInputsClick = this.onPlaceholderTextChange.bind(this);
 
+        this.init (textarea, previewDiv);
     }
-    init (textarea, importButton, clearButton, previewDiv) {
+    bindButtons(importButton, clearButton) {
+        this.unbindButtons();
+        if (importButton instanceof HTMLElement) {
+            importButton.addEventListener('click', this.handleImportButtonClick);
+            this.importButton = importButton;
+        }
+
+        if (clearButton instanceof HTMLElement) {
+            clearButton.addEventListener('click', this.handleClearButtonClick);
+            this.clearButton = clearButton;
+        }
+    }
+    unbindButtons() {
+        this.importButton?.removeEventListener('click', this.handleImportButtonClick);
+        this.importButton = null;
+        this.clearButton?.removeEventListener('click', this.handleClearButtonClick);
+        this.clearButton = null;
+    }
+
+    init (textarea, previewDiv) {
         if (!(textarea instanceof HTMLElement))
             throw new Error("textarea is required");
-
-        if (!(importButton instanceof HTMLElement))
-            throw new Error("importButton is required");
-
-        if (!(clearButton instanceof HTMLElement))
-            throw new Error("clearButton is required");
 
         if (!(previewDiv instanceof HTMLElement))
             throw new Error("previewDiv is required");
@@ -1265,8 +1312,6 @@ class TermsImport {
         this._importVersion = 0;
 
         this.textarea = textarea;
-        this.importButton = importButton;
-        this.clearButton = clearButton;
         this.previewDiv = previewDiv;
 
         this.colSeparator = this.textarea.form.elements['col-separator'];
@@ -1294,8 +1339,7 @@ class TermsImport {
         this.sepInputs = this.sepInputs.filter(Boolean);
 
         this.textarea.addEventListener('input', this.handleTextareaInput);
-        this.importButton.addEventListener('click', this.handleImportButtonClick);
-        this.clearButton.addEventListener('click', this.handleClearButtonClick);
+
 
         this.sepInputs.forEach(el => {
             const event = el.tagName === 'INPUT' && el.type === 'text' ? 'input' : 'click';
@@ -1685,8 +1729,19 @@ class TermController {
     constructor(container, api, errorHandler) {
 
         if (TermController.instance) return TermController.instance;
-        TermController.instance = this;
 
+        if (!(container instanceof HTMLElement))
+            throw new Error("container must be HTMLElement");
+
+        if (!api || !(api instanceof Api)) {
+            throw new Error("api is required");
+        }
+
+        if (!errorHandler || !(errorHandler instanceof ErrorHandler)) {
+            throw new Error("errorHandler is required");
+        }
+
+        TermController.instance = this;
         this.handleTermsCreated = this.onTermsCreated.bind(this);
         this.handleClick = this.onControllerClick.bind(this);
         this.handleAddTermRow = this.onAddTermRow.bind(this);
@@ -1696,16 +1751,11 @@ class TermController {
     }
 
     init(container, api, errorHandler) {
-        if (!(container instanceof HTMLElement))
-            throw new Error("container must be HTMLElement");
+        if (!(container instanceof HTMLElement)) return;
 
-        if (!api) {
-            throw new Error("api is required");
-        }
+        if (!api) return;
 
-        if (!errorHandler) {
-            throw new Error("errorHandler is required");
-        }
+        if (!errorHandler) return;
 
         if (this.container) {
             this.destroy();
@@ -1745,16 +1795,22 @@ class TermController {
         this.lastIndex = index;
     }
     bindButtons(deleteDraftButton, addTermButton) {
+        this.unbindButtons();
         if (deleteDraftButton instanceof HTMLElement) {
-            deleteDraftButton.removeEventListener('click', this.handleDeleteDraft);
             deleteDraftButton.addEventListener('click', this.handleDeleteDraft);
             deleteDraftButton.style.display = 'block';
+            this.deleteDraftButton = deleteDraftButton;
         }
-
         if (addTermButton instanceof HTMLElement) {
-            addTermButton.removeEventListener('click', this.handleAddTermRow);
             addTermButton.addEventListener('click', this.handleAddTermRow);
+            this.addTermButton = addTermButton;
         }
+    }
+    unbindButtons() {
+        this.deleteDraftButton?.removeEventListener('click', this.handleDeleteDraft);
+        this.addTermButton?.removeEventListener('click', this.handleAddTermRow);
+        this.deleteDraftButton = null;
+        this.addTermButton = null;
     }
     onDeleteDraft() {
         this.api.deleteDraft()
@@ -1897,11 +1953,27 @@ class AutoSaveTextService {
     }
 }
 class AutoSave {
-    constructor (api, errorHandler) {
+    constructor (api, errorHandler, s_d_Id, draft = false, container, form) {
 
         if (AutoSave.instance) return AutoSave.instance;
-        AutoSave.instance = this;
 
+        if (!api || !(api instanceof Api)) {
+            throw new Error("api is required");
+        }
+
+        if (!errorHandler || !(errorHandler instanceof ErrorHandler)) {
+            throw new Error("errorHandler is required");
+        }
+
+        if (Number(s_d_Id) < 1) throw new Error("Invalid s_d_Id");
+
+
+        if (!(container instanceof HTMLElement)) throw new Error("container must be HTMLElement");
+
+        if (!(form instanceof HTMLFormElement)) throw new Error("form must be HTMLFormElement");
+
+
+        AutoSave.instance = this;
         this.api = api;
         this.errorHandler = errorHandler;
 
@@ -1912,14 +1984,12 @@ class AutoSave {
         this.handleFocusOut = this.onFormFocusOut.bind(this);
         this.handleChange = this.onLanguageChange.bind(this);
         // this.handleTermsCreate = this.onTermsCreate.bind(this);
+
+        this.init(s_d_Id, draft = false, container, form);
     }
 
     init(s_d_Id, draft = false, container, form){
-        if (Number(s_d_Id) < 1) {
-            throw new Error("Invalid s_d_Id");
-        }
-
-        if (!(container instanceof HTMLElement) || !(form instanceof HTMLElement))
+        if (Number(s_d_Id) < 1 || !(container instanceof HTMLElement) || !(form instanceof HTMLElement))
             return;
 
         if (this.container) {
@@ -2085,26 +2155,15 @@ class AutoSave {
 }
 
 class SetForm {
-    constructor(form, container, errorService, submitType = "", api = null, errorHandler = null, test = false) {
-        this.minTermsCnt = 3;
-        this.maxTermLength = 950;
-        this.maxDescriptionLength  = 950;
-        let messageEl = document.getElementById('field-terms');
-        this.messages = {
-            messageMinThreeTerms:messageEl.dataset.messageMinThreeTerms,
-            messageNotBlankTerm:messageEl.dataset.messageNotBlankTerm,
-            messageTermUp:messageEl.dataset.messageTermUp,
-            messageDescriptionUp:messageEl.dataset.messageDescriptionUp
-        }
+    constructor(form, container, errorService, messages, submitType = "", api = null, errorHandler = null, test = false) {
+
+        if (SetForm.instance) return SetForm.instance;
 
         if (!(form instanceof HTMLFormElement)) throw new Error("form must be HTMLFormElement");
-        this.form = form;
 
         if (!(container instanceof HTMLElement)) throw new Error("container must be HTMLElement");
-        this.container = container;
 
         if (!(errorService instanceof ErrorService)) throw new Error("errorService must be ErrorService");
-        this.errorService = errorService;
 
         if (submitType === 'JSON') {
             if (!(api instanceof Api)) throw new Error("api must be Api");
@@ -2112,6 +2171,29 @@ class SetForm {
             this.api = api;
             this.errorHandler = errorHandler;
         }
+
+        SetForm.instance = this;
+        this.minTermsCnt = 3;
+        this.maxTermLength = 950;
+        this.maxDescriptionLength  = 950;
+
+        this.form = form;
+        this.container = container;
+        this.errorService = errorService;
+
+        const {
+            messageMinThreeTerms,
+            messageNotBlankTerm,
+            messageTermUp,
+            messageDescriptionUp
+        } = messages;
+
+        this.messages = {
+            messageMinThreeTerms,
+            messageNotBlankTerm,
+            messageTermUp,
+            messageDescriptionUp
+        };
 
         const submitsByType = {
             'Data': (event) => {
@@ -2150,8 +2232,6 @@ class SetForm {
         this.submitHandler(event);
     }
     validate(){
-        this.setId = Number(document.getElementById('field-id')?.value) || 0;
-
         let result = true;
         ["field-title", "field-description"].forEach(id => {
             result = Boolean(result && this.checkField(id));
@@ -2274,6 +2354,7 @@ class SetForm {
     }
     checkField(fieldId) {
         const field = document.getElementById(fieldId);
+        if (!field) return false;
 
         if (field.value.trim() === "") {
             this.errorService.showByField(field, field.dataset.message);
@@ -2285,16 +2366,19 @@ class SetForm {
             return true;
         }
     }
-    checkLanguage(fieldId, fieldId2) {
+    checkLanguage(fieldId, fieldErrId) {
         const field = document.getElementById(fieldId);
+        if (!field) return false;
+
+        const fieldErr = document.getElementById(fieldErrId);
 
         if (field.value.trim() === "") {
             this.errorService.showByField(field, field.dataset.message);
-            this.addErrorClass(document.getElementById(fieldId2));
+            this.addErrorClass(fieldErr);
             return false;
         } else {
             this.errorService.hideByField(field);
-            this.delErrorClass(document.getElementById(fieldId2));
+            this.delErrorClass(fieldErr);
             return true;
         }
     }
@@ -2305,6 +2389,8 @@ class SetForm {
         this._errorMark(field, false);
     }
     _errorMark(field, add = true) {
+        if (!field) return;
+
         const wrapper = field.closest('[data-error-class]');
         if (!wrapper) return;
         if (add) {
@@ -2366,44 +2452,58 @@ document.addEventListener('DOMContentLoaded', function () {
     const termsDescriptionAreaEl = document.getElementById('terms-description-area');
     const setFormEl = document.getElementById('set-form');
     const setIdEl = document.getElementById("field-id");
+    const errorEl = document.getElementById('field-error');
+    let messageEl = document.getElementById('field-terms');
+
+
+    if (!termsDescriptionAreaEl) throw new Error("terms-description-area");
+    if (!setFormEl) throw new Error("set-form not found");
+    if (!setIdEl) throw new Error("field-id not found");
+    if (!errorEl) throw new Error("field-error not found");
+    if (!messageEl) throw new Error("field-terms not found");
+
+
     const s_d_Id = setIdEl ? setIdEl.value : 0;
     const isDraft = setIdEl?.dataset.draft === "true";
-    const errorEl = document.getElementById('field-error');
-
 
     new DivPlaceholder(termsDescriptionAreaEl);
     new EditableDiv(termsDescriptionAreaEl);
     new TextNormalization(termsDescriptionAreaEl);
 
+    const errorHandler = new ErrorHandler(new ErrorService(errorEl))
 
     const api = new Api(s_d_Id, isDraft);
 
-    const autoSave = new AutoSave(api, new ErrorHandler(new ErrorService(errorEl)));
-    autoSave.init(s_d_Id, isDraft, termsDescriptionAreaEl, setFormEl);
+    new AutoSave(api, errorHandler, s_d_Id, isDraft, termsDescriptionAreaEl, setFormEl);
 
 
-    const termController = new TermController(termsDescriptionAreaEl, api, new ErrorHandler(new ErrorService(errorEl)));
-    termController.bindButtons(document.getElementById('delete-draft-buttonButton'), document.getElementById('add_term_button'));
+    new TermController(termsDescriptionAreaEl, api, errorHandler)
+        .bindButtons(document.getElementById('delete-draft-button'), document.getElementById('add_term_button'));
 
 
-    const setForm = new SetForm(setFormEl, termsDescriptionAreaEl, new ErrorService(errorEl),
-        "",null,null, true);
-    setForm.bindButtons(document.getElementById('submitButton'))
+
+    new SetForm(setFormEl, termsDescriptionAreaEl, new ErrorService(errorEl),
+        {
+        messageMinThreeTerms:messageEl.dataset.messageMinThreeTerms,
+        messageNotBlankTerm:messageEl.dataset.messageNotBlankTerm,
+        messageTermUp:messageEl.dataset.messageTermUp,
+        messageDescriptionUp:messageEl.dataset.messageDescriptionUp
+    }, "",null,null, true)
+        .bindButtons(document.getElementById('submitButton'))
 
     
-    const termsImport = new TermsImport(api, new ErrorHandler(new ErrorService(document.getElementById('field-import-error'))));
-    termsImport.init(
+    const termsImport = new TermsImport(api,
+        new ErrorHandler(new ErrorService(document.getElementById('field-import-error'))),
         document.getElementById("field-import"),
-        document.getElementById('overlay_import_button'),
-        document.getElementById('overlay_clear_button'),
-        document.getElementById("field-import-preview")
-    );
+        document.getElementById("field-import-preview"));
+    termsImport.bindButtons(document.getElementById('overlay_import_button'), document.getElementById('overlay_clear_button'));
 
 
     const importAreaEl= document.getElementById("overlay");
     new Overlay(importAreaEl).bindButtons(
         document.getElementById("overlay_show_button"),
         document.getElementById("overlay_hide_button"));
+
     importAreaEl.addEventListener("overlay:open-start", () => {
         termsImport.onShow()
     });
