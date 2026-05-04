@@ -1,0 +1,1115 @@
+
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CSV Datei einlesen</title>
+    <script src="../xlsx.full.min.js"></script>
+    <script src="../jquery-3.4.1.min.js"></script>
+    <script src="../jquery-csv.js"></script>
+
+    <script>
+
+        // Globale Variablen
+        let versendet = [];
+        let bestellt = []
+        let pending = [];
+        let canceled = [];
+        let kartons = [];
+
+        let versendetByDate = {};
+        let canceledByDate = {};
+
+        let purchaseDate = null;
+
+        let packs = new Map();
+        let packSet = new Set();
+
+        $(document).ready(function () {
+            const $infoBox = $('#infoBox');
+            const $text = $("#kartonsEinlesenText");
+
+            const messages = [];
+
+            const localStorageKartons = localStorage.getItem("kartons");
+            if (localStorageKartons) {
+                kartons = JSON.parse(localStorageKartons);
+                messages.push("Kartons wurden aus dem Local Storage geladen");
+            }
+
+            const localStoragePacks = localStorage.getItem("packs");
+            if (localStoragePacks) {
+                const saved = JSON.parse(localStorage.getItem("packs"));
+                packs = new Map(Object.entries(saved).map(([key, arr]) => [
+                        Number(key),
+                        arr
+                    ])
+                );
+
+                messages.push("Packs wurden aus dem Local Storage geladen");
+                packSet = new Set([...packs.values()].flat());
+            }
+
+            if (messages.length) {
+                $text
+                    .text(messages.join(" & "))
+                    .css("color", "green");
+
+                activateCSVRead();
+            }
+
+            $infoBox.find('.info-header').on('click', function () {
+                $infoBox.toggleClass('expanded');
+            });
+        });
+
+        function activateCSVRead() {
+            $("#CSVContainer").removeClass("deactivated");
+            $("#CSVText").text("");
+        }
+        function activateExcelDownloade() {
+            $("#downloadExcel").removeClass("deactivated");
+            $("#excelText").text("");
+        }
+
+        // Einlesen der kartons
+        const readKartons = (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function () {
+                const arrayBuffer = this.result;
+                const workbook = XLSX.read(arrayBuffer, { type: "array" });
+
+                // Erstes Blatt auslesen
+                const firstSheetName = workbook.SheetNames[0];
+                const worksheet = workbook.Sheets[firstSheetName];
+
+                // 🔹 Daten einlesen mit vordefinierten Headers und versteckte Zeilen ignorieren
+                let jsonData = XLSX.utils.sheet_to_json(worksheet, {
+                    raw: true,
+                    skipHidden: true,
+                    header: ["Sku", "Produktname", "Produktmaße","EH pro hL-Palette",	"EH pro Sped-Pal.", "Kürzel", "KartonSku"]
+                });
+
+                kartons = {};
+                packs = new Map();
+                jsonData.forEach(element => {
+                    if (!kartons[element.KartonSku]) {
+                        // Wenn der Karton noch nicht existiert, erstelle ihn
+                        kartons[element.KartonSku] = {
+                            sku: element.KartonSku,
+                            quantity: 0,
+                            unitPrice: "0",
+                            productSKU: []
+                        };
+                    }
+
+                    // Füge die SKU zum "productSKU"-Array hinzu
+                    kartons[element.KartonSku].productSKU.push(element.Sku);
+
+                    const match = element.Sku.match(/-([1-9])$/);
+                    if (match) {
+                        const groupKey = Number(match[1]);
+                        const baseSku = element.Sku.slice(0, -2);
+
+                        if (!packs.has(groupKey)) {
+                            packs.set(groupKey, []);
+                        }
+
+                        const arr = packs.get(groupKey);
+                        if (!arr.includes(baseSku)) {
+                            arr.push(baseSku);
+                        }
+                    }
+                });
+
+                // kartons = Object.entries(kartons).map(([key, value]) => ({
+                //     ...value
+                // }));
+
+                kartons = Object.values(kartons);
+                localStorage.setItem("kartons", JSON.stringify(kartons));
+
+                packs = new Map([...packs.entries()].sort((a, b) => Number(b[0]) - Number(a[0])));
+                localStorage.setItem("packs", JSON.stringify(Object.fromEntries(packs)));
+
+                activateCSVRead();
+                print("Kartons wurden eingelesen.", "green")
+            };
+            reader.readAsArrayBuffer(file);
+        };
+
+        // Einlesen der export CSV
+        function readFile(event, element){
+            const file = event.target.files[0];
+
+            if (file) {
+                const reader = new FileReader();
+
+                reader.onload = function(e) {
+                    const contents = e.target.result;
+                    readCsvFile(contents);
+                };
+                reader.readAsText(file);
+
+                $(element).prop('disabled', true);
+                $('#fileInputContainer').append('<input type="file" accept=".txt, .csv" onchange="readFile(event, $(this))">')
+                activateExcelDownloade();
+            } else {
+                alert("Keine Datei ausgewählt");
+            }
+        }
+
+        function readCsvFile(csv) {
+
+            $.csv.toObjects(csv, {separator: "\t"}).forEach(row => {
+                const orderNumber = row['amazon-order-id'];
+                const orderStatus = row['order-status'];
+
+                let quantity = Number(row['quantity']);
+                let unitPrice = (row['item-price']/quantity);
+
+                let sku = correctSku(row['sku']);
+                const description = row['product-name'];
+                const kartons = addKarton(sku, quantity, description);
+
+                // const [kartonSKUs, kartonQuantities]= addKarton(sku, quantity, description);
+
+
+                // if (sku.includes('-4')) { // 4er Multipack anpassen
+                //     sku = correctSku(sku.split('-4')[0])
+                //     quantity = quantity*4;
+                //     unitPrice = unitPrice/4;
+                // } else if (sku.includes('-2')){ // Doppelpacks
+                //     sku = correctSku(sku.split('-2')[0])
+                //     quantity = quantity*2
+                //     unitPrice = unitPrice/2
+                // }
+
+                const match = sku.match(/-([2-9])$/);
+                if (match) {
+                    const factor = Number(match[1]);
+                    const baseSku = sku.slice(0, -2);
+
+                    sku = correctSku(baseSku);
+                    quantity = quantity*factor;
+                    unitPrice = unitPrice/factor;
+                }
+
+                const data = {
+                    sku,
+                    quantity,
+                    unitPrice,
+                    totalPrice: Number(row['item-price']),
+                    order_number: orderNumber,
+                    description,
+                    kartonSKUs: [...kartons.keys()].join(','),
+                    kartonQuantities: [...kartons.values()],
+                    originalSKU: row['sku'],
+
+                };
+
+                setPurchaseDate(row['purchase-date']);
+
+                const lastUpdatedDate = getWorkingDay(row['last-updated-date']);
+                const dataByLastUpdatedDate = {
+                    sku,//: correctSku(sku.split('-')[0]),
+                    quantity,
+                    unitPrice,
+                    totalPrice: Number(row['item-price']),
+                    order_number: orderNumber,
+                    description,
+                    kartonSKUs: [...kartons.keys()].join(','),
+                    kartonQuantities: [...kartons.values()],
+                    lastUpdatedDate: row['last-updated-date'],
+                    originalSKU: row['sku']
+                };
+
+                // je nach orderStatus in die entsprechende Liste reinschreiben
+                if (orderStatus === 'Cancelled') {
+                    canceled.push(data);
+                    addByDate(canceledByDate, lastUpdatedDate, dataByLastUpdatedDate)
+                } else if (orderStatus === 'Pending') {
+                    pending.push(data);
+                    bestellt.push(data);
+                    print(`Die Bestellung ${orderNumber} über ${row['quantity']} x ${row['product-name']} ist Ausstehend`);
+                } else if (orderStatus === 'Shipped') {
+                    versendet.push(data);
+                    bestellt.push(data);
+                    addByDate(versendetByDate, lastUpdatedDate, dataByLastUpdatedDate)
+                } else {
+                    print(`${row}, Unbekannter Order Status`)
+                }
+            }); // end forEach
+        } //end readCsvFile
+
+        function getWorkingDay (dateString) {
+            if (!dateString) return;
+            const date = new Date(dateString);
+            const day = date.getDay();
+
+            if (day === 6) {
+                date.setDate(date.getDate() + 2);
+            } else if (day === 0) {
+                date.setDate(date.getDate() + 1);
+            }
+
+            //return date.toISOString().split("T")[0];
+
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, "0");
+            const dayNum = String (date.getDate()).padStart(2,"0")
+
+            return `${year}-${month}-${dayNum}`;
+        }
+
+        function correctSku(sku) {
+            const corrections = {
+                // Amazon/IONOS SKU:Sgae SKU
+                /*
+                                "05-GRYL-PZRA": "07.13122",
+                                "01.10008": "01.10008/A24",
+                                "01.41001-1S": "01.41001-60",
+                                "07.15806/1": "07.15806",
+                                "09-UVI8-FTAX": "07.13121",
+                                "07.00870/1": "07.00870",
+                                "07:09155": "07.09155",
+                                "01.41001-16l": "01.41001-16",
+                                "07.15822/1": "07.15822",
+                                "07.09157/1": "07.09157",
+                                "CW-ERPK-0NOE": "07.09146",
+                                "07.09149/1": "07.09149",
+                                "02.10009/25/25kg": "02.10009/25",
+                                "02.10002-1B": "02.10002",
+
+                                "SG-KQP6-CCW4": "01.9011",
+                                "1B0H-2X2E-6LG7": "01.9001",
+                                "YU-M599-K8MR": "01.9001",
+                                "EG-5YY7-SL7V": "01.9002",
+                                "4A-SKJP-WH9E": "01.10070",
+                                "07:09153": "07.09153",
+                                "01.10009": "01.10009/bio",
+                                "X0-9NX0-9X1Q": "01.10013",
+                                "IL-TXHY-EEEL": "07.13148",
+                                "KA-84TE-4BN7": "07.13145",
+                                "4L-X7S6-VXLD": "07.13149",
+                                "B9-TVJ7-UODH": "07.10301",
+                                "5A-KSA2-DM8T": "07.14513",
+                                "KA-84TE": "07.13145",
+                                "F2-EVIH-K2VR": "07.14510",
+                                "20-9QFU-RCN9": "01.9012-2",
+                                "01.10008/AGH": "01.10008/A24",
+                                "01.10002": "01.10002/SM",
+                                "NS-IYVP-DQYD": "07.00941",
+                                "04.10453/1": "04.10453",
+
+                                "07.09141": "07.09144",
+                                "07.14013": "07.00870",
+
+
+                                "07.10030_2": "07.10030",
+                                "02.10002/s-1": "02.10002/S",
+                                "07.10013_2": "07.10013",
+                                "07.10017-2": "07.10017",
+                                "02.10001/20kg": "02.10001",
+                                "4A-SKJP-WH9E": "01.10070",
+
+
+                                "01.10008/19ex-1":"01.10008/19ex",
+                                "01.10008/A24-1":"01.10008/A24",
+                                "01.10012-1" :"01.10012",
+                                "01.9101-1": "01.9101",
+                                "01.30002X-1":"01.30002X",
+                                "01.45014-1" : "01.45014",
+                                "02.10011F-1": "02.10011F",
+                                "07.13149-1" : "07.13149",
+                                "07.00870-1": "07.00870",
+
+                                "01.9012-2B": "01.9012-2",
+                                "02.10002-4B": "02.10002-4",
+                */
+
+                "01.40002/oL/1":"01.40002/oL-1",
+                "01.40002/oL/2":"01.40002/oL-2",
+                "01.40002/oL/96":"01.40002/oL-96",
+
+            };
+
+            if (corrections[sku]) {
+                sku = corrections[sku];
+            }
+
+            sku = sku.replace(/-(\d{1,2})B$/, '-$1');
+
+            while (sku.endsWith('-1')) {
+                sku = sku.slice(0, -2);
+            }
+
+            return sku;
+
+
+            // if (sku.endsWith("-1")) {
+            //     return sku.slice(0, -2);
+            // } else if (sku.endsWith("-1B")) {
+            //     return sku.slice(0, -3);
+            // } else if (sku.endsWith("-2B")) {
+            //     return sku.slice(0, -1);
+            // } else if (sku.endsWith("-4B")) {
+            //     return sku.slice(0, -1);
+            // } else if (sku.endsWith("-15B")) {
+            //     return sku.slice(0, -1);
+            // } else if (sku.endsWith("-24B")) {
+            //     return sku.slice(0, -1);
+            // } else if (sku.endsWith("-30B")) {
+            //     return sku.slice(0, -1);
+            // } else {
+            //     return sku;
+            // }
+        }
+
+        function addKarton(sku, quantity, description) {
+            // let kartonSkus = [];
+            // let kartonQuantities = [];
+
+            let kartons = new Map();
+
+            const addKartonSkuAndQty = (sku, qty) => {
+                const current = kartons.get(sku) || 0;
+                kartons.set(sku, current + qty);
+                // kartonSkus.push(sku);
+                // kartonQuantities.push(qty);
+            };
+
+            // ✅ BoxR4,5
+            // if (sku === '01.9012-2' && quantity > 1) {
+            //     const mapping = {
+            //         3: [['01.9012-2', 1], ['01.9012-4', 1]],
+            //         6: [['01.9012-2', 1], ['01.9012-4', 2]],
+            //         8: [['01.9012-2', 1], ['01.9012-4', 3]]
+            //     };
+            //
+            //     if (mapping[quantity]) {
+            //         mapping[quantity].forEach(([sku, qty], idx) => addKarton(idx, sku, qty));
+            //     } else {
+            //         addKarton(0, '01.9012-4', Math.floor(quantity / 2));
+            //     }
+            //
+            //     return [kartonSkus, kartonQuantities];
+            // }
+
+            // ✅ WG16 (Mapping vereinfacht)
+            // if (sku === '01.41001-16') {
+            //     const wg16Map = {
+            //         1: '01.41001-16',
+            //         2: '01.41001-16-2',
+            //         3: '01.41001-16-3',
+            //         4: '01.41001-16-4'
+            //     };
+            //
+            //     sku = wg16Map[quantity] || sku;
+            //     kartonSkus.push(findKarton(sku));
+            //     kartonQuantities.push(1);
+            //     return [kartonSkus, kartonQuantities];
+            // }
+
+            // ✅ WG2, Ap2, HempF2 (2er Packungen)
+            // if (['01.41001-60', '01.10013', '01.45014', '07.10124'].includes(sku) && quantity > 1) {
+            //     const baseSku = sku + '-2';
+            //     kartonSkus[0] = findKarton(baseSku);
+            //     kartonQuantities[0] = Math.floor(quantity / 2);
+            //
+            //     const rest = quantity % 2;
+            //     if (rest > 0) {
+            //         kartonSkus[1] = findKarton(sku);
+            //         kartonQuantities[1] = rest;
+            //     }
+            //     return [kartonSkus, kartonQuantities];
+            // }
+
+            let applied = false;
+            for (const [quantityKey, skus] of packs) {
+
+                if (!skus.includes(sku)) continue;
+
+                const qKey = Number(quantityKey);
+
+                if (quantity < qKey) continue;
+
+                const whole = Math.floor(quantity / qKey);
+                const remainder = quantity % qKey;
+
+                const baseSku = `${sku}-${qKey}`;
+
+                addKartonSkuAndQty(findKarton(baseSku), whole);
+
+                quantity = remainder;
+                applied = true;
+
+                if (quantity === 0) break;
+            }
+            if (applied) {
+                if (quantity > 0) {
+                    addKartonSkuAndQty(findKarton(sku), quantity);
+                }
+                // return [kartonSkus, kartonQuantities];
+                return kartons;
+            }
+
+
+            // // ✅ PL, PHs, EquiLin, Ameco 4er Pack
+            // if (['02.10011F-4', '02.10002/s-4', '01.10095-4', '01.9101-4'].includes(sku)) {
+            //     sku = sku.slice(0, -2); // "-4" entfernen
+            //     kartonSkus.push(findKarton(sku));
+            //     kartonQuantities.push(quantity * 4);
+            //     return [kartonSkus, kartonQuantities];
+            // }
+
+            const match = sku.match(/-([1-9])$/);
+            if (match) {
+                const factor = Number(match[1]);
+                const baseSku = sku.slice(0, -2);
+
+                if (!packSet.has(baseSku)) {
+                    addKartonSkuAndQty(findKarton(baseSku), quantity * factor);
+                    // return [kartonSkus, kartonQuantities];
+                    return kartons;
+
+                }
+            }
+
+            // ✅ Standard-Fall
+            const karton = findKarton(sku);
+            if (!karton) {
+                print(`❌ Kein passender Karton gefunden für: ${sku}, ${description}`, "red");
+                // return [undefined, undefined];
+                return kartons;
+            }
+
+            addKartonSkuAndQty(karton, quantity);
+
+            // return [kartonSkus, kartonQuantities];
+            return kartons;
+
+        }
+
+        function findKarton(sku) {
+            for (const karton of kartons) {
+                // Standardfall: Suche nach passendem Karton
+                if (karton.productSKU.includes(sku)) {
+                    return karton.sku;  // Schleife beenden, da der passende Karton gefunden wurde
+                }
+            }
+            return null;
+        }
+
+        function addByDate (obj, date, row) {
+            if (!date) return;
+            date = date.split("T")[0];
+            if (!obj[date])
+                obj[date] = [];
+            obj[date].push(row);
+        }
+
+        function downloadExcel() {
+            // const excelFile = `Amazon ${getYesterday()}.xlsx`;
+            const excelFile = `Amazon ${getPurchaseDate()}.xlsx`;
+
+// Tiefe Kopie, damit bigData NICHT verändert wird
+            const newVersendet = JSON.parse(JSON.stringify(versendet));
+            const newBestellt = JSON.parse(JSON.stringify(bestellt));
+            const newPending = JSON.parse(JSON.stringify(pending));
+
+// Zusammenfassung nur bei Amazon, danach Sortierung
+            const [summarizedBestellt, summarizedBestelltKartons] = summarizeJson(newBestellt);
+            summarizedBestellt.sort((a, b) =>  {
+                const skuCompare = a.sku.localeCompare(b.sku);
+                if (skuCompare !== 0) return skuCompare;
+                return a.kartonSKUs.localeCompare(b.kartonSKUs);
+            });
+            summarizedBestelltKartons.sort((a, b) => a.sku.localeCompare(b.sku));
+
+            const [summerizedPending, summarizedPendingKartons] = summarizeJson(newPending);
+            newPending.sort((a, b) =>  {
+                const skuCompare = a.sku.localeCompare(b.sku);
+                if (skuCompare !== 0) return skuCompare;
+                return a.kartonSKUs.localeCompare(b.kartonSKUs);
+            });
+            summarizedPendingKartons.sort((a, b) => a.sku.localeCompare(b.sku));
+
+            const [summarizedVersendet, summarizedVersendetKartons] = summarizeJson(newVersendet, true);
+            summarizedVersendet.sort((a, b) => a.sku.localeCompare(b.sku));
+            summarizedVersendetKartons.sort((a, b) => a.sku.localeCompare(b.sku));
+
+            newPending.forEach(item => {
+                if (item.kartonQuantities) {
+                    item.kartonQuantities = item.kartonQuantities.toString();
+                }
+            });
+
+            bestellt.forEach(item => {
+                if (item.kartonQuantities) {
+                    item.kartonQuantities = item.kartonQuantities.toString();
+                }
+            });
+
+// Gesamtwert berechnen
+
+            let gesamtWertBestellt = 0;
+            summarizedBestellt.forEach(item => {
+                gesamtWertBestellt += item.quantity * (Number(item.unitPrice));
+
+            });
+            print(`Gesamtbetrag Bestellt: ${gesamtWertBestellt.toFixed(2)} EUR`);
+
+            let gesamtWertPending = 0;
+            newPending.forEach(item => {
+                gesamtWertPending += item.quantity * (Number(item.unitPrice));
+
+            });
+            print(`Gesamtbetrag Pending: ${gesamtWertPending.toFixed(2)} EUR`);
+
+            let gesamtWertVersendet = 0;
+            summarizedVersendet.forEach(item => {
+                gesamtWertVersendet += item.quantity * (Number(item.unitPrice));
+            });
+            print(`Gesamtbetrag Versendet: ${gesamtWertVersendet.toFixed(2)} EUR`);
+
+
+// Bei Amazon: order_number entfernen
+            let gesProdukteBestellt = 0;
+            summarizedBestellt.forEach(item => {
+                gesProdukteBestellt += item.quantity;
+                delete item.order_number;
+                //delete item.kartonQuantities;
+            });
+
+            let gesProduktePending = 0;
+            newPending.forEach(item => {
+                gesProduktePending += item.quantity;
+                delete item.order_number;
+                //delete item.kartonQuantities;
+
+            });
+
+            let gesProdukteVersendet = 0;
+            summarizedVersendet.forEach(item => {
+                gesProdukteVersendet += item.quantity;
+                delete item.order_number;
+                delete item.kartonQuantities;
+
+            });
+
+
+// Kartons bereinigen und anhängen (ebenfalls ohne Mutationen)
+            const bereinigteBestelltKartons = summarizedBestelltKartons
+                .filter(item => item.quantity !== 0)
+                .map(item => {
+                    return {...item};
+                });
+            summarizedBestellt.push(...bereinigteBestelltKartons);
+            summarizedBestellt.push({
+                sku: "Gesamtproduktanzahl",
+                quantity: gesProdukteBestellt,
+                unitPrice : "Gesamtbestellwert",
+                totalPrice: gesamtWertBestellt,
+            });
+
+            const bereinigtePendingKartons = summarizedPendingKartons
+                .filter(item => item.quantity !== 0)
+                .map(item => {
+                    return {...item};
+                });
+            newPending.push(...bereinigtePendingKartons);
+            newPending.push({
+                sku: "Gesamtproduktanzahl",
+                quantity: gesProduktePending,
+                unitPrice : "Gesamtbestellwert",
+                totalPrice: gesamtWertPending,
+            });
+
+            const bereinigteVersendetKartons = summarizedVersendetKartons
+                .filter(item => item.quantity !== 0)
+                .map(item => {
+                    return {...item};
+                });
+            summarizedVersendet.push(...bereinigteVersendetKartons);
+            summarizedVersendet.push({
+                sku: "Gesamtproduktanzahl",
+                quantity: gesProdukteVersendet,
+                unitPrice : "Gesamtbestellwert",
+                totalPrice: gesamtWertVersendet,
+            });
+
+
+            // Excel-Sheets erzeugen
+            const wsSummarizedBestellt = XLSX.utils.json_to_sheet(summarizedBestellt);
+            const wsPending = XLSX.utils.json_to_sheet(newPending); // Original bleibt unverändert
+
+            const wsSummarizedVersendet = XLSX.utils.json_to_sheet(summarizedVersendet);
+            const wsBestellt = XLSX.utils.json_to_sheet(bestellt); // Original bleibt unverändert
+            const wsVersendet = XLSX.utils.json_to_sheet(versendet); // Original bleibt unverändert
+            const wsCanceled = XLSX.utils.json_to_sheet(canceled); // Original bleibt unverändert
+
+
+            const wb = XLSX.utils.book_new();
+            // XLSX.utils.book_append_sheet(wb, wsSummarizedBestellt, `Bestellt kumuliert am ${getYesterday()}`);
+            // XLSX.utils.book_append_sheet(wb, wsSummarizedVersendet, `Versendet kumuliert am ${getNextWorkDayFromYesterday()}`);
+            XLSX.utils.book_append_sheet(wb, wsSummarizedBestellt, `BestelltKumuliertAm ${getPurchaseDate()}`.substring(0, 31));
+            XLSX.utils.book_append_sheet(wb, wsPending, "Ausstehend");
+
+            //-----------------------------------------------------
+
+            const newVersendetByDate = JSON.parse(JSON.stringify(versendetByDate));
+            addSheetsByDate(wb, newVersendetByDate, "Versendet", true);  // true = ohne MED
+
+            const newCanceledByDate = JSON.parse(JSON.stringify(canceledByDate));
+            addSheetsByDate(wb, newCanceledByDate, "Storniert", true);
+            //-----------------------------------------------------
+
+            XLSX.utils.book_append_sheet(wb, wsSummarizedVersendet, `VersendetKumuliertAm ${getLastUpdatedDate(versendetByDate)}`.substring(0, 31));
+            XLSX.utils.book_append_sheet(wb, wsBestellt, "Bestellt");
+            XLSX.utils.book_append_sheet(wb, wsVersendet, "Versendet");
+            XLSX.utils.book_append_sheet(wb, wsCanceled, "Storniert");
+
+            XLSX.writeFile(wb, excelFile);
+            print(`Die Excel-Datei "${excelFile}" wurde erfolgreich erstellt.`, "green");
+
+
+            // eine Zeile mit Allem Gesamt, also Artikel und Preis
+        }
+
+        function setPurchaseDate (date) {
+            if (purchaseDate === null) {
+                purchaseDate = date.split("T")[0];
+                console.log(purchaseDate);
+            }
+        }
+
+        function getPurchaseDate () {
+            if (purchaseDate !== null) {
+                console.log(purchaseDate);
+                return purchaseDate;
+            }
+            return getYesterday();
+        }
+
+        function getLastUpdatedDate(dataByDate) {
+            const maxDate = Object.keys(dataByDate).reduce((a, b) => new Date(a) > new Date(b) ? a : b);
+            console.log(maxDate);
+            return maxDate;
+        }
+
+        /**
+         * @param {object} wb - Excel workbook
+         * @param {object} dataByDate -  { "15.01.2026": [array of items], ... }
+         * @param {string} sheetPrefix -  "Versendet" или "Storniert"
+         * @param {boolean} ohneMED -  MED
+         */
+        function addSheetsByDate(wb, dataByDate, sheetPrefix, ohneMED = false) {
+            console.log(dataByDate);
+
+            const sortedDates = Object.keys(dataByDate)
+                .sort((a, b) => new Date(b) - new Date(a));
+
+            console.log(sortedDates);
+
+            sortedDates.forEach(date => {
+                const items = dataByDate[date];
+                const [summarizedItems, summarizedKartons] = summarizeJson(items, ohneMED);
+                summarizedItems.sort((a, b) => {
+                    const skuCompare = a.sku.localeCompare(b.sku);
+                    if (skuCompare !== 0) return skuCompare;
+                    return a.kartonSKUs.localeCompare(b.kartonSKUs);
+                });
+                // const bereinigteKartons = summarizedKartons
+                //     .filter(item => item.quantity !== 0)
+                //     .map(item => {
+                //         return {...item};
+                //     });
+
+                let quantity = summarizedItems.reduce((sum, item) => sum + item.quantity, 0);
+                let totalPrice= summarizedItems.reduce((sum, item) => sum + (item.totalPrice || 0), 0)
+
+                console.log(summarizedKartons);
+                const bereinigteKartons = Object.values(summarizedKartons)
+                    // .filter(item => item.quantity !== 0)
+                    .map(item => ({ ...item }))
+                    .sort((a, b) => a.sku.localeCompare(b.sku));
+
+                console.log(bereinigteKartons);
+
+                summarizedItems.push(...bereinigteKartons);
+                summarizedItems.push({
+                    sku: "Gesamtproduktanzahl",
+                    quantity: quantity, //summarizedItems.reduce((sum, item) => sum + item.quantity, 0),
+                    unitPrice: "Gesamtwert",
+                    totalPrice: totalPrice //summarizedItems.reduce((sum, item) => sum + (item.totalPrice || 0), 0)
+                });
+
+                console.log(summarizedItems);
+                const safeDate = date.replace(/[\/\\\?\*\[\]]/g, "_");
+                const sheetName = `${sheetPrefix} ${safeDate}`.substring(0, 31);
+                console.log(sheetName);
+
+                const ws = XLSX.utils.json_to_sheet(summarizedItems);
+                XLSX.utils.book_append_sheet(wb, ws, sheetName);
+            });
+        }
+
+        function summarizeJson(data, ohneMED=false) {
+            const summarizedData = {};
+            const summarizedDataKartons = {};
+
+            data.forEach(item => {
+                const key = `${item.sku}_${item.unitPrice}_${item.kartonSKUs}`;
+                if (!summarizedData[key]) {
+                    summarizedData[key] = {
+                        ...item
+                    };
+                } else {
+                    summarizedData[key].quantity += item.quantity;
+                    summarizedData[key].totalPrice += item.totalPrice;
+                    console.log(typeof summarizedData[key].kartonQuantities, summarizedData[key].kartonQuantities);
+                    if (summarizedData[key].kartonQuantities)
+                        summarizedData[key].kartonQuantities.forEach((_, index) => {summarizedData[key].kartonQuantities[index] += item.kartonQuantities[index];});
+
+                }
+
+                item.kartonSKUs?.split(",").forEach((karton, idx) => {
+                    if (ohneMED && karton === "MED")
+                        return;
+                    const kartonKey = karton;
+                    const kartonQty = Number(item.kartonQuantities[idx]) || 0;
+
+                    if (!summarizedDataKartons[kartonKey]) {
+                        summarizedDataKartons[kartonKey] = {
+                            sku: karton,
+                            quantity: kartonQty,
+                            unitPrice: 0
+                        };
+                    } else {
+                        summarizedDataKartons[kartonKey].quantity += kartonQty;
+                    }
+                });
+            });
+
+            Object.values(summarizedData).forEach(item => {
+                if (item.kartonQuantities) {
+                    item.kartonQuantities = item.kartonQuantities.toString();
+                }
+            });
+
+
+            return [Object.values(summarizedData), Object.values(summarizedDataKartons)];
+        }
+
+        function print(text, color = "black") {
+            $('#cons').append(`<p style="color: ${color};">${text}</p>`);
+        }
+
+        function createTable(data) {
+            let table = '<table border="1" cellspacing="0" cellpadding="5"><thead><tr>' +
+                '<th>Original SKU</th>' + // Order Number nur hinzufügen, wenn isOSN true ist
+                '<th>Angepasste SKU</th><th>Menge</th><th>Wert</th>' +
+                '<th>Beschreibung</th>' +
+                '<th>Karton</th>'
+            '</tr></thead><tbody>';
+
+            data.forEach(item => {
+                table += `<tr>`+
+                    `<td>${item.originalSKU}</td>`+ // Order Number Spalte nur einfügen, wenn isOSN true ist
+                    `<td>${item.sku}</td>
+                  <td>${item.quantity}</td>
+                  <td>${item.unitPrice}</td>` +
+                    `<td>${item.description}</td>
+                <td>${item.karton}</td>
+              </tr>`;
+            });
+
+            table += '</tbody></table>';
+            $('#table-container').html(table);
+        }
+
+        function getMondayToFridayRange() {
+            const today = new Date();
+            const monday = new Date(today.setDate(today.getDate() - (today.getDay() + 6) % 7));
+            const friday = new Date(monday); friday.setDate(monday.getDate() + 4);
+
+            const format = d => String(d.getDate()).padStart(2, '0');
+            return `${format(monday)}-${format(friday)}.${String(monday.getMonth() + 1).padStart(2, '0')}.${String(monday.getFullYear()).slice(-2)}`;
+        }
+
+        function getYesterday() {
+            const d = new Date();
+            d.setDate(d.getDate() - 1);
+            return `${d.getDate().toString().padStart(2, '0')}.${(d.getMonth() + 1).toString().padStart(2, '0')}`;
+        }
+
+        function getNextWorkDayFromYesterday() {
+            const d = new Date();
+            d.setDate(d.getDate() - 1); // gestern
+            do d.setDate(d.getDate() + 1); // nächster Tag, bis Werktag
+            while (d.getDay() % 6 === 0);
+            return `${d.getDate().toString().padStart(2, '0')}.${(d.getMonth() + 1).toString().padStart(2, '0')}`;
+        }
+
+
+    </script>
+    <style>
+        /* Grundlegende Stile für die gesamte Seite */
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(to right, #eef2f7, #dce4ec);
+            color: #333;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        /* Stil für die Überschrift */
+        h1 {
+            font-size: 2.5em;
+            color: #003366;
+            margin-bottom: 20px;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        /* Datei-Input-Container */
+        #fileInputContainer {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
+            padding: 15px;
+            background: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        input[type="file"] {
+            padding: 10px;
+            font-size: 1em;
+            cursor: pointer;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+            transition: all 0.3s ease;
+            background-color: #ffffff;
+        }
+
+        input[type="file"]:hover {
+            border-color: #003366;
+            box-shadow: 0px 0px 5px rgba(0, 51, 102, 0.4);
+        }
+
+        /* Stil für Buttons */
+        button {
+            padding: 14px 28px;
+            font-size: 1.1em;
+            color: #fff;
+            background: linear-gradient(135deg, #004080, #002f5e);
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 15px;
+            font-weight: bold;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        button:hover {
+            background: linear-gradient(135deg, #003366, #001f40);
+            box-shadow: 0px 4px 12px rgba(0, 51, 102, 0.4);
+        }
+
+        /* Konsolenausgabe */
+        #cons {
+            width: 80%;
+            margin-top: 20px;
+            padding: 15px;
+            border: 1px solid #ccc;
+            background-color: #fff;
+            border-radius: 8px;
+            color: #333;
+            font-size: 0.95em;
+            box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Tabellen-Container */
+        #table-container {
+            width: 90%;
+            max-width: 1000px;
+            margin-top: 20px;
+            overflow-x: auto;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        #table-container table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        #table-container th, #table-container td {
+            padding: 14px;
+            border: 1px solid #ddd;
+            text-align: left;
+        }
+
+        #table-container th {
+            background-color: #004080;
+            color: #fff;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        #table-container tr:nth-child(even) {
+            background-color: #f4f7fa;
+        }
+
+        /* Switch Toggle */
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 24px;
+        }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: gray;
+            transition: .4s;
+            border-radius: 24px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked + .slider {
+            background-color: #004080;
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(26px);
+        }
+
+        .deactivated{
+            pointer-events: none;
+            opacity: 0.7;
+        }
+        .info-box {
+            background-color: #f0f4f8;
+            border-left: 4px solid #007acc;
+            padding: 15px 20px;
+            font-family: Arial, sans-serif;
+            position: relative;
+            margin: 20px 0;
+            border-radius: 5px;
+        }
+
+        .info-header {
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .info-icon {
+            font-size: 20px;
+            margin-right: 10px;
+            color: #007acc;
+        }
+
+        .info-content {
+            margin-top: 10px;
+            display: none;
+        }
+
+        .expanded .info-content {
+            display: block;
+        }
+
+        .toggle-icon {
+            margin-left: auto;
+            transition: transform 0.3s ease;
+        }
+
+        .expanded .toggle-icon {
+            transform: rotate(90deg);
+        }
+    </style>
+</head>
+<body>
+
+<div class="info-box" id="infoBox">
+    <div class="info-header">
+        <span class="info-icon">ℹ️</span>
+        <span>Information zur Nutzung des Tools</span>
+        <span class="toggle-icon">▶</span>
+    </div>
+    <div class="info-content">
+        <!--TODO Besser schreiben -->
+        Fasst den Amazon Bestellbericht zusammen
+
+        <p><strong>Vorgehensweise:</strong></p>
+        <ol>
+            <li>Amazon Bestellbericht hohlen</li>
+            <li>Hier hochladen</li>
+            <li>Zusammengefasste Excel herunterladen</li>
+        </ol>
+        Bei Fragen, Anmerkungen oder Probleme Bitte an Marwin wenden.
+    </div>
+
+</div>
+<div>
+    <h1>Kartons einlesen</h1>
+    <input id="kartonsEinlesen" type="file" accept=".xlsx" onChange="readKartons(event, $(this))" />
+    <p id="kartonsEinlesenText"></p>
+</div>
+
+<div id="CSVContainer" class="deactivated">
+    <h1>CSV Datei einlesen</h1>
+
+    <p id="CSVText" style="color: red">Bevor die CSV-Dateien eingelesen werden können, müssen zuerst die Kartons eingelesen werden.</p>
+
+    <div id="fileInputContainer">
+        <input type="file" accept=".txt, .csv" onchange="readFile(event, $(this))">
+    </div>
+</div>
+
+<button id="downloadExcel" class="deactivated" onclick="downloadExcel()">Download Excel</button>
+<p id="excelText" style="color: red">Bevor die Excel-Datei erstellt werden kann, muss eine CSV-Datei eingelesen werden.</p>
+<div id="cons"></div>
+<div id="table-container"></div>
+</body>
+
+</html>

@@ -16,10 +16,7 @@
         let bestellt = []
         let pending = [];
         let canceled = [];
-        let kartons = [];
-
-        let packs = new Map();
-        let packSet = new Set();
+        let kartons = {};
 
         let versendetByDate = {};
         let canceledByDate = {};
@@ -27,39 +24,16 @@
         let purchaseDate = null;
 
 
-        $(document).ready(function () {
-            const $infoBox = $('#infoBox');
-            const $text = $("#kartonsEinlesenText");
-
-            const messages = [];
-
+        $(document).ready(function() {
             const localStorageKartons = localStorage.getItem("kartons");
             if (localStorageKartons) {
                 kartons = JSON.parse(localStorageKartons);
-                messages.push("Kartons wurden aus dem Local Storage geladen");
-            }
-
-            const localStoragePacks = localStorage.getItem("packs");
-            if (localStoragePacks) {
-                const saved = JSON.parse(localStorage.getItem("packs"));
-                packs = new Map(Object.entries(saved).map(([key, arr]) => [
-                        Number(key),
-                        arr
-                    ])
-                );
-
-                messages.push("Packs wurden aus dem Local Storage geladen");
-                packSet = new Set([...packs.values()].flat());
-            }
-
-            if (messages.length) {
-                $text
-                    .text(messages.join(" & "))
-                    .css("color", "green");
-
+                $("#kartonsEinlesenText").text("Kartons wurden aus dem Local Storage geladen", "green");
                 activateCSVRead();
             }
 
+            const $infoBox = $('#infoBox');
+            // Klickhandler
             $infoBox.find('.info-header').on('click', function () {
                 $infoBox.toggleClass('expanded');
             });
@@ -88,7 +62,7 @@
                 const firstSheetName = workbook.SheetNames[0];
                 const worksheet = workbook.Sheets[firstSheetName];
 
-                // 🔹 Daten einlesen mit vordefinierten Headers und versteckte Zeilen ignorieren
+                // Daten einlesen mit vordefinierten Headers und versteckte Zeilen ignorieren
                 let jsonData = XLSX.utils.sheet_to_json(worksheet, {
                     raw: true,
                     skipHidden: true,
@@ -96,7 +70,6 @@
                 });
 
                 kartons = {};
-                packs = new Map();
                 jsonData.forEach(element => {
                     if (!kartons[element.KartonSku]) {
                         // Wenn der Karton noch nicht existiert, erstelle ihn
@@ -110,33 +83,12 @@
 
                     // Füge die SKU zum "productSKU"-Array hinzu
                     kartons[element.KartonSku].productSKU.push(element.Sku);
-
-                    const match = element.Sku.match(/-(\d)$/);
-                    if (match) {
-                        const groupKey = Number(match[1]);
-                        const baseSku = element.Sku.slice(0, -2);
-
-                        if (!packs.has(groupKey)) {
-                            packs.set(groupKey, []);
-                        }
-
-                        const arr = packs.get(groupKey);
-                        if (!arr.includes(baseSku)) {
-                            arr.push(baseSku);
-                        }
-                    }
                 });
 
-                // kartons = Object.entries(kartons).map(([key, value]) => ({
-                //     ...value
-                // }));
-
-                kartons = Object.values(kartons);
+                kartons = Object.entries(kartons).map(([key, value]) => ({
+                    ...value
+                }));
                 localStorage.setItem("kartons", JSON.stringify(kartons));
-
-                packs = new Map([...packs.entries()].sort((a, b) => Number(b[0]) - Number(a[0])));
-                localStorage.setItem("packs", JSON.stringify(Object.fromEntries(packs)));
-
                 activateCSVRead();
                 print("Kartons wurden eingelesen.", "green")
             };
@@ -168,15 +120,27 @@
         function readCsvFile(csv) {
 
             $.csv.toObjects(csv, {separator: "\t"}).forEach(row => {
-                const orderNumber = row['amazon-order-id'];
-                const orderStatus = row['order-status'];
-                let quantity = Number(row['quantity']);
-                let value = (row['item-price']/quantity);
-                let sku = correctSku(row['sku']);
-                const description = row['product-name'];
+
+                const orderNumber = row['amazon-order-id']; //order number
+
+
+                const orderStatus = row['order-status'];//='Shipped
+
+                let quantity = Number(row['quantity']); //parcel items / quantity
+
+                let value = (row['item-price']/quantity); //parcel items / value
+ 
+
+
+                let sku = correctSku(row['sku']); //parcel items / sku
+
+                const description = row['product-name']; //parcel items / description
+
+
                 const [kartonSKUs, kartonQuantitys]= addKarton(sku, quantity, description);
 
                 if (sku.includes('-4')) { // 4er Multipack anpassen
+
                     sku = correctSku(sku.split('-4')[0])
                     quantity = quantity*4;
                     value = value/4;
@@ -190,29 +154,32 @@
                     sku,//: correctSku(sku.split('-')[0]),
                     quantity,
                     value,
-                    gesVal: Number(row['item-price']),
+                    gesVal: Number(row['item-price']), //parcel items / value
                     order_number: orderNumber,
                     description,
                     kartonSKUs: kartonSKUs?.toString(),
                     kartonQuantitys: kartonQuantitys,
-                    originalSKU: row['sku'],
+                    originalSKU: row['sku'], //parcel items / sku
 
                 };
 
-                setPurchaseDate(row['purchase-date']);
+                setPurchaseDate(row['purchase-date']); //created at
 
-                const lastUpdatedDate = row['last-updated-date'];
+
+                const lastUpdatedDate = getWorkingDay(row['last-updated-date']); //created at
+
                 const dataByLastUpdatedDate = {
                     sku,//: correctSku(sku.split('-')[0]),
                     quantity,
                     value,
-                    gesVal: Number(row['item-price']),
+                    gesVal: Number(row['item-price']), // ?
                     order_number: orderNumber,
                     description,
                     kartonSKUs: kartonSKUs?.toString(),
                     kartonQuantitys: kartonQuantitys,
-                    lastUpdatedDate: row['last-updated-date'],
-                    originalSKU: row['sku']
+                    lastUpdatedDate: row['last-updated-date'], //created at
+
+                    originalSKU: row['sku'] //parcel items / sku
                 };
 
                 // je nach orderStatus in die entsprechende Liste reinschreiben
@@ -232,38 +199,54 @@
                 }
             }); // end forEach
         } //end readCsvFile
+
+        function getWorkingDay (dateString) {
+            if (!dateString) return;
+const date = new Date(dateString);
+const day = date.getDay();
+
+if (day === 6) {
+	date.setDate(date.getDate() + 2);
+} else if (day === 0) {
+	date.setDate(date.getDate() + 1);
+}
+
+//return date.toISOString().split("T")[0];
+
+const year = date.getFullYear();
+const month = String(date.getMonth() + 1).padStart(2, "0");
+const dayNum = String (date.getDate()).padStart(2,"0")
+
+//if ("2026-03-06T23:44:46+00:00" == dateString)
+//alert([`${year}-${month}-${dayNum}`, date.toLocaleDateString("de-DE")]);
+
+return `${year}-${month}-${dayNum}`;
+
+}
+
         function correctSku(sku) {
             const corrections = {
                 // Amazon/IONOS SKU:Sgae SKU
+/*
                 "05-GRYL-PZRA": "07.13122",
                 "01.10008": "01.10008/A24",
                 "01.41001-1S": "01.41001-60",
                 "07.15806/1": "07.15806",
-                "07.10017-2": "07.10017",
                 "09-UVI8-FTAX": "07.13121",
                 "07.00870/1": "07.00870",
                 "07:09155": "07.09155",
-                "07.14013": "07.00870",
                 "01.41001-16l": "01.41001-16",
                 "07.15822/1": "07.15822",
                 "07.09157/1": "07.09157",
                 "CW-ERPK-0NOE": "07.09146",
-                "07.10013_2": "07.10013",
                 "07.09149/1": "07.09149",
                 "02.10009/25/25kg": "02.10009/25",
-                "02.10001/20kg": "02.10001",
-                "07.09141": "07.09144",
                 "02.10002-1B": "02.10002",
-                "04.10453/1": "04.10453",
-                "02.10002/s-1": "02.10002/S",
-                "02.10011F-1": "02.10011F",
-                "01.9101-1": "01.9101",
+
                 "SG-KQP6-CCW4": "01.9011",
                 "1B0H-2X2E-6LG7": "01.9001",
                 "YU-M599-K8MR": "01.9001",
                 "EG-5YY7-SL7V": "01.9002",
-                "07.10030_2": "07.10030",
-                "01.41001": "01.40001",
                 "4A-SKJP-WH9E": "01.10070",
                 "07:09153": "07.09153",
                 "01.10009": "01.10009/bio",
@@ -279,12 +262,65 @@
                 "01.10008/AGH": "01.10008/A24",
                 "01.10002": "01.10002/SM",
                 "NS-IYVP-DQYD": "07.00941",
-                "01.45014-1" : "01.45014",
-                "07.13149-1" : "07.13149" //Marina hat hizugefügt
+                "04.10453/1": "04.10453",
+
+                "07.09141": "07.09144",
+                "07.14013": "07.00870",
+*/
+
+"07.10030_2": "07.10030",
+"02.10002/s-1": "02.10002/S",
+"07.10013_2": "07.10013",
+"07.10017-2": "07.10017",
+"02.10001/20kg": "02.10001",
+"4A-SKJP-WH9E": "01.10070",
+
+
+//MI
+/*
+"01.10008/19ex-1":"01.10008/19ex",
+"01.10008/A24-1":"01.10008/A24",
+"01.10012-1" :"01.10012",
+"01.9101-1": "01.9101",
+"01.30002X-1":"01.30002X",
+"01.45014-1" : "01.45014",
+"02.10011F-1": "02.10011F",
+"07.13149-1" : "07.13149",
+"07.00870-1": "07.00870",
+
+"01.9012-2B": "01.9012-2",
+"02.10002-4B": "02.10002-4",
+*/
+
+
+
+
+"01.40002/oL/1":"01.40002/oL-1",
+"01.40002/oL/2":"01.40002/oL-2",
+"01.40002/oL/96":"01.40002/oL-96",
+
+
+
+
             };
+
             if (corrections[sku]) {
                 return corrections[sku];
-            }else{
+            } else if (sku.endsWith("-1")) {
+		return sku.slice(0, -2);
+            } else if (sku.endsWith("-1B")) {
+		return sku.slice(0, -3);
+            } else if (sku.endsWith("-2B")) {
+		return sku.slice(0, -1);
+            } else if (sku.endsWith("-4B")) {
+		return sku.slice(0, -1);
+            } else if (sku.endsWith("-15B")) {
+		return sku.slice(0, -1);
+            } else if (sku.endsWith("-24B")) {
+		return sku.slice(0, -1);
+            } else if (sku.endsWith("-30B")) {
+		return sku.slice(0, -1);
+	    } else {
                 return sku;
             }
         }
@@ -292,108 +328,62 @@
             let kartonSkus = [];
             let kartonQuantities = [];
 
-            const addKartonSkuAndQty = (sku, qty) => {
-                kartonSkus.push(findKarton(sku));
-                kartonQuantities.push(qty);
+            const addKarton = (index, sku, qty) => {
+                kartonSkus[index] = findKarton(sku);
+                kartonQuantities[index] = qty;
             };
 
             // ✅ BoxR4,5
-            // if (sku === '01.9012-2' && quantity > 1) {
-            //     const mapping = {
-            //         3: [['01.9012-2', 1], ['01.9012-4', 1]],
-            //         6: [['01.9012-2', 1], ['01.9012-4', 2]],
-            //         8: [['01.9012-2', 1], ['01.9012-4', 3]]
-            //     };
-            //
-            //     if (mapping[quantity]) {
-            //         mapping[quantity].forEach(([sku, qty], idx) => addKarton(idx, sku, qty));
-            //     } else {
-            //         addKarton(0, '01.9012-4', Math.floor(quantity / 2));
-            //     }
-            //
-            //     return [kartonSkus, kartonQuantities];
-            // }
+            if (sku === '01.9012-2' && quantity > 1) {
+                const mapping = {
+                    3: [['01.9012-2', 1], ['01.9012-4', 1]],
+                    6: [['01.9012-2', 1], ['01.9012-4', 2]],
+                    8: [['01.9012-2', 1], ['01.9012-4', 3]]
+                };
+
+                if (mapping[quantity]) {
+                    mapping[quantity].forEach(([sku, qty], idx) => addKarton(idx, sku, qty));
+                } else {
+                    addKarton(0, '01.9012-4', Math.floor(quantity / 2));
+                }
+
+                return [kartonSkus, kartonQuantities];
+            }
 
             // ✅ WG16 (Mapping vereinfacht)
-            // if (sku === '01.41001-16') {
-            //     const wg16Map = {
-            //         1: '01.41001-16',
-            //         2: '01.41001-16-2',
-            //         3: '01.41001-16-3',
-            //         4: '01.41001-16-4'
-            //     };
-            //
-            //     sku = wg16Map[quantity] || sku;
-            //     kartonSkus.push(findKarton(sku));
-            //     kartonQuantities.push(1);
-            //     return [kartonSkus, kartonQuantities];
-            // }
+            if (sku === '01.41001-16') {
+                const wg16Map = {
+                    1: '01.41001-16',
+                    2: '01.41001-32',
+                    3: '01.41001-48',
+                    4: '01.41001-64'
+                };
+                sku = wg16Map[quantity] || sku;
+                kartonSkus.push(findKarton(sku));
+                kartonQuantities.push(1);
+                return [kartonSkus, kartonQuantities];
+            }
 
             // ✅ WG2, Ap2, HempF2 (2er Packungen)
-            // if (['01.41001-60', '01.10013', '01.45014', '07.10124'].includes(sku) && quantity > 1) {
-            //     const baseSku = sku + '-2';
-            //     kartonSkus[0] = findKarton(baseSku);
-            //     kartonQuantities[0] = Math.floor(quantity / 2);
-            //
-            //     const rest = quantity % 2;
-            //     if (rest > 0) {
-            //         kartonSkus[1] = findKarton(sku);
-            //         kartonQuantities[1] = rest;
-            //     }
-            //     return [kartonSkus, kartonQuantities];
-            // }
+            if (['01.41001-60', '01.10013', '01.45014', '07.10124'].includes(sku) && quantity > 1) {
+                const baseSku = sku + '-2';
+                kartonSkus[0] = findKarton(baseSku);
+                kartonQuantities[0] = Math.floor(quantity / 2);
 
-            let applied = false;
-            for (const [quantityKey, skus] of packs) {
-
-                if (!skus.includes(sku)) continue;
-
-                const qKey = Number(quantityKey);
-
-                if (quantity < qKey) continue;
-
-                const whole = Math.floor(quantity / qKey);
-                const remainder = quantity % qKey;
-
-                const baseSku = `${sku}-${qKey}`;
-
-                kartonSkus.push(findKarton(baseSku));
-                kartonQuantities.push(whole);
-
-                quantity = remainder;
-                applied = true;
-
-                if (quantity === 0) break;
-            }
-            if (applied) {
-                if (quantity > 0) {
-                    kartonSkus.push(findKarton(sku));
-                    kartonQuantities.push(quantity);
+                const rest = quantity % 2;
+                if (rest > 0) {
+                    kartonSkus[1] = findKarton(sku);
+                    kartonQuantities[1] = rest;
                 }
                 return [kartonSkus, kartonQuantities];
             }
 
-
-            // // ✅ PL, PHs, EquiLin, Ameco 4er Pack
-            // if (['02.10011F-4', '02.10002/s-4', '01.10095-4', '01.9101-4'].includes(sku)) {
-            //     sku = sku.slice(0, -2); // "-4" entfernen
-            //     kartonSkus.push(findKarton(sku));
-            //     kartonQuantities.push(quantity * 4);
-            //     return [kartonSkus, kartonQuantities];
-            // }
-
-            const match = sku.match(/-(\d)$/);
-            if (match) {
-                const factor = Number(match[1]);
-                const baseSku = sku.slice(0, -2);
-
-                if (!packSet.has(baseSku)) {
-
-                    kartonSkus.push(findKarton(baseSku));
-                    kartonQuantities.push(quantity * factor);
-
-                    return [kartonSkus, kartonQuantities];
-                }
+            // ✅ PL, PHs, EquiLin, Ameco 4er Pack //MI
+            if (['02.10011F-4', '02.10002/s-4', '01.10095-4', '01.9101-4', '02.10002-4','01.10008/A24-4', '01.10012-4'].includes(sku)) {
+                sku = sku.slice(0, -2); // "-4" entfernen
+                kartonSkus.push(findKarton(sku));
+                kartonQuantities.push(quantity * 4);
+                return [kartonSkus, kartonQuantities];
             }
 
             // ✅ Standard-Fall
@@ -408,7 +398,6 @@
 
             return [kartonSkus, kartonQuantities];
         }
-
         function findKarton(sku) {
             for (const karton of kartons) {
                 // Standardfall: Suche nach passendem Karton
@@ -420,7 +409,7 @@
         }
         function addByDate (obj, date, row) {
             if (!date) return;
-            date = date.split("T")[0];
+            //date = date.split("T")[0];
             if (!obj[date])
                 obj[date] = [];
             obj[date].push(row);
@@ -431,27 +420,46 @@
             // const excelFile = `Amazon ${getYesterday()}.xlsx`;
             const excelFile = `Amazon ${getPurchaseDate()}.xlsx`;
 
-
-            // Tiefe Kopie, damit bigData NICHT verändert wird
+// Tiefe Kopie, damit bigData NICHT verändert wird
+            const newVersendet = JSON.parse(JSON.stringify(versendet));
             const newBestellt = JSON.parse(JSON.stringify(bestellt));
             const newPending = JSON.parse(JSON.stringify(pending));
-            const newVersendet = JSON.parse(JSON.stringify(versendet));
 
-
-            // Zusammenfassung nur bei Amazon, danach Sortierung
-            const [summarizedBestellt, summarizedBestelltKartons] = summarizeJson(newBestellt, true);
-            summarizedBestellt.sort((a, b) => a.sku.localeCompare(b.sku));
+// Zusammenfassung nur bei Amazon, danach Sortierung
+            const [summarizedBestellt, summarizedBestelltKartons] = summarizeJson(newBestellt);
+            summarizedBestellt.sort((a, b) =>  {
+const skuCompare = a.sku.localeCompare(b.sku);
+if (skuCompare !== 0) return skuCompare;
+return a.kartonSKUs.localeCompare(b.kartonSKUs);
+	});
             summarizedBestelltKartons.sort((a, b) => a.sku.localeCompare(b.sku));
 
             const [summerizedPending, summarizedPendingKartons] = summarizeJson(newPending);
-            newPending.sort((a, b) => a.sku.localeCompare(b.sku));
+            newPending.sort((a, b) =>  {
+const skuCompare = a.sku.localeCompare(b.sku);
+if (skuCompare !== 0) return skuCompare;
+return a.kartonSKUs.localeCompare(b.kartonSKUs);
+	});
             summarizedPendingKartons.sort((a, b) => a.sku.localeCompare(b.sku));
 
             const [summarizedVersendet, summarizedVersendetKartons] = summarizeJson(newVersendet, true);
             summarizedVersendet.sort((a, b) => a.sku.localeCompare(b.sku));
             summarizedVersendetKartons.sort((a, b) => a.sku.localeCompare(b.sku));
 
-            // Gesamtwert berechnen
+newPending.forEach(item => {
+  if (item.kartonQuantitys) {
+    item.kartonQuantitys = item.kartonQuantitys.toString();
+  }
+});
+
+bestellt.forEach(item => {
+  if (item.kartonQuantitys) {
+    item.kartonQuantitys = item.kartonQuantitys.toString();
+  }
+});
+
+// Gesamtwert berechnen
+
             let gesamtWertBestellt = 0;
             summarizedBestellt.forEach(item => {
                 gesamtWertBestellt += item.quantity * (Number(item.value));
@@ -473,20 +481,22 @@
             print(`Gesamtbetrag Versendet: ${gesamtWertVersendet.toFixed(2)} EUR`);
 
 
-            // Bei Amazon: order_number entfernen
+// Bei Amazon: order_number entfernen
             let gesProdukteBestellt = 0;
             summarizedBestellt.forEach(item => {
                 gesProdukteBestellt += item.quantity;
                 delete item.order_number;
-                delete item.kartonQuantitys;
+                //delete item.kartonQuantitys;
             });
+
             let gesProduktePending = 0;
             newPending.forEach(item => {
                 gesProduktePending += item.quantity;
                 delete item.order_number;
-                delete item.kartonQuantitys;
+                //delete item.kartonQuantitys;
 
             });
+
             let gesProdukteVersendet = 0;
             summarizedVersendet.forEach(item => {
                 gesProdukteVersendet += item.quantity;
@@ -495,20 +505,8 @@
 
             });
 
-            // Kartons bereinigen und anhängen (ebenfalls ohne Mutationen)
-            const bereinigteVersendetKartons = summarizedVersendetKartons
-                .filter(item => item.quantity !== 0)
-                .map(item => {
-                    return {...item};
-                });
-            summarizedVersendet.push(...bereinigteVersendetKartons);
-            summarizedVersendet.push({
-                sku: "Gesamtproduktanzahl",
-                quantity: gesProdukteVersendet,
-                value : "Gesamtbestellwert",
-                gesVal: gesamtWertVersendet,
-            });
 
+// Kartons bereinigen und anhängen (ebenfalls ohne Mutationen)
             const bereinigteBestelltKartons = summarizedBestelltKartons
                 .filter(item => item.quantity !== 0)
                 .map(item => {
@@ -535,14 +533,29 @@
                 gesVal: gesamtWertPending,
             });
 
+            const bereinigteVersendetKartons = summarizedVersendetKartons
+                .filter(item => item.quantity !== 0)
+                .map(item => {
+                    return {...item};
+                });
+            summarizedVersendet.push(...bereinigteVersendetKartons);
+            summarizedVersendet.push({
+                sku: "Gesamtproduktanzahl",
+                quantity: gesProdukteVersendet,
+                value : "Gesamtbestellwert",
+                gesVal: gesamtWertVersendet,
+            });
+
 
             // Excel-Sheets erzeugen
             const wsSummarizedBestellt = XLSX.utils.json_to_sheet(summarizedBestellt);
+            const wsPending = XLSX.utils.json_to_sheet(newPending); // Original bleibt unverändert
+
             const wsSummarizedVersendet = XLSX.utils.json_to_sheet(summarizedVersendet);
             const wsBestellt = XLSX.utils.json_to_sheet(bestellt); // Original bleibt unverändert
             const wsVersendet = XLSX.utils.json_to_sheet(versendet); // Original bleibt unverändert
-            const wsPending = XLSX.utils.json_to_sheet(newPending); // Original bleibt unverändert
             const wsCanceled = XLSX.utils.json_to_sheet(canceled); // Original bleibt unverändert
+
 
             const wb = XLSX.utils.book_new();
             // XLSX.utils.book_append_sheet(wb, wsSummarizedBestellt, `Bestellt kumuliert am ${getYesterday()}`);
@@ -608,12 +621,19 @@
             sortedDates.forEach(date => {
                 const items = dataByDate[date];
                 const [summarizedItems, summarizedKartons] = summarizeJson(items, ohneMED);
-                summarizedItems.sort((a, b) => a.sku.localeCompare(b.sku));
+                summarizedItems.sort((a, b) => {
+const skuCompare = a.sku.localeCompare(b.sku);
+if (skuCompare !== 0) return skuCompare;
+return a.kartonSKUs.localeCompare(b.kartonSKUs);
+	});
                 // const bereinigteKartons = summarizedKartons
                 //     .filter(item => item.quantity !== 0)
                 //     .map(item => {
                 //         return {...item};
                 //     });
+
+		let quantity = summarizedItems.reduce((sum, item) => sum + item.quantity, 0);
+		let gesVal= summarizedItems.reduce((sum, item) => sum + (item.gesVal || 0), 0)
 
                 console.log(summarizedKartons);
                 const bereinigteKartons = Object.values(summarizedKartons)
@@ -626,9 +646,9 @@
                 summarizedItems.push(...bereinigteKartons);
                 summarizedItems.push({
                     sku: "Gesamtproduktanzahl",
-                    quantity: summarizedItems.reduce((sum, item) => sum + item.quantity, 0),
+                    quantity: quantity, //summarizedItems.reduce((sum, item) => sum + item.quantity, 0),
                     value: "Gesamtwert",
-                    gesVal: summarizedItems.reduce((sum, item) => sum + (item.gesVal || 0), 0)
+                    gesVal: gesVal //summarizedItems.reduce((sum, item) => sum + (item.gesVal || 0), 0)
                 });
 
                 console.log(summarizedItems);
@@ -654,7 +674,10 @@
                 } else {
                     summarizedData[key].quantity += item.quantity;
                     summarizedData[key].gesVal += item.gesVal;
-                }
+if (summarizedData[key].kartonQuantitys)
+summarizedData[key].kartonQuantitys.forEach((_, index) => {summarizedData[key].kartonQuantitys[index] += item.kartonQuantitys[index];});
+                
+		}
 
                 item.kartonSKUs?.split(",").forEach((karton, idx) => {
                     if (ohneMED && karton === "MED")
@@ -673,6 +696,13 @@
                     }
                 });
             });
+
+Object.values(summarizedData).forEach(item => {
+  if (item.kartonQuantitys) {
+    item.kartonQuantitys = item.kartonQuantitys.toString();
+  }
+});
+
 
             return [Object.values(summarizedData), Object.values(summarizedDataKartons)];
         }

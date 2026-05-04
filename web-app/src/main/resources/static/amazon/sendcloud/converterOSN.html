@@ -1,0 +1,662 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CSV Datei einlesen</title>
+  <script src="../xlsx.full.min.js"></script>
+  <script src="../jquery-3.4.1.min.js"></script>
+  <script src="../jquery-csv.js"></script>
+
+  <script>
+
+    // Globale Variablen
+    let bigData = [];
+    let kartons = {};
+	let kartonsVK = {};
+
+    $(document).ready(function() {
+      const localStorageKartons = localStorage.getItem("kartons");
+      if (localStorageKartons) {
+        kartons = JSON.parse(localStorageKartons);
+		kartonsVK = JSON.parse(localStorageKartons);
+        $("#kartonsEinlesenText").text("Kartons wurden aus dem Local Storage geladen");
+        activateCSVRead();
+      }
+
+
+      const $infoBox = $('#infoBox');
+      // Klickhandler
+      $infoBox.find('.info-header').on('click', function () {
+        $infoBox.toggleClass('expanded');
+      });
+    });
+
+    function activateCSVRead() {
+      $("#CSVContainer").removeClass("deactivated");
+      $("#CSVText").text("");
+    }
+    function activateExcelDownloade() {
+      $("#downloadExcel").removeClass("deactivated");
+      $("#excelText").text("");
+    }
+
+    // Einlesen der kartons
+    const handleFileChange = (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function () {
+        const arrayBuffer = this.result;
+        const workbook = XLSX.read(arrayBuffer, { type: "array" });
+
+        // Erstes Blatt auslesen
+        const firstSheetName = workbook.SheetNames[0];
+        const worksheet = workbook.Sheets[firstSheetName];
+
+        // 🔹 Daten einlesen mit vordefinierten Headers und versteckte Zeilen ignorieren
+        let jsonData = XLSX.utils.sheet_to_json(worksheet, {
+          raw: true,
+          skipHidden: true,
+          header: ["Sku", "Produktname", "Produktmaße","EH pro hL-Palette",	"EH pro Sped-Pal.", "Kürzel", "KartonSku"]
+        });
+
+        kartons = {};
+        jsonData.forEach(element => {
+          if (!kartons[element.KartonSku]) {
+            // Wenn der Karton noch nicht existiert, erstelle ihn
+            kartons[element.KartonSku] = {
+              sku: element.KartonSku,
+              quantity: 0,
+              value: "0",
+              productSKU: []
+            };
+          }
+
+          // Füge die SKU zum "productSKU"-Array hinzu
+          kartons[element.KartonSku].productSKU.push(element.Sku);
+        });
+
+        kartons = Object.entries(kartons).map(([key, value]) => ({
+          ...value
+        }));
+		kartonsVK = Object.entries(kartons).map(([key, value]) => ({
+          ...value
+        }));
+        localStorage.setItem("kartons", JSON.stringify(kartons));
+        activateCSVRead();
+        print("Kartons wurden eingelesen.")
+      };
+      reader.readAsArrayBuffer(file);
+    };
+
+    // Einlesen der SendCloud export CSV
+    function readFile(event, element){
+      const file = event.target.files[0];
+
+      if (file) {
+        const reader = new FileReader();
+
+        reader.onload = function(e) {
+          const contents = e.target.result;
+          readCsvFile(contents);
+        };
+        reader.readAsText(file);
+
+        $(element).prop('disabled', true);
+        $('#fileInputContainer').append('<input type="file" accept=".csv" onchange="readFile(event, $(this))">')
+        activateExcelDownloade();
+      } else {
+        alert("Keine Datei ausgewählt");
+      }
+    }
+
+
+    function addKarton(data) {
+      const sku = data.sku;
+      const quantity = data.quantity;
+      let found = false;
+
+      for (const karton of kartons) {
+        // Standardfall: Suche nach passendem Karton
+        if (karton.productSKU.includes(sku)) {
+          if(data.isVK && !data.isEinzelRE){
+			kartonsVK.find(kartonVK => kartonVK.sku === karton.sku).quantity += quantity;
+			console.log("VK")
+		  }else if(!data.isEinzelRE){
+            karton.quantity += quantity;  // Menge zum gefundenen Karton hinzufügen
+          }
+          found = true;
+          return karton.sku;  // Schleife beenden, da der passende Karton gefunden wurde
+        }
+      }
+
+      // Fehlermeldung nur ausgeben, wenn kein passender Karton gefunden wurde
+      if (!found) {
+        print(`Kein passender Karton gefunden für: ${sku}, ${data.description}`);
+      }
+    }
+
+    function summarizeJson(data) {
+      const summarizedData = {};
+      data.forEach(item => {
+        const key = `${item.sku}_${item.value}`;
+        if (!summarizedData[key]) {
+          summarizedData[key] = item;
+        } else {
+          summarizedData[key].quantity += item.quantity;
+        }
+      });
+      return Object.values(summarizedData);
+    }
+
+    function correctSku(sku) {
+      const corrections = {
+        // Amazon/IONOS SKU:Sgae SKU
+        "05-GRYL-PZRA": "07.13122",
+        "01.10008": "01.10008/A24",
+        "01.41001-1S": "01.41001-60",
+        "07.15806/1": "07.15806",
+        "07.10017-2": "07.10017",
+        "09-UVI8-FTAX": "07.13121",
+        "07.00870/1": "07.00870",
+        "07:09155": "07.09155",
+        "07.14013": "07.00870",
+        "01.41001-16l": "01.41001-16",
+        "07.15822/1": "07.15822",
+        "07.09157/1": "07.09157",
+        "CW-ERPK-0NOE": "07.09146",
+        "07.10013_2": "07.10013",
+        "07.09149/1": "07.09149",
+        "02.10009/25/25kg": "02.10009/25",
+        "02.10001/20kg": "02.10001",
+        "07.09141": "07.09144",
+        "02.10002-1B": "02.10002",
+        "04.10453/1": "04.10453",
+        "02.10002/s-1": "02.10002/S",
+        "02.10011F-1": "02.10011F",
+        "01.9101-1": "01.9101",
+        "SG-KQP6-CCW4": "01.9011",
+        "1B0H-2X2E-6LG7": "01.9001",
+        "YU-M599-K8MR": "01.9001",
+        "EG-5YY7-SL7V": "01.9002",
+        "07.10030_2": "07.10030",
+        "01.41001": "01.41001-60",
+        "4A-SKJP-WH9E": "01.10070",
+        "07:09153": "07.09153",
+        "01.10009": "01.10009/bio",
+        "X0-9NX0-9X1Q": "01.10013",
+        "IL-TXHY-EEEL": "07.13148",
+        "KA-84TE-4BN7": "07.13145",
+        "4L-X7S6-VXLD": "07.13149",
+        "B9-TVJ7-UODH": "07.10301",
+        "5A-KSA2-DM8T": "07.14513",
+        "KA-84TE": "07.13145",
+        "F2-EVIH-K2VR": "07.14510",
+        "20-9QFU-RCN9": "01.9012",
+        "01.41001-1S-2": "01.41001-60-2",
+        "01.10008/AGH": "01.10008/A24",
+        "01.10002": "01.10002/SM",
+		"01.10007/AGH": "01.10007/A26",
+		"01.10009/AGH": "01.10009/bio",
+		"01.41001-2":"01.41001-60-2",
+		"01.100014":"01.10014",
+		"01.10009/BA": "01.10009/bio",
+		"02.100035/25": "02.10035/25"
+
+      };
+      if (corrections[sku]) {
+        return corrections[sku];
+      }else{
+        if (sku.includes("-")) {
+          return correctSku(sku.split("-")[0]);
+        }
+        return sku;
+      }
+    }
+
+    function readCsvFile(csv) {
+
+      let data = $.csv.toObjects(csv);
+      let orderNumber;
+      let createdAt;
+
+      data.forEach(row => {
+		orderNumber = row["order number"] + " "+ row["to name"];
+
+        createdAt = formatDate(row["created at"]);
+
+        let containsValue = bigData.some(value => value.order_number === orderNumber);
+
+        let jsonString = row["parcel items"].slice(2, -1)
+                .replace(/\\u([0-9A-Fa-f]{4})/g, (match, group1) => String.fromCharCode(parseInt(group1, 16)))
+                .replace(/\\x([0-9A-Fa-f]{2})/g, (match, group1) => String.fromCharCode(parseInt(group1, 16)));
+
+        const decoder = new TextDecoder('utf-8', { fatal: true });
+        jsonString = decoder.decode(new Uint8Array([...jsonString].map(c => c.charCodeAt(0))));
+
+        try {
+          const parsedJson = JSON.parse(jsonString);
+          parsedJson.forEach(item => {
+            if (!containsValue) {
+              let quantity = item.quantity;
+              let value = item.value.replaceAll('.', ',');
+              let sku = correctSku(item.sku);
+              let isEinzelRE = false;
+			  let isVK = false;
+
+              if (istZahlNachBindestrichGroesserAls3(orderNumber)) {
+                if (item.sku.includes('-4')) {
+                  value = String(Number(item.value) / 4).replaceAll('.', ',');
+                  quantity = quantity * 4;
+                }
+                isEinzelRE = true;
+                console.log("sku.includes('-4')", item)
+              }
+			  
+			  if(orderNumber.includes('Göde')|| orderNumber.startsWith('BEZ')){
+				isEinzelRE = true;
+			  }
+
+              if (orderNumber.startsWith('VK')) {
+                isVK = true;
+              }
+
+              const description = item.description;
+              const data = {
+                originalSKU: item.sku,
+                sku,
+                quantity,
+                value,
+                order_number: orderNumber,
+                description,
+                karton : addKarton({orderNumber, sku, quantity, description, isEinzelRE, isVK}),
+                isEinzelRE,
+				isVK,
+                createdAt
+              };
+
+              bigData.push(data);
+            }
+          });
+        } catch (e) {
+          console.warn(jsonString)
+          console.error("Fehler beim Parsen des JSON:", e);
+        }
+      })
+    }
+
+    function downloadExcel() {
+      // Zusammenfassen und Sortieren (nach SKU) der Daten
+      const summarizedData = bigData;
+
+      // Berechnen es Gesamtpreises
+      let gesValPP = 0;
+	  let gesValVK = 0;
+      summarizedData.forEach(item => {
+        if(!item.isEinzelRE && !item.isVK){
+          gesValPP += item.quantity * Number(item.value.replace(",", "."))
+        }else if(item.isVK){
+          gesValVK += item.quantity * Number(item.value.replace(",", "."))
+		}
+      });
+      print("Gesamt PP betrag: "+ gesValPP)
+	  print("Gesamt VK betrag: "+ gesValVK)
+	
+	  // Kartons für PP Bestellungen
+	  summarizedData.push({sku:"PP", quantity:"Kartons"});
+      kartons.forEach(item => { delete item.productSKU});
+      kartons = kartons.filter(item => !(item.quantity === 0));
+      summarizedData.push(...kartons);
+	  
+	  //Kartons für VK Bestellungen
+	  summarizedData.push({sku:"VK", quantity:"Kartons"});
+	  kartonsVK.forEach(item => { delete item.productSKU});
+      kartonsVK = kartonsVK.filter(item => !(item.quantity === 0));
+      summarizedData.push(...kartonsVK);
+	  
+	  
+	  summarizedData.forEach(item => {
+		Object.keys(item).forEach(key => {
+			if (item[key] === undefined) {
+				item[key] = 'Leer';
+			}
+		});
+	  });
+      createTable(summarizedData)
+    }
+
+    function istZahlNachBindestrichGroesserAls3(input) {
+      const parts = input.split('-');
+      if (parts.length < 2) {
+        print('Kein Bindestrich oder keine Zahl danach bei: ' + input);
+        return false; // Kein Bindestrich oder keine Zahl danach
+      }
+
+      const zahlNachBindestrich = parseInt(parts[parts.length - 1], 10);
+      if (isNaN(zahlNachBindestrich)) {
+        return false; // Kein gültiger Zahlenwert nach dem Bindestrich
+      }
+
+      return zahlNachBindestrich > 3;
+    }
+
+    function print(... text) {
+      $('#cons').append("<p>" + text.join(" ") + "</p>")
+    }
+
+    function createTable(data) {
+      let table = `
+    <table border="1" cellspacing="0" cellpadding="5">
+      <thead>
+        <tr>
+          <th>Erstellt am</th>
+          <th>Original SKU</th>
+          <th>Angepasste SKU</th>
+          <th>Menge</th>
+          <th>Wert</th>
+          <th>Order Number</th>
+          <th>Beschreibung</th>
+          <th>Karton</th>
+        </tr>
+      </thead>
+      <tbody>
+  `;
+
+	data.forEach(item => {
+	  const rowStyle = item.isEinzelRE
+		? ' style="background-color: #ffe0e0;"'
+		: item.isVK
+		? ' style="background-color: #22e0e0;"'
+		: '';
+
+	  table += `<tr${rowStyle}>
+		<td>${item.createdAt ?? ""}</td>
+		<td>${item.originalSKU ?? ""}</td>
+		<td>${item.sku ?? ""}</td>
+		<td>${item.quantity ?? ""}</td>
+		<td>${item.value ?? ""}</td>
+		<td>${item.order_number ?? ""}</td>
+		<td>${item.description ?? ""}</td>
+		<td>${item.karton ?? ""}</td>
+	  </tr>`;
+	});
+
+
+      table += '</tbody></table>';
+      $('#table-container').html(table);
+    }
+
+    function formatDate(input) {
+      const [year, month, day] = input.split(' ')[0].split('-');
+      return `${day}.${month}.${year}`;
+    }
+
+    function getMondayToFridayRange() {
+      const today = new Date();
+      const monday = new Date(today.setDate(today.getDate() - (today.getDay() + 6) % 7));
+      const friday = new Date(monday); friday.setDate(monday.getDate() + 4);
+
+      const format = d => String(d.getDate()).padStart(2, '0');
+      return `${format(monday)}-${format(friday)}.${String(monday.getMonth() + 1).padStart(2, '0')}.${String(monday.getFullYear()).slice(-2)}`;
+    }
+  </script>
+  <style>
+    /* Grundlegende Stile für die gesamte Seite */
+    body {
+      font-family: 'Arial', sans-serif;
+      background: linear-gradient(to right, #eef2f7, #dce4ec);
+      color: #333;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin: 0;
+      padding: 20px;
+      min-height: 100vh;
+    }
+
+    /* Stil für die Überschrift */
+    h1 {
+      font-size: 2.5em;
+      color: #003366;
+      margin-bottom: 20px;
+      text-align: center;
+      font-weight: bold;
+    }
+
+    /* Datei-Input-Container */
+    #fileInputContainer {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+      padding: 15px;
+      background: #ffffff;
+      border-radius: 12px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    }
+
+    input[type="file"] {
+      padding: 10px;
+      font-size: 1em;
+      cursor: pointer;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      transition: all 0.3s ease;
+      background-color: #ffffff;
+    }
+
+    input[type="file"]:hover {
+      border-color: #003366;
+      box-shadow: 0px 0px 5px rgba(0, 51, 102, 0.4);
+    }
+
+    /* Stil für Buttons */
+    button {
+      padding: 14px 28px;
+      font-size: 1.1em;
+      color: #fff;
+      background: linear-gradient(135deg, #004080, #002f5e);
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      margin-top: 15px;
+      font-weight: bold;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    }
+
+    button:hover {
+      background: linear-gradient(135deg, #003366, #001f40);
+      box-shadow: 0px 4px 12px rgba(0, 51, 102, 0.4);
+    }
+
+    /* Konsolenausgabe */
+    #cons {
+      width: 80%;
+      margin-top: 20px;
+      padding: 15px;
+      border: 1px solid #ccc;
+      background-color: #fff;
+      border-radius: 8px;
+      color: #333;
+      font-size: 0.95em;
+      box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Tabellen-Container */
+    #table-container {
+      width: 90%;
+      max-width: 1000px;
+      margin-top: 20px;
+      overflow-x: auto;
+      background-color: #fff;
+      border-radius: 8px;
+      box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    #table-container table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    #table-container th, #table-container td {
+      padding: 14px;
+      border: 1px solid #ddd;
+      text-align: left;
+    }
+
+    #table-container th {
+      background-color: #004080;
+      color: #fff;
+      font-weight: bold;
+      text-transform: uppercase;
+    }
+
+    #table-container tr:nth-child(even) {
+      background-color: #f4f7fa;
+    }
+
+    /* Switch Toggle */
+    .switch {
+      position: relative;
+      display: inline-block;
+      width: 50px;
+      height: 24px;
+    }
+
+    .switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: gray;
+      transition: .4s;
+      border-radius: 24px;
+    }
+
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 18px;
+      width: 18px;
+      left: 3px;
+      bottom: 3px;
+      background-color: white;
+      transition: .4s;
+      border-radius: 50%;
+    }
+
+    input:checked + .slider {
+      background-color: #004080;
+    }
+
+    input:checked + .slider:before {
+      transform: translateX(26px);
+    }
+
+    .deactivated{
+      pointer-events: none;
+      opacity: 0.7;
+    }
+    .info-box {
+      background-color: #f0f4f8;
+      border-left: 4px solid #007acc;
+      padding: 15px 20px;
+      font-family: Arial, sans-serif;
+      position: relative;
+      margin: 20px 0;
+      border-radius: 5px;
+    }
+
+    .info-header {
+      font-weight: bold;
+      display: flex;
+      align-items: center;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .info-icon {
+      font-size: 20px;
+      margin-right: 10px;
+      color: #007acc;
+    }
+
+    .info-content {
+      margin-top: 10px;
+      display: none;
+    }
+
+    .expanded .info-content {
+      display: block;
+    }
+
+    .toggle-icon {
+      margin-left: auto;
+      transition: transform 0.3s ease;
+    }
+
+    .expanded .toggle-icon {
+      transform: rotate(90deg);
+    }
+  </style>
+</head>
+<body>
+
+<div class="info-box" id="infoBox">
+  <div class="info-header">
+    <span class="info-icon">ℹ️</span>
+    <span>Information zur Nutzung des Tools</span>
+    <span class="toggle-icon">▶</span>
+  </div>
+  <div class="info-content">
+    Mit diesem Tool können Sie aus der CSV-Exportdatei von Sendcloud eine Excel-Liste erstellen,
+    die direkt im Browser angezeigt wird. Diese Liste dient als Grundlage für die Erstellung der RE in Sage.
+
+    <p><strong>Vorgehensweise:</strong></p>
+    <ol>
+      <li>CSV-Export der erstellten Labels in Sendcloud durchführen.</li>
+      <li>Falls noch nicht geschehen oder wenn aktualisiert: Die Excel-Datei <em>"Produktkürzel Aktuell"</em> einlesen (<code>0-PfS\Produktdaten\Produktkürzel Aktuell.xlsx</code>).</li>
+      <li>Auswählen, ob Amazon- oder OSN-Exportlabels eingelesen werden sollen.</li>
+      <li>Die CSV-Datei(en) auswählen.</li>
+      <li>Auf <em>Download Excel</em> klicken.</li>
+      <li>Aus der erzeugten Excel-Datei kann anschließend die RE erstellt werden. Für Amazon-Exporte kann zur Übertragung in Sage auch das Programm <em>ExcelToSage.exe</em> verwendet werden.</li>
+    </ol>
+    Bei Fragen, Anmerkungen oder Probleme Bitte an Marwin wenden.
+  </div>
+
+</div>
+<div>
+  <h1>Kartons einlesen</h1>
+  <input id="kartonsEinlesen" type="file" accept=".xlsx" onChange="handleFileChange(event, $(this))" />
+  <p id="kartonsEinlesenText"></p>
+</div>
+
+<div id="CSVContainer" class="deactivated">
+  <h1>CSV Datei einlesen</h1>
+
+  <p id="CSVText" style="color: red">Bevor die CSV-Dateien eingelesen werden können, müssen zuerst die Kartons eingelesen werden.</p>
+
+  <div id="fileInputContainer">
+    <input type="file" accept=".csv" onchange="readFile(event, $(this))">
+  </div>
+</div>
+
+<button id="downloadExcel" class="deactivated" onclick="downloadExcel()">Download Excel</button>
+<p id="excelText" style="color: red">Bevor die Excel-Datei erstellt werden kann, muss eine CSV-Datei eingelesen werden.</p>
+<div id="cons"></div>
+<div id="table-container"></div>
+</body>
+
+</html>
