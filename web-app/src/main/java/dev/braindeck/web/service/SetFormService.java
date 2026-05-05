@@ -29,6 +29,7 @@ public class SetFormService {
     }
 
     public SetFormResult create(
+            String url,
             NewSetPayloadC payload,
             List<NewTermPayload> terms,
             Integer draftId
@@ -43,7 +44,7 @@ public class SetFormService {
         }
 
         SetCreatedDto set = result.getSet();
-        return SetFormResult.redirect("/user/" + userService.getCurrentUser().id()  + "/set/" + set.id());
+        return SetFormResult.redirect(url.formatted(set.id()) );
     }
 
 

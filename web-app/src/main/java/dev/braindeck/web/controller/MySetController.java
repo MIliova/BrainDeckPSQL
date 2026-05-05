@@ -52,6 +52,7 @@ public class MySetController {
                         set.descriptionLanguageId()
                         ),
                 "terms", set.terms(),
+                "isDraft", false,
                 "actionUrl", "/set/" + setId + "/edit",
                 "pageTitle", messageSource.getMessage("messages.set.edit", null, locale)
         ));
@@ -76,6 +77,7 @@ public class MySetController {
                     payload.termLanguageId(), payload.descriptionLanguageId());
 
             modelPreparationService.prepareModel(model, locale, Map.of(
+                    "isDraft", false,
                     "actionUrl", "/set/" + setId + "/edit",
                     "pageTitle", messageSource.getMessage("messages.set.edit", null, locale)
             ));

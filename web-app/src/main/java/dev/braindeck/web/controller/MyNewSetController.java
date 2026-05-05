@@ -70,7 +70,7 @@ public class MyNewSetController {
             return "new-set";
         }
 
-        SetFormResult result = setFormService.create(payload, termsValidateResult.getTerms(), null);
+        SetFormResult result = setFormService.create("/set/%d", payload, termsValidateResult.getTerms(), null);
         if (result.isRedirect()) {
             return "redirect:" + result.getRedirectUrl();
         }

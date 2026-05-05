@@ -101,9 +101,18 @@ public class DraftController {
             Model model,
             Locale locale
     ) {
+
+        System.out.println("Creating new draft " + draftId);
+
         model.addAttribute("currentView", "new-set");
         TermsValidateResult<NewTermPayload> termsValidateResult  = setFormService.validate(payloadTerms, NewTermPayload.class);
+
         if (bindingResult.hasErrors() || termsValidateResult.hasErrors()) {
+
+            System.out.println("errors");
+
+            System.out.println(termsValidateResult.getModelAttributes());
+
             model.addAllAttributes(termsValidateResult.getModelAttributes());
 
             languagesControllerHelper.getLanguages(languagesRestClient.findAllByTypes(), model, locale,
@@ -114,10 +123,13 @@ public class DraftController {
                     "actionUrl", "/draft/" + draftId,
                     "pageTitle", messageSource.getMessage("messages.draft.edit", null, locale)
             ));
+
+            System.out.println("payload = " + payload);
+
             return "new-set";
         }
 
-        SetFormResult result = setFormService.create(payload, termsValidateResult.getTerms(), draftId);
+        SetFormResult result = setFormService.create("/set/%d", payload, termsValidateResult.getTerms(), draftId);
         if (result.isRedirect()) {
             return "redirect:" + result.getRedirectUrl();
         }

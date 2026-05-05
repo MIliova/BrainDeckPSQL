@@ -10,7 +10,9 @@ import org.springframework.validation.BindException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.method.annotation.HandlerMethodValidationException;
 
+import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 import java.util.NoSuchElementException;
@@ -35,7 +37,32 @@ public class ApiControllerAdvice {
 
         return pd;
     }
+    @ExceptionHandler(HandlerMethodValidationException.class)
+    public ProblemDetail handleHandlerMethodValidation(HandlerMethodValidationException ex, Locale locale) {
 
+        ProblemDetail pd = problem(
+                HttpStatus.BAD_REQUEST,
+                "errors.400.title",
+                "Validation failed",
+                locale
+        );
+
+        Map<String, String> errors = new HashMap<>();
+
+        ex.getAllErrors().forEach(error -> {
+            String key = error.getCodes() != null && error.getCodes().length > 0
+                    ? error.getCodes()[0]
+                    : "global";
+            if (key.contains(".")) {
+                key = key.substring(key.lastIndexOf(".") + 1);
+            }
+
+            errors.merge(key, error.getDefaultMessage(), (a, b) -> a + ", " + b);
+        });
+
+        pd.setProperty("errors", errors);
+        return pd;
+    }
     // 1. Ошибки валидации JSON: @Valid @RequestBody
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ProblemDetail handleMethodArgumentNotValid(MethodArgumentNotValidException ex, Locale locale) {
@@ -51,6 +78,18 @@ public class ApiControllerAdvice {
                         FieldError::getField,
                         Collectors.mapping(FieldError::getDefaultMessage, Collectors.joining(", "))
                 ));
+
+//        Map<String, String> errors = new HashMap<>();
+//        ex.getBindingResult().getAllErrors().forEach(error -> {
+//            String key;
+//            if (error instanceof FieldError fieldError) {
+//                key = fieldError.getField();
+//            } else {
+//                key = "global";
+//            }
+//            String message = error.getDefaultMessage();
+//            errors.merge(key, message, (a, b) -> a + ", " + b);
+//        });
 
         pd.setProperty("errors", errors);
         return pd;
@@ -114,6 +153,10 @@ public class ApiControllerAdvice {
 
     @ExceptionHandler(Exception.class)
     public ProblemDetail handleAny(Exception ex, Locale locale) {
+
+        System.out.println("CLASS = " + ex.getClass().getName());
+        ex.printStackTrace();
+
         ProblemDetail pd = problem(
                 HttpStatus.INTERNAL_SERVER_ERROR,
                 "errors.500.title",

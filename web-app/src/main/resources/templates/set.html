@@ -38,6 +38,7 @@
             <main>
                 <section>
                     <article class="blue-row blue-row-set blue-row-margin" th:each="term: ${set.terms}">
+                        <div class="term-index term-index--center"></div>
                         <div th:text="${term.term}"></div>
                         <div class="separator">|</div>
                         <div th:text="${term.description}"></div>

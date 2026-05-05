@@ -1055,10 +1055,20 @@ class Api {
                         message: "Invalid JSON"
                     });
                 }
+
+                if (response.status === 400 && data.errors) {
+                    throw new ApiError({
+                        type: "badrequest",
+                        message: data?.message || data?.detail || data?.title || "Bad Request",
+                        status: response.status,
+                        details: data?.errors
+                    });
+                }
+
                 if (!response.ok) {
                     throw new ApiError({
                         type: "http",
-                        message: data?.message || `HTTP ${response.status}`,
+                        message: data?.message || data?.detail || data?.title || `HTTP ${response.status}`,
                         status: response.status,
                         details: data?.errors
                     });
@@ -1104,7 +1114,7 @@ class ErrorService {
     }
 
     show(errs) {
-        console.error(errs);
+        if (errs) console.error(errs);
 
         if (!(this.errorField instanceof HTMLElement)) return;
 
@@ -1186,6 +1196,23 @@ class ErrorHandler {
             },
 
             business: (err, ctx = {}) => {
+                const d = err.details;
+
+                if (d && typeof d === "object" && ctx) {
+                    let done = false;
+
+                    Object.entries(ctx).forEach(([key, el]) => {
+                        if (d[key]) {
+                            this.errorService.showByField(el, d[key]);
+                            done = true;
+                        }
+                    })
+                    if (done) return;
+                }
+                this.errorService.show(d || "Ошибка Save");
+            },
+
+            badrequest: (err, ctx = {}) => {
                 const d = err.details;
 
                 if (d && typeof d === "object" && ctx) {
@@ -1323,18 +1350,12 @@ class TermsImport {
             ? this.textarea.placeholder.split("\n").map(r => r.split("\t"))
             : [];
 
-        // this.sepInputs = [
-        //     ...Array.from(this.colSeparator instanceof RadioNodeList ? this.colSeparator : [this.colSeparator]),
-        //     ...Array.from(this.rowSeparator instanceof RadioNodeList ? this.rowSeparator : [this.rowSeparator]),
-        //     this.colCustom,
-        //     this.rowCustom
-        // ];
         this.sepInputs = [
-            this.colSeparator,
-            this.rowSeparator,
+            ...Array.from(this.colSeparator instanceof RadioNodeList ? this.colSeparator : [this.colSeparator]),
+            ...Array.from(this.rowSeparator instanceof RadioNodeList ? this.rowSeparator : [this.rowSeparator]),
             this.colCustom,
             this.rowCustom
-        ].flat().filter(Boolean);
+        ];
 
         this.sepInputs = this.sepInputs.filter(Boolean);
 
@@ -1384,7 +1405,7 @@ class TermsImport {
     clearPreview() {
         this.data = null;
         this.previewDiv.innerHTML = '';
-        this.errorService.show('');
+        this.errorHandler.errorService.show('');
     }
     onClear () {
         this.clearPreview();
@@ -2181,9 +2202,12 @@ class SetForm {
         this.container = container;
         this.errorService = errorService;
 
+        this.termsDto = [];
+
         const {
             messageMinThreeTerms,
             messageNotBlankTerm,
+            messageNotBlankDescription,
             messageTermUp,
             messageDescriptionUp
         } = messages;
@@ -2191,6 +2215,7 @@ class SetForm {
         this.messages = {
             messageMinThreeTerms,
             messageNotBlankTerm,
+            messageNotBlankDescription,
             messageTermUp,
             messageDescriptionUp
         };
@@ -2240,8 +2265,8 @@ class SetForm {
             result = Boolean(result && this.checkLanguage(ids[0],ids[1]));
         });
 
-        result = Boolean(result && this.checkTerms());
-
+        result = Boolean(this.checkTerms() && result);
+        return true
         return Boolean(result || this.test);
     }
     checkTerms(){
@@ -2267,7 +2292,6 @@ class SetForm {
                 };
             })
             .filter(Boolean);
-
         let goodTermsCnt = 0;
         let halfTermsCnt = 0;
 
@@ -2286,12 +2310,15 @@ class SetForm {
         let needFromHalf = Math.min(halfTermsCnt, needMore);
         let needFromEmpty = Math.max(0, needMore - needFromHalf);
 
+        console.log([needMore,needFromHalf,needFromEmpty])
+
         for (const { id, term, description, termEmpty, descEmpty } of rowsData) {
             if (termEmpty && descEmpty) {
                 if (needFromEmpty > 0) {
                     this.errorService.showByField(term,this.messages.messageMinThreeTerms);
                     this.addErrorClass(term);
                     needFromEmpty--;
+                    result = false;
                 } else {
                     this.errorService.hideByField(term);
                     this.errorService.hideByField(description);
@@ -2302,9 +2329,12 @@ class SetForm {
 
             let termError = null;
             let descError = null;
+            let termText = "";
+            let descriptionText = "";
+
 
             if (!termEmpty) {
-                const termText = TextService.fromElement(term);
+                termText = TextService.fromElement(term);
                 if (termText.length > this.maxTermLength) {
                     termError = this.messages.messageTermUp;
                 }
@@ -2314,13 +2344,13 @@ class SetForm {
             }
 
             if (!descEmpty) {
-                const descrText = TextService.fromElement(description);
-                if (descrText.length > this.maxDescriptionLength) {
+                descriptionText = TextService.fromElement(description);
+                if (descriptionText.length > this.maxDescriptionLength) {
                     descError = this.messages.messageDescriptionUp;
                 }
             } else {
                 if (needFromHalf) {
-                    descError = this.messages.messageMinThreeTerms;
+                    descError = this.messages.messageNotBlankDescription;
                     needFromHalf--;
                 }
             }
@@ -2343,8 +2373,8 @@ class SetForm {
             }
 
             let termDto = {
-                term,
-                description,
+                term: termText,
+                description: descriptionText,
                 ...(id != null ? { id } : {})
             };
 
@@ -2484,11 +2514,12 @@ document.addEventListener('DOMContentLoaded', function () {
 
     new SetForm(setFormEl, termsDescriptionAreaEl, new ErrorService(errorEl),
         {
-        messageMinThreeTerms:messageEl.dataset.messageMinThreeTerms,
-        messageNotBlankTerm:messageEl.dataset.messageNotBlankTerm,
-        messageTermUp:messageEl.dataset.messageTermUp,
-        messageDescriptionUp:messageEl.dataset.messageDescriptionUp
-    }, "",null,null, true)
+            messageMinThreeTerms:messageEl.dataset.messageMinThreeTerms,
+            messageNotBlankTerm:messageEl.dataset.messageNotBlankTerm,
+            messageNotBlankDescription:messageEl.dataset.messageNotBlankDescription,
+            messageTermUp:messageEl.dataset.messageTermUp,
+            messageDescriptionUp:messageEl.dataset.messageDescriptionUp
+    }, "",null,null, false)
         .bindButtons(document.getElementById('submitButton'))
 
     

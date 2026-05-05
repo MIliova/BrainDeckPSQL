@@ -12,12 +12,33 @@ body {
     counter-reset: my-counter;
 }
 .term-index {
-    margin: 10px;
     counter-increment: my-counter;
+    margin: 10px;
+    font-weight: bold;
+    color: #072748;
 }
+
 .term-index::before {
     content: counter(my-counter);
-    font-weight: bold;
+}
+
+.term-index--center {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100%;
+    padding: 0 !important;
+    margin: 0!important;
+}
+
+.term-index--center::before {
+    color: #072748;
+}
+
+.separator {
+    color: #072748;
+    font-size: 200% !important;
+    margin: 0 10px;
 }
 .main {
     display: grid;
@@ -44,7 +65,8 @@ body {
     padding: 10px;
     flex-direction: column;
 }
-.textarea-description input, textarea{
+.textarea-description input,
+.textarea-description textarea {
     width: 100%;
     background-color: #244f73;
     border: none;
@@ -111,7 +133,7 @@ hr {
     top:0;
     left:0;
     position:absolute;
-//width: 250px;
+/*//width: 250px;*/
     max-height: 200px; /* Максимальная высота контейнера */
     overflow-y: auto; /* Вертикальная прокрутка, если контент превышает высоту */
     width: fit-content;
@@ -299,10 +321,7 @@ select {
     font-size: 100%;
     /*font-weight: bold;*/
     text-transform: none;
-    padding-left: 0;
-    padding-right: 0;
-    padding-top: -5px;
-    padding-bottom: 10px;
+    padding: -5px 0 10px 0;
     height: 30px;
 }
 .blue-row-button-img img {
@@ -317,7 +336,7 @@ select {
     /*display: flex;*/
     /*padding: 20px;*/
     display: grid;
-    grid-template-columns: 1fr auto 1fr;
+    grid-template-columns: auto 1fr auto 1fr;
     align-items: flex-start;
 }
 .blue-row-set div{
@@ -326,11 +345,7 @@ select {
     line-height: 1.6;
     font-weight: 600;
 }
-.separator {
-    color: #072748;
-    font-size: 200% !important;
-    margin: 0 10px;
-}
+
 .blue-row-sets {
     /*margin-left:10px;*/
     padding: 17px 0px 17px 17px;
@@ -384,12 +399,13 @@ select {
 
 .placeholder {
     /*min-height: 40px;*/
-    outline: none;
+    position: relative;
 }
 .placeholder.empty::before {
     content: attr(data-placeholder);
     color: #aaa;
     pointer-events: none;
+    position: absolute;
 }
 
 .textarea-import {

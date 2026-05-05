@@ -18,6 +18,28 @@ public class TermParser {
     private final ObjectMapper objectMapper;
     private final Validator validator;
 
+    public static class ParseResult<T> {
+        private final List<T> terms;
+        private final Map<Integer, Map<String, String>> termsErrors;
+
+        public ParseResult(List<T> terms, Map<Integer, Map<String, String>> termsErrors) {
+            this.terms = terms;
+            this.termsErrors = termsErrors;
+        }
+
+        public List<T> getTerms() {
+            return terms;
+        }
+
+        public Map<Integer, Map<String, String>> getTermsErrors() {
+            return termsErrors;
+        }
+
+        public boolean hasErrors() {
+            return !termsErrors.isEmpty();
+        }
+    }
+
     public TermParser(ObjectMapper objectMapper, Validator validator) {
         this.objectMapper = objectMapper;
         this.validator = validator;
@@ -25,6 +47,7 @@ public class TermParser {
 
     public <T> ParseResult<T> parse(String json, Class<T> termClass) {
         List<T> terms;
+        System.out.println(json);
         try {
             terms = objectMapper.readValue(
                     json,
@@ -60,25 +83,5 @@ public class TermParser {
         return new ParseResult<>(terms, termsErrors);
     }
 
-    public static class ParseResult<T> {
-        private final List<T> terms;
-        private final Map<Integer, Map<String, String>> termsErrors;
 
-        public ParseResult(List<T> terms, Map<Integer, Map<String, String>> termsErrors) {
-            this.terms = terms;
-            this.termsErrors = termsErrors;
-        }
-
-        public List<T> getTerms() {
-            return terms;
-        }
-
-        public Map<Integer, Map<String, String>> getTermsErrors() {
-            return termsErrors;
-        }
-
-        public boolean hasErrors() {
-            return !termsErrors.isEmpty();
-        }
-    }
 }
