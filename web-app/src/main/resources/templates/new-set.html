@@ -15,19 +15,19 @@
             <header class="container-left-right">
                 <div><h1 th:text="${pageTitle}">Create a new set/Edit a set</h1></div>
                 <div style="display: flex">
-                    <div class="blue-row margin-left" th:if=" ${payload.id != null and (isDraft != null and !isDraft)}">
-                        <a class="blue-row-a-img" th:href="@{/set/{id}(id=${payload.id})}">
+                    <div class="blue-row margin-left" th:if=" ${payload?.id != null and (isDraft != null and !isDraft)}">
+                        <a class="blue-row-a-img" th:href="@{/set/{id}(id=${payload?.id})}">
                             <img width="20" src="/images/back-to-set.png" th:alt="#{messages.set.create.import}" />
                             [[#{messages.set.edit.back}]]
                         </a>
                     </div>
                     <div class="blue-row margin-left">
                         <button id="submitButton" class="blue-row-button-img" type="button"
-                            th:aria-label="${payload.id} != null ? #{messages.save} : #{messages.create}"><img
-                            width="20" src="/images/save.png" th:alt="${payload.id} != null ? #{messages.save} : #{messages.create}" /><span
-                            th:text="${payload.id} != null ? #{messages.save} : #{messages.create}">Create/Save</span></button>
+                            th:aria-label="${payload?.id} != null ? #{messages.save} : #{messages.create}"><img
+                            width="20" src="/images/save.png" th:alt="${payload?.id} != null ? #{messages.save} : #{messages.create}" /><span
+                            th:text="${payload?.id} != null ? #{messages.save} : #{messages.create}">Create/Save</span></button>
                     </div>
-                    <div class="blue-row margin-left" th:if="${isDraft}">
+                    <div class="blue-row margin-left" th:if="${(isDraft != null and !isDraft)}">
                         <button id="delete-draft-button" class="blue-row-button-img" type="button"
                             th:aria-label="#{messages.delete.draft}"><img
                             width="20" src="/images/delete-set.png" th:alt="#{messages.delete.draft}" /><span
@@ -39,7 +39,7 @@
                 <form method="post" id="set-form"
                       th:action="${actionUrl}"
                       th:object="${payload}"
-                      th:data-is-draft="${isDraft}">
+                      th:data-is-draft="${(isDraft != null and !isDraft)}">
 
                     <section>
                         <div th:data-error-class="blue-row-err"
@@ -112,7 +112,7 @@
                                th:name="id"
                                th:value="*{id}"
                                id="field-id"
-                               th:data-draft="${isDraft}">
+                               th:data-draft="${(isDraft != null and !isDraft)}">
                     </section>
 
 

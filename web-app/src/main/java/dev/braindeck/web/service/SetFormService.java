@@ -5,7 +5,9 @@ import dev.braindeck.web.entity.SetCreatedDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -16,13 +18,10 @@ public class SetFormService {
 
     public <T> TermsValidateResult<T> validate(String payloadTerms, Class<T> clazz) {
         try {
-            TermParser.ParseResult<T> parseResult = termParser.parse(payloadTerms, clazz);
-            if (parseResult.hasErrors()) {
-                return TermsValidateResult.termsErrors(
-                        parseResult.getTerms(),
-                        parseResult.getTermsErrors());
-            }
-            return TermsValidateResult.success(parseResult.getTerms());
+            return TermsValidateResult.from(
+                    termParser.parse(payloadTerms, clazz)
+            );
+
         } catch (IllegalArgumentException e) {
             return TermsValidateResult.generalError(e.getMessage());
         }

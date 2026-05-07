@@ -2,7 +2,7 @@ package dev.braindeck.web.controller;
 
 import dev.braindeck.web.client.LanguagesRestClient;
 import dev.braindeck.web.client.MySetsRestClient;
-import dev.braindeck.web.controller.payload.DraftPayload;
+import dev.braindeck.web.controller.payload.SetViewModel;
 import dev.braindeck.web.controller.payload.UpdateSetPayload;
 import dev.braindeck.web.controller.payload.UpdateTermPayload;
 import dev.braindeck.web.entity.*;
@@ -31,6 +31,7 @@ public class MySetController {
     private final SetFormService setFormService;
     private final LanguagesRestClient languagesRestClient;
     private final LanguagesControllerHelper languagesControllerHelper;
+    private final SetViewModelBuilder vmBuilder;
 
     @GetMapping("/edit")
     public String get(
@@ -43,16 +44,27 @@ public class MySetController {
 
         languagesControllerHelper.getLanguages(languagesRestClient.findAllByTypes(), model, locale,
                 set.termLanguageId(), set.descriptionLanguageId());
+
+        SetViewModel vm = vmBuilder.build(
+                set.id(),
+                set.title(),
+                set.description(),
+                set.termLanguageId(),
+                set.descriptionLanguageId(),
+                false,
+                set.terms());
+
         modelPreparationService.prepareModel(model,  locale, Map.of(
-                "payload", new DraftPayload(
-                        set.id(),
-                        set.title(),
-                        set.description(),
-                        set.termLanguageId(),
-                        set.descriptionLanguageId()
-                        ),
-                "terms", set.terms(),
-                "isDraft", false,
+//                "payload", new SetViewModel(
+//                        set.id(),
+//                        set.title(),
+//                        set.description(),
+//                        set.termLanguageId(),
+//                        set.descriptionLanguageId()
+//                        ),
+//                "terms", set.terms(),
+//                "isDraft", false,
+                "vm", vm,
                 "actionUrl", "/set/" + setId + "/edit",
                 "pageTitle", messageSource.getMessage("messages.set.edit", null, locale)
         ));
@@ -71,16 +83,39 @@ public class MySetController {
         model.addAttribute("currentView", "new-set");
 
         TermsValidateResult<UpdateTermPayload> termsValidateResult  = setFormService.validate(payloadTerms, UpdateTermPayload.class);
+
         if (bindingResult.hasErrors() || termsValidateResult.hasErrors()) {
-            model.addAllAttributes(termsValidateResult.getModelAttributes());
+            SetViewModel vm = vmBuilder.build(
+                    setId,
+                    payload.title(),
+                    payload.description(),
+                    payload.termLanguageId(),
+                    payload.descriptionLanguageId(),
+                    false,
+                    termsValidateResult.getTermsVM(),
+                    termsValidateResult.hasErrors(),
+                    termsValidateResult.getError()
+            );
+//            model.addAllAttributes(termsValidateResult.getModelAttributes());
             languagesControllerHelper.getLanguages(languagesRestClient.findAllByTypes(), model, locale,
                     payload.termLanguageId(), payload.descriptionLanguageId());
 
             modelPreparationService.prepareModel(model, locale, Map.of(
-                    "isDraft", false,
+//                    "payload", new SetViewModelBuilder(
+//                            setId,
+//                            payload.title(),
+//                            payload.description(),
+//                            payload.termLanguageId(),
+//                            payload.descriptionLanguageId()
+//                    ),
+//                    "terms", payloadTerms,
+//                    "isDraft", false,
+                    "vm", vm,
                     "actionUrl", "/set/" + setId + "/edit",
                     "pageTitle", messageSource.getMessage("messages.set.edit", null, locale)
             ));
+
+            System.out.println(model);
             return "new-set";
         }
 

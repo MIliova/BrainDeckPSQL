@@ -1,7 +1,7 @@
 package dev.braindeck.web.controller;
 
 import dev.braindeck.web.client.*;
-import dev.braindeck.web.controller.payload.DraftPayload;
+import dev.braindeck.web.controller.payload.SetViewModel;
 import dev.braindeck.web.controller.payload.NewSetPayloadC;
 import dev.braindeck.web.controller.payload.NewTermPayload;
 import dev.braindeck.web.entity.*;
@@ -42,7 +42,7 @@ public class DraftController {
         languagesControllerHelper.getLanguages(languagesRestClient.findAllByTypes(), model, locale, draft.termLanguageId(), draft.descriptionLanguageId());
 
         modelPreparationService.prepareModel(model, locale, Map.of(
-                "payload", new DraftPayload(
+                "payload", new SetViewModel(
                         draft.id(),
                         draft.title(),
                         draft.description(),
@@ -77,7 +77,7 @@ public class DraftController {
                 draft.termLanguageId(), draft.descriptionLanguageId());
 
         modelPreparationService.prepareModel(model, locale, Map.of(
-                "payload", new DraftPayload(
+                "payload", new SetViewModel(
                         draft.id(),
                         draft.title(),
                         draft.description(),

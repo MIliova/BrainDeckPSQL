@@ -16,10 +16,11 @@ public record UpdateTermPayload (
         String term,
 
         @Size(min = 0, max = 950)
-        String description,
+        String description
+        /*,
 
         @NotNull
         @Positive
-        Integer setId
+        Integer setId*/
 ) {
 }
